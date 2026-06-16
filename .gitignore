@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.next/
+.cache/
+.env
+.env.local
+.env.production
+.DS_Store
+.tmp/
+uploads/

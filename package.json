@@ -1,5 +1,28 @@
 {
+  "name": "sanipep-sh-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config apps/frontend/vite.config.ts",
+    "build": "tsc -p apps/frontend/tsconfig.json && vite build --config apps/frontend/vite.config.ts",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:flows": "node scripts/check-flows.mjs",
+    "check:responsive": "node scripts/check-responsive.mjs",
+    "preview": "vite preview --config apps/frontend/vite.config.ts"
+  },
   "dependencies": {
+    "lucide-react": "^1.18.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "reshaped": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "playwright": "^1.61.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
   }
 }

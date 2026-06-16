@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "product_groups",
+  "info": {
+    "singularName": "product-group",
+    "pluralName": "product-groups",
+    "displayName": "Product Group",
+    "description": "Produktgruppen als Orientierung, ohne klassischen Katalogfokus"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "summary": {
+      "type": "text",
+      "required": true
+    },
+    "priority": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "primary",
+        "secondary",
+        "automated"
+      ]
+    },
+    "visibleOnLanding": {
+      "type": "boolean",
+      "default": false
+    },
+    "defaultRoute": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    }
+  }
+}

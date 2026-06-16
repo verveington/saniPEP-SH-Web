@@ -1,0 +1,56 @@
+{
+  "kind": "singleType",
+  "collectionName": "contact_settings",
+  "info": {
+    "singularName": "contact-setting",
+    "pluralName": "contact-settings",
+    "displayName": "Contact Setting",
+    "description": "Standort, Parteiverkehr, Erreichbarkeit und Kontaktkanaele"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "address": {
+      "type": "text",
+      "required": true
+    },
+    "publicHours": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.opening-hour"
+    },
+    "reachableHours": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "phone": {
+      "type": "string",
+      "required": true,
+      "maxLength": 40
+    },
+    "fax": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "whatsapp": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

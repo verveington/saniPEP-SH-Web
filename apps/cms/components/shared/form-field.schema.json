@@ -1,0 +1,48 @@
+{
+  "collectionName": "components_shared_form_fields",
+  "info": {
+    "displayName": "Form Field",
+    "description": "CMS-steuerbares Formularfeld fuer Request-Flows"
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "helpText": {
+      "type": "text"
+    },
+    "fieldType": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "text",
+        "email",
+        "phone",
+        "date",
+        "select",
+        "textarea",
+        "checkbox",
+        "file"
+      ]
+    },
+    "required": {
+      "type": "boolean",
+      "default": false
+    },
+    "options": {
+      "type": "json"
+    },
+    "sortOrder": {
+      "type": "integer",
+      "required": true,
+      "default": 0
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "portal_help_contents",
+  "info": {
+    "singularName": "portal-help-content",
+    "pluralName": "portal-help-contents",
+    "displayName": "Portal Help Content",
+    "description": "Sichere Hilfetexte fuer Portalprozesse ohne sensible Listendaten"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "topic": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "safeSummary": {
+      "type": "text",
+      "required": true
+    },
+    "nextAction": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "roleVisibility": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "anonymous",
+        "portal-customer",
+        "employee"
+      ]
+    },
+    "relatedRoute": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "/portal/login",
+        "/portal",
+        "/rezept-hochladen",
+        "/termin-anfragen",
+        "/kontakt"
+      ]
+    }
+  }
+}

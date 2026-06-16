@@ -1,0 +1,67 @@
+{
+  "kind": "collectionType",
+  "collectionName": "service_pages",
+  "info": {
+    "singularName": "service-page",
+    "pluralName": "service-pages",
+    "displayName": "Service Page",
+    "description": "Leistungsseiten fuer Premium-, Sekundaer- und automatisierte Versorgungsbereiche"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "priority": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "primary",
+        "secondary",
+        "automated"
+      ]
+    },
+    "summary": {
+      "type": "text",
+      "required": true
+    },
+    "intent": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "searchSignals": {
+      "type": "json"
+    },
+    "processSteps": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.process-step"
+    },
+    "faqs": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.faq-item"
+    },
+    "primaryCta": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.cta"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo",
+      "required": true
+    }
+  }
+}

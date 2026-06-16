@@ -1,0 +1,33 @@
+{
+  "collectionName": "components_shared_seos",
+  "info": {
+    "displayName": "SEO",
+    "description": "SEO-Metadaten fuer oeffentliche und noindex-Seiten"
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 70
+    },
+    "description": {
+      "type": "text",
+      "required": true,
+      "maxLength": 170
+    },
+    "canonicalPath": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "robots": {
+      "type": "enumeration",
+      "required": true,
+      "default": "index,follow",
+      "enum": [
+        "index,follow",
+        "noindex,nofollow"
+      ]
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "landing_page_sections",
+  "info": {
+    "singularName": "landing-page-section",
+    "pluralName": "landing-page-sections",
+    "displayName": "Landing Page Section",
+    "description": "Homepage-Abschnitte fuer Premium-Einstieg, Schnellzugriff und Conversion-Flows"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "sectionKey": {
+      "type": "uid",
+      "required": true
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "lead": {
+      "type": "text",
+      "required": true
+    },
+    "body": {
+      "type": "richtext"
+    },
+    "tone": {
+      "type": "enumeration",
+      "default": "default",
+      "enum": [
+        "default",
+        "soft",
+        "white",
+        "premium"
+      ]
+    },
+    "primaryCta": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.cta"
+    },
+    "secondaryCta": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.cta"
+    },
+    "media": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "sortOrder": {
+      "type": "integer",
+      "required": true,
+      "default": 0
+    }
+  }
+}

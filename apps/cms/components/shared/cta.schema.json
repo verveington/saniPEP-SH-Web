@@ -1,0 +1,37 @@
+{
+  "collectionName": "components_shared_ctas",
+  "info": {
+    "displayName": "CTA",
+    "description": "Redaktioneller Call-to-Action mit sicherer Zielroute"
+  },
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "route": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "/termin-anfragen",
+        "/rezept-hochladen",
+        "/kontakt",
+        "/hilfe-finden",
+        "/inkontinenz-pflege",
+        "/portal/login"
+      ]
+    },
+    "intent": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "appointment",
+        "prescription-upload",
+        "written-inquiry",
+        "care-configuration",
+        "portal-login"
+      ]
+    }
+  }
+}

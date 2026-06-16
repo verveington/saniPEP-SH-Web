@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_shared_process_steps",
+  "info": {
+    "displayName": "Process Step",
+    "description": "Redaktioneller Prozessschritt fuer Service- und Formularseiten"
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "copy": {
+      "type": "text",
+      "required": true
+    },
+    "sortOrder": {
+      "type": "integer",
+      "required": true,
+      "default": 0
+    }
+  }
+}

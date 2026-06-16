@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "hero_contents",
+  "info": {
+    "singularName": "hero-content",
+    "pluralName": "hero-contents",
+    "displayName": "Hero Content",
+    "description": "Hero-Copy, Bildreferenz und CTA fuer oeffentliche Einstiegsseiten"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "pageKey": {
+      "type": "uid",
+      "required": true
+    },
+    "headline": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "subline": {
+      "type": "text",
+      "required": true
+    },
+    "primaryCta": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.cta",
+      "required": true
+    },
+    "media": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo"
+    }
+  }
+}

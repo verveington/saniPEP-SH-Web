@@ -1,0 +1,125 @@
+{
+  "/": {
+    "title": "saniPEP Sanitätshaus München | Versorgung mit System",
+    "description": "Termine, Rezeptupload und digitale Begleitung für Kompression, Brustprothetik, Inkontinenz, Pflegehilfsmittel und weitere Versorgungen in München.",
+    "canonicalPath": "/",
+    "audience": "public",
+    "primaryConversion": "appointment",
+    "robots": "index,follow",
+    "strapiUid": "api::landing-page-section.landing-page-section"
+  },
+  "/hilfe-finden": {
+    "title": "Hilfe finden | saniPEP Sanitätshaus München",
+    "description": "Patientenorientierte Suche nach Symptomen, Produkten und Situationen mit direktem Weg zu Termin, Rezeptupload, Portal oder Anfrage.",
+    "canonicalPath": "/hilfe-finden",
+    "audience": "public",
+    "primaryConversion": "appointment",
+    "robots": "index,follow",
+    "strapiUid": "api::symptom.symptom"
+  },
+  "/lymphoedem-lipoedem-narbenkompression": {
+    "title": "Lymphödem, Lipödem & Narbenkompression | saniPEP",
+    "description": "Premium-Beratung für Lymphödem, Lipödem, Narbenkompression und Flachstrick-Kompression mit Rezeptupload und Terminanfrage.",
+    "canonicalPath": "/lymphoedem-lipoedem-narbenkompression",
+    "audience": "public",
+    "primaryConversion": "appointment",
+    "robots": "index,follow",
+    "strapiUid": "api::service-page.service-page"
+  },
+  "/brustprothetik": {
+    "title": "Brustprothetik in München | saniPEP Sanitätshaus",
+    "description": "Diskrete Beratung nach Brustoperation oder bei neuer Brustprothetik-Versorgung mit geschützter Terminanfrage und Rezeptupload.",
+    "canonicalPath": "/brustprothetik",
+    "audience": "public",
+    "primaryConversion": "appointment",
+    "robots": "index,follow",
+    "strapiUid": "api::service-page.service-page"
+  },
+  "/bandagen-orthesen-reha-stoma": {
+    "title": "Bandagen, Orthesen, Reha & Stoma | saniPEP",
+    "description": "Schneller Einstieg für Bandagen, Orthesen, Reha-Hilfsmittel und Stoma-Versorgung mit Rezeptupload und fachlicher Rückmeldung.",
+    "canonicalPath": "/bandagen-orthesen-reha-stoma",
+    "audience": "public",
+    "primaryConversion": "prescription-upload",
+    "robots": "index,follow",
+    "strapiUid": "api::service-page.service-page"
+  },
+  "/inkontinenz-pflege": {
+    "title": "Inkontinenz & Pflegehilfsmittel konfigurieren | saniPEP",
+    "description": "Automatisierter Fragebogen für Inkontinenzversorgung und Pflegehilfsmittel mit Rezeptklärung, Bestellanfrage und Portalstatus.",
+    "canonicalPath": "/inkontinenz-pflege",
+    "audience": "public",
+    "primaryConversion": "care-configuration",
+    "robots": "index,follow",
+    "strapiUid": "api::form-configuration.form-configuration"
+  },
+  "/rezept-hochladen": {
+    "title": "Rezept sicher hochladen | saniPEP Sanitätshaus",
+    "description": "Rezeptupload als sicherer Request mit Einwilligung, Mitarbeiterprüfung und Statusrückmeldung statt ungeprüfter Direktänderung.",
+    "canonicalPath": "/rezept-hochladen",
+    "audience": "public",
+    "primaryConversion": "prescription-upload",
+    "robots": "index,follow",
+    "strapiUid": "api::form-configuration.form-configuration"
+  },
+  "/termin-anfragen": {
+    "title": "Wunschtermin anfragen | saniPEP Sanitätshaus München",
+    "description": "Terminwunsch mit Datum, 1-Stunden-Zeitfenster, Anliegen, Fragebogen und optionalem Rezeptupload. Bestätigung erfolgt durch Mitarbeiter.",
+    "canonicalPath": "/termin-anfragen",
+    "audience": "public",
+    "primaryConversion": "appointment",
+    "robots": "index,follow",
+    "strapiUid": "api::form-configuration.form-configuration"
+  },
+  "/kontakt": {
+    "title": "Kontakt & schriftliche Anfrage | saniPEP München",
+    "description": "Kontakt zu saniPEP Sanitätshaus in München mit Telefon, WhatsApp, E-Mail, Öffnungszeiten und schriftlicher Anfrage an den Fachbereich.",
+    "canonicalPath": "/kontakt",
+    "audience": "public",
+    "primaryConversion": "written-inquiry",
+    "robots": "index,follow",
+    "strapiUid": "api::contact-setting.contact-setting"
+  },
+  "/portal/login": {
+    "title": "Kundenportal Login | saniPEP",
+    "description": "Portalzugang aktivieren oder mit E-Mail und Passwort einloggen. Das Portal zeigt Status und erzeugt prüfbare Anfragen.",
+    "canonicalPath": "/portal/login",
+    "audience": "portal",
+    "primaryConversion": "portal-login",
+    "robots": "noindex,nofollow",
+    "strapiUid": "api::portal-help-content.portal-help-content"
+  },
+  "/portal": {
+    "title": "Kundenportal Dashboard | saniPEP",
+    "description": "Mock-Dashboard für Rezepterinnerung, Dauerversorgungen, offene Anfragen, Mitarbeiterprüfung und sichere Request-based Actions.",
+    "canonicalPath": "/portal",
+    "audience": "portal",
+    "primaryConversion": "portal-status",
+    "robots": "noindex,nofollow",
+    "strapiUid": "api::portal-help-content.portal-help-content"
+  },
+  "/admin/requests": {
+    "title": "Mitarbeiterprüfung | saniPEP Admin",
+    "description": "Interne Mock-Queue für Request-Triage, Rückfragen, Omnia-Vorbereitung, Freigabe und Audit-Nachweis.",
+    "canonicalPath": "/admin/requests",
+    "audience": "admin",
+    "primaryConversion": "internal-review",
+    "robots": "noindex,nofollow"
+  },
+  "/admin/integrations": {
+    "title": "Integrationsübersicht | saniPEP Admin",
+    "description": "Interne Übersicht der Connector-Verträge für Strapi, Omnia, Nextcloud Kalender und Notion Kalender.",
+    "canonicalPath": "/admin/integrations",
+    "audience": "admin",
+    "primaryConversion": "integration-readiness",
+    "robots": "noindex,nofollow"
+  },
+  "/admin/design-lab": {
+    "title": "Reshaped Design-Lab | saniPEP Admin",
+    "description": "Interne Variantenprüfung für Farben, Buttons, Terminmodule, Portalverlauf, Statusanzeigen und Formularlayouts.",
+    "canonicalPath": "/admin/design-lab",
+    "audience": "admin",
+    "primaryConversion": "design-system",
+    "robots": "noindex,nofollow"
+  }
+}

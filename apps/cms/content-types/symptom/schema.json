@@ -1,0 +1,62 @@
+{
+  "kind": "collectionType",
+  "collectionName": "symptoms",
+  "info": {
+    "singularName": "symptom",
+    "pluralName": "symptoms",
+    "displayName": "Symptom",
+    "description": "Patientensprache fuer Suche und qualifizierte Weiterleitung"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "term": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "category": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "symptom",
+        "product",
+        "situation"
+      ]
+    },
+    "synonyms": {
+      "type": "json"
+    },
+    "priority": {
+      "type": "integer",
+      "required": true,
+      "default": 1
+    },
+    "recommendedRoute": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "/termin-anfragen",
+        "/rezept-hochladen",
+        "/lymphoedem-lipoedem-narbenkompression",
+        "/brustprothetik",
+        "/bandagen-orthesen-reha-stoma",
+        "/inkontinenz-pflege",
+        "/portal/login",
+        "/kontakt"
+      ]
+    },
+    "primaryAction": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "appointment",
+        "upload",
+        "configure",
+        "portal",
+        "inquiry"
+      ]
+    }
+  }
+}

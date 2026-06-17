@@ -4,19 +4,16 @@ import type {
   ConversionGoal,
   ConversionSummary,
   ConversionStage,
-  PortalRequest,
   Route,
 } from "./types";
 
 type CreateConversionEventInput = {
   stage: ConversionStage;
   route: Route;
-  requestType?: PortalRequest["type"];
-  safeCategory?: string;
 };
 
 export const conversionPrivacyBoundary =
-  "Nur Route, Conversion-Ziel, Stage, sichere Kategorie und Request-Art. Keine Namen, Dateien, Diagnosen, Freitexte, Omnia-IDs oder Browser-Persistenz.";
+  "Nur Route, grobes Conversion-Ziel und Stage. Keine Namen, Dateien, Diagnosen, Fachbereiche, Freitexte, Omnia-IDs oder Browser-Persistenz.";
 
 const timestamp = (offsetMinutes = 0) =>
   new Date(Date.UTC(2026, 5, 16, 8, offsetMinutes, 0)).toISOString();
@@ -25,60 +22,44 @@ export const seedConversionEvents: ConversionEvent[] = [
   {
     id: "CV-1001",
     stage: "route-view",
-    route: "/lymphoedem-lipoedem-narbenkompression",
     goal: "appointment",
     at: timestamp(4),
     source: "public-website",
-    safeCategory: "Kompression",
   },
   {
     id: "CV-1002",
     stage: "cta-click",
-    route: "/lymphoedem-lipoedem-narbenkompression",
     goal: "appointment",
     at: timestamp(7),
     source: "public-website",
-    safeCategory: "Kompression",
   },
   {
     id: "CV-1003",
     stage: "request-submitted",
-    route: "/termin-anfragen",
     goal: "appointment",
     at: timestamp(12),
     source: "public-website",
-    requestType: "appointment",
-    safeCategory: "Lipödem-Erstberatung",
   },
   {
     id: "CV-1004",
     stage: "request-submitted",
-    route: "/rezept-hochladen",
-    goal: "prescription-upload",
+    goal: "upload",
     at: timestamp(18),
     source: "public-website",
-    requestType: "prescription-upload",
-    safeCategory: "Kompressionsversorgung",
   },
   {
     id: "CV-1005",
     stage: "request-submitted",
-    route: "/kontakt",
-    goal: "written-inquiry",
+    goal: "contact",
     at: timestamp(25),
     source: "public-website",
-    requestType: "written-inquiry",
-    safeCategory: "Beratung",
   },
   {
     id: "CV-1006",
     stage: "request-submitted",
-    route: "/inkontinenz-pflege",
-    goal: "care-configuration",
+    goal: "contact",
     at: timestamp(32),
     source: "public-website",
-    requestType: "care-configuration",
-    safeCategory: "Pflegehilfsmittel",
   },
 ];
 
@@ -91,12 +72,9 @@ export const createConversionEvent = (
   return {
     id: `CV-MOCK-${String(sequence).padStart(4, "0")}`,
     stage: input.stage,
-    route: input.route,
     goal: metadata.primaryConversion,
     at: new Date().toISOString(),
-    source: metadata.audience === "portal" ? "portal" : metadata.audience === "admin" ? "admin-design-lab" : "public-website",
-    requestType: input.requestType,
-    safeCategory: input.safeCategory,
+    source: "public-website",
   };
 };
 
@@ -129,14 +107,9 @@ export const summarizeConversionEvents = (events: ConversionEvent[]): Conversion
 
 export const conversionGoalLabel: Record<ConversionGoal, string> = {
   appointment: "Termine",
-  "prescription-upload": "Rezeptuploads",
-  "written-inquiry": "schriftliche Anfragen",
-  "care-configuration": "Pflege-/Inkontinenz-Konfigurationen",
-  "portal-login": "Portal-Logins",
-  "portal-status": "Portalstatus",
-  "internal-review": "Mitarbeiterprüfung",
-  "integration-readiness": "Integrationsreife",
-  "design-system": "Designsystem",
+  upload: "Uploads",
+  contact: "Kontakt",
+  portal_login: "Portal-Login",
 };
 
 export const conversionStageLabel: Record<ConversionStage, string> = {

@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "form_configurations",
+  "info": {
+    "singularName": "form-configuration",
+    "pluralName": "form-configurations",
+    "displayName": "Form Configuration",
+    "description": "Redaktionell steuerbare Felder, Validierung und Consent-Copy fuer Request-Flows"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "formKey": {
+      "type": "uid",
+      "required": true
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "introCopy": {
+      "type": "text",
+      "required": true
+    },
+    "fields": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.form-field",
+      "required": true
+    },
+    "requiredConsentScopes": {
+      "type": "json"
+    },
+    "requestTarget": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "prescription-upload",
+        "appointment",
+        "reorder",
+        "contact-check",
+        "document",
+        "written-inquiry",
+        "care-configuration"
+      ]
+    },
+    "staffReviewRequired": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    },
+    "localPersistence": {
+      "type": "enumeration",
+      "required": true,
+      "default": "none",
+      "enum": [
+        "none",
+        "metadata-only"
+      ]
+    }
+  }
+}

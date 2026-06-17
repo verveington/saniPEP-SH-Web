@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_shared_faq_items",
+  "info": {
+    "displayName": "FAQ Item",
+    "description": "Oeffentliche Antwort ohne individuelle Gesundheitsdaten"
+  },
+  "attributes": {
+    "question": {
+      "type": "string",
+      "required": true,
+      "maxLength": 160
+    },
+    "answer": {
+      "type": "richtext",
+      "required": true
+    },
+    "safeTopic": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "termin",
+        "rezeptupload",
+        "kompression",
+        "brustprothetik",
+        "inkontinenz",
+        "pflegehilfsmittel",
+        "portal",
+        "kontakt"
+      ]
+    }
+  }
+}

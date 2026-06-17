@@ -1,0 +1,38 @@
+{
+  "name": "@sanipep/cms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Strapi CMS for saniPEP public website content",
+  "scripts": {
+    "build": "strapi build",
+    "console": "strapi console",
+    "develop": "strapi develop",
+    "dev": "strapi develop",
+    "seed": "node scripts/seed-public-content.mjs",
+    "start": "strapi start",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/plugin-users-permissions": "5.48.0",
+    "@strapi/strapi": "5.48.0",
+    "better-sqlite3": "12.8.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.2",
+    "styled-components": "^6.1.19"
+  },
+  "overrides": {
+    "esbuild": "0.28.1",
+    "lodash": "4.18.1",
+    "vite": "8.0.16",
+    "ws": "8.21.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.0.0 <=24.x.x",
+    "npm": ">=9.0.0"
+  },
+  "strapi": {
+    "uuid": "84347dd1-3f98-4b69-bd24-0b8da511de88"
+  }
+}

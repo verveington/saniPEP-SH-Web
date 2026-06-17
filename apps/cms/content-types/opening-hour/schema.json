@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "opening_hours",
+  "info": {
+    "singularName": "opening-hour",
+    "pluralName": "opening-hours",
+    "displayName": "Opening Hour",
+    "description": "Strukturierte Oeffnungszeiten und Parteiverkehr fuer lokale SEO und Kontaktmodule"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "locationKey": {
+      "type": "string",
+      "required": true
+    },
+    "weekday": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ]
+    },
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 40
+    },
+    "opensAt": {
+      "type": "time",
+      "required": true
+    },
+    "closesAt": {
+      "type": "time",
+      "required": true
+    },
+    "appointmentRecommended": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    },
+    "publicNote": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "sortOrder": {
+      "type": "integer",
+      "required": true,
+      "default": 0
+    },
+    "visibleOnWebsite": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    }
+  }
+}

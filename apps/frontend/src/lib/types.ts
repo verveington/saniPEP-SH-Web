@@ -4,10 +4,13 @@ export type Route =
   | "/lymphoedem-lipoedem-narbenkompression"
   | "/brustprothetik"
   | "/bandagen-orthesen-reha-stoma"
-  | "/inkontinenz-pflege"
-  | "/rezept-hochladen"
+  | "/inkontinenz-pflegehilfsmittel"
+  | "/rezept-upload"
   | "/termin-anfragen"
   | "/kontakt"
+  | "/impressum"
+  | "/datenschutz"
+  | "/einwilligung"
   | "/portal/login"
   | "/portal"
   | "/admin/requests"
@@ -35,14 +38,9 @@ export type RouteAudience = "public" | "portal" | "admin";
 
 export type ConversionGoal =
   | "appointment"
-  | "prescription-upload"
-  | "written-inquiry"
-  | "care-configuration"
-  | "portal-login"
-  | "portal-status"
-  | "internal-review"
-  | "integration-readiness"
-  | "design-system";
+  | "upload"
+  | "contact"
+  | "portal_login";
 
 export type RouteMetadata = {
   title: string;
@@ -59,12 +57,9 @@ export type ConversionStage = "route-view" | "cta-click" | "form-start" | "reque
 export type ConversionEvent = {
   id: string;
   stage: ConversionStage;
-  route: Route;
   goal: ConversionGoal;
   at: string;
-  source: "public-website" | "portal" | "admin-design-lab";
-  requestType?: PortalRequest["type"];
-  safeCategory?: string;
+  source: "public-website";
 };
 
 export type ConversionSummary = {
@@ -284,6 +279,8 @@ export type AppointmentRequestInput = {
 
 export type UploadInput = {
   fileName: string;
+  fileType?: string;
+  fileSizeBytes?: number;
   context: string;
   patientNote?: string;
   consentScopes?: ConsentScope[];
@@ -292,6 +289,7 @@ export type UploadInput = {
 export type ValidationResult = {
   valid: boolean;
   errors: string[];
+  fieldErrors: Record<string, string>;
 };
 
 export type ContactInquiryInput = {

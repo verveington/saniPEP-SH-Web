@@ -60,7 +60,7 @@ export const authAdapter = {
     return {
       ok: true,
       method: "one-time-password",
-      customerId: "CUS-MOCK-1007",
+      customerId: "DEMO-CUSTOMER",
       message:
         "Portal aktiviert. Das Einmalpasswort ist verbraucht; der nächste Login erfolgt mit E-Mail und Passwort.",
       nextStep: "enter-portal",
@@ -82,7 +82,7 @@ export const authAdapter = {
     return {
       ok: true,
       method: "email-password",
-      customerId: "CUS-MOCK-1007",
+      customerId: "DEMO-CUSTOMER",
       message: "Login erfolgreich. Portalstatus wird read-mostly angezeigt.",
       nextStep: "enter-portal",
       auditLabel: "Portal-Login erfolgreich",

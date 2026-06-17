@@ -1,0 +1,435 @@
+{
+  "contentPolicy": {
+    "purpose": "Redaktioneller Mock-Content fuer Strapi-Struktur und SEO-Pruefung.",
+    "containsRealPatientData": false,
+    "containsFinalLegalTexts": false,
+    "analyticsBoundary": "Nur grobe Ziele wie appointment, upload, contact und portal_login verwenden. Keine Suchbegriffe, Freitexte oder Gesundheitsdetails tracken.",
+    "medicalClaimBoundary": "Texte beschreiben Beratung, Versorgung und Ablauf. Sie versprechen keine Heilung und ersetzen keine aerztliche Abklaerung."
+  },
+  "contactSetting": {
+    "name": "saniPEP Sanitaetshaus",
+    "address": "Charles-de-Gaulle-Str. 4, Muenchen",
+    "locality": "Muenchen",
+    "serviceArea": "Muenchen und Umgebung",
+    "reachableHours": "Montag bis Freitag, 08:00 - 17:00",
+    "phone": "089 678048-0",
+    "fax": "089 678048-70",
+    "email": "sani@sanipep.de",
+    "whatsapp": "0171 4715257"
+  },
+  "openingHours": [
+    { "locationKey": "sanipep-muenchen", "weekday": "monday", "label": "Montag", "opensAt": "13:00:00", "closesAt": "17:00:00", "appointmentRecommended": true, "publicNote": "Parteiverkehr am Nachmittag.", "sortOrder": 1, "visibleOnWebsite": true },
+    { "locationKey": "sanipep-muenchen", "weekday": "tuesday", "label": "Dienstag", "opensAt": "08:00:00", "closesAt": "13:00:00", "appointmentRecommended": true, "publicNote": "Parteiverkehr am Vormittag.", "sortOrder": 2, "visibleOnWebsite": true },
+    { "locationKey": "sanipep-muenchen", "weekday": "wednesday", "label": "Mittwoch", "opensAt": "13:00:00", "closesAt": "17:00:00", "appointmentRecommended": true, "publicNote": "Parteiverkehr am Nachmittag.", "sortOrder": 3, "visibleOnWebsite": true },
+    { "locationKey": "sanipep-muenchen", "weekday": "thursday", "label": "Donnerstag", "opensAt": "08:00:00", "closesAt": "13:00:00", "appointmentRecommended": true, "publicNote": "Parteiverkehr am Vormittag.", "sortOrder": 4, "visibleOnWebsite": true },
+    { "locationKey": "sanipep-muenchen", "weekday": "friday", "label": "Freitag", "opensAt": "13:00:00", "closesAt": "17:00:00", "appointmentRecommended": true, "publicNote": "Parteiverkehr am Nachmittag.", "sortOrder": 5, "visibleOnWebsite": true }
+  ],
+  "landingPageSections": [
+    {
+      "sectionKey": "home-hero",
+      "title": "Versorgung mit System",
+      "lead": "Persoenlich beraten, passgenau versorgt und digital begleitet: von Rezeptupload bis Terminwunsch.",
+      "body": "saniPEP verbindet Sanitaetshaus-Beratung in Muenchen mit klaren digitalen Wegen. Anfragen werden geprueft und erst nach Rueckmeldung weiterbearbeitet.",
+      "sectionHeadingLevel": "h1",
+      "tone": "premium",
+      "primaryCta": { "label": "Termin anfragen", "route": "/termin-anfragen", "intent": "appointment" },
+      "secondaryCta": { "label": "Rezept hochladen", "route": "/rezept-upload", "intent": "prescription-upload" },
+      "internalLinks": [
+        { "label": "Lymphoedem, Lipoedem und Narbenkompression", "route": "/lymphoedem-lipoedem-narbenkompression", "purpose": "context" },
+        { "label": "Brustprothetik", "route": "/brustprothetik", "purpose": "context" },
+        { "label": "Inkontinenz und Pflegehilfsmittel", "route": "/inkontinenz-pflegehilfsmittel", "purpose": "context" }
+      ],
+      "sortOrder": 1,
+      "visibleOnWebsite": true
+    },
+    {
+      "sectionKey": "home-services",
+      "title": "Versorgungsbereiche",
+      "lead": "Die oeffentlichen Seiten fuehren zu Termin, Upload oder Kontakt. Status- und Mitarbeiterbereiche liegen ausserhalb dieses Builds.",
+      "body": "Die Inhalte sind so formuliert, dass sie Orientierung geben, ohne individuelle Beratung oder aerztliche Abklaerung zu ersetzen.",
+      "sectionHeadingLevel": "h2",
+      "tone": "white",
+      "primaryCta": { "label": "Hilfe finden", "route": "/hilfe-finden", "intent": "written-inquiry" },
+      "sortOrder": 2,
+      "visibleOnWebsite": true
+    }
+  ],
+  "servicePages": [
+    {
+      "title": "Lymphoedem, Lipoedem und Narbenkompression",
+      "slug": "lymphoedem-lipoedem-narbenkompression",
+      "priority": "primary",
+      "summary": "Ruhige Beratung, Massnahme, Verlaufskontrolle und passgenaue Kompressionsversorgung mit Terminwunsch in Muenchen.",
+      "headline": "Lymphoedem, Lipoedem und Narbenkompression in Muenchen",
+      "intro": "Wir nehmen uns Zeit fuer Ihre Situation, pruefen Rezeptlage und Versorgungsweg und bereiten den naechsten Termin nachvollziehbar vor.",
+      "intent": "Termin",
+      "searchSignals": ["schwere Beine", "geschwollene Beine", "Kompressionsstruempfe nach Mass", "Narbenkompression"],
+      "processSteps": [
+        { "title": "Anliegen einordnen", "copy": "Sie nennen kurz Anlass, Rezeptlage und Wunschzeit.", "sortOrder": 1 },
+        { "title": "Termin vorbereiten", "copy": "Das Team prueft, was fuer Beratung und Massnahme benoetigt wird.", "sortOrder": 2 },
+        { "title": "Versorgung begleiten", "copy": "Weitere Schritte werden persoenlich besprochen und dokumentiert.", "sortOrder": 3 }
+      ],
+      "primaryCta": { "label": "Termin anfragen", "route": "/termin-anfragen", "intent": "appointment" },
+      "internalLinks": [
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Kompressionsversorgung Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "title": "Brustprothetik",
+      "slug": "brustprothetik",
+      "priority": "primary",
+      "summary": "Diskrete Beratung, hochwertige Auswahl und sensible Begleitung durch den Versorgungsprozess in Muenchen.",
+      "headline": "Brustprothetik in Muenchen",
+      "intro": "Die Beratung erfolgt ruhig, geschuetzt und mit Blick auf Passform, Alltag und persoenliche Fragen.",
+      "intent": "Diskreter Termin",
+      "searchSignals": ["Brustprothese nach Operation", "Erstversorgung", "neue Versorgung"],
+      "processSteps": [
+        { "title": "Diskreten Termin anfragen", "copy": "Sie waehlen einen Kontaktweg und nennen nur, was fuer die Vorbereitung notwendig ist.", "sortOrder": 1 },
+        { "title": "Beratung vorbereiten", "copy": "Das Team plant Zeit, Raum und passende Auswahl.", "sortOrder": 2 },
+        { "title": "Naechste Schritte klaeren", "copy": "Rezept, Anpassung und Rueckfragen werden gemeinsam besprochen.", "sortOrder": 3 }
+      ],
+      "primaryCta": { "label": "Termin anfragen", "route": "/termin-anfragen", "intent": "appointment" },
+      "internalLinks": [
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Brustprothetik Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "title": "Bandagen, Orthesen, Reha und Stoma",
+      "slug": "bandagen-orthesen-reha-stoma",
+      "priority": "secondary",
+      "summary": "Schneller Einstieg fuer Rezeptupload, Rueckfragekanal und klare Weiterleitung.",
+      "headline": "Bandagen, Orthesen, Reha und Stoma in Muenchen",
+      "intro": "Fuer viele Versorgungen ist eine kurze Vorabklaerung hilfreich. Rezeptupload und Kontaktformular fuehren zur passenden Rueckmeldung.",
+      "intent": "Rezept und Beratung",
+      "searchSignals": ["Bandage Rezept", "Orthese", "Reha Hilfsmittel", "Stoma Versorgung"],
+      "primaryCta": { "label": "Rezept hochladen", "route": "/rezept-upload", "intent": "prescription-upload" },
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Schriftliche Anfrage", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Sanitaetshaus Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    }
+  ],
+  "productGroups": [
+    { "name": "Kompressionsversorgung", "slug": "kompressionsversorgung", "summary": "Orientierung fuer Mass- und Flachstrickversorgung, Narbenkompression und Kontrolltermine.", "priority": "primary", "visibleOnLanding": true, "defaultRoute": "/lymphoedem-lipoedem-narbenkompression" },
+    { "name": "Brustprothetik", "slug": "brustprothetik", "summary": "Diskrete Beratung und Auswahl fuer eine neue oder bestehende Versorgung.", "priority": "primary", "visibleOnLanding": true, "defaultRoute": "/brustprothetik" },
+    { "name": "Inkontinenz und Pflegehilfsmittel", "slug": "inkontinenz-pflegehilfsmittel", "summary": "Fragebogen fuer wiederkehrende Versorgung, Rezeptklaerung und Bestellanfrage.", "priority": "automated", "visibleOnLanding": true, "defaultRoute": "/inkontinenz-pflegehilfsmittel" }
+  ],
+  "symptoms": [
+    { "term": "schwere Beine", "category": "symptom", "synonyms": ["geschwollene Beine", "Druckgefuehl"], "priority": 1, "recommendedRoute": "/lymphoedem-lipoedem-narbenkompression", "primaryAction": "appointment", "analyticsGoal": "appointment", "trackingNote": "Nur grobes Ziel tracken, keine Suchbegriffe." },
+    { "term": "Rezept erhalten", "category": "situation", "synonyms": ["Verordnung", "Unterlagen hochladen"], "priority": 2, "recommendedRoute": "/rezept-upload", "primaryAction": "upload", "analyticsGoal": "upload", "trackingNote": "Nur grobes Ziel tracken, keine Dateinamen." },
+    { "term": "Pflegehilfsmittel beantragen", "category": "product", "synonyms": ["monatliche Versorgung", "Pflegebox"], "priority": 2, "recommendedRoute": "/inkontinenz-pflegehilfsmittel", "primaryAction": "configure", "analyticsGoal": "contact", "trackingNote": "Nur grobes Ziel tracken, keine Freitexte." }
+  ],
+  "faqs": [
+    {
+      "question": "Kann ich ein Rezept online hochladen?",
+      "answer": "Ja. Der Upload erzeugt eine pruefbare Anfrage. Bitte laden Sie nur notwendige Unterlagen hoch und bestaetigen Sie die Einwilligung aktiv.",
+      "safeTopic": "rezeptupload",
+      "relatedRoute": { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" },
+      "claimSafe": true,
+      "sortOrder": 1
+    },
+    {
+      "question": "Ist eine Terminanfrage schon eine feste Buchung?",
+      "answer": "Nein. Die Anfrage wird geprueft und erst nach Rueckmeldung durch das Team bestaetigt.",
+      "safeTopic": "termin",
+      "relatedRoute": { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+      "claimSafe": true,
+      "sortOrder": 2
+    },
+    {
+      "question": "Soll ich Gesundheitsdetails per WhatsApp senden?",
+      "answer": "Bitte nicht. Nutzen Sie fuer Unterlagen den Upload oder stimmen Sie den passenden geschuetzten Weg mit dem Team ab.",
+      "safeTopic": "kontakt",
+      "relatedRoute": { "label": "Kontakt", "route": "/kontakt", "purpose": "context" },
+      "claimSafe": true,
+      "sortOrder": 3
+    }
+  ],
+  "seoMetadata": [
+    {
+      "route": "/",
+      "seo": {
+        "title": "saniPEP Sanitaetshaus Muenchen | Beratung & Versorgung",
+        "description": "Sanitaetshaus in Muenchen fuer Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezeptupload und Terminanfrage.",
+        "canonicalPath": "/",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Versorgung mit System",
+      "h2Structure": ["Versorgungsbereiche", "Kontakt und Standort"],
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" }
+      ],
+      "localSeoFocus": "Sanitaetshaus Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/hilfe-finden",
+      "seo": {
+        "title": "Hilfe finden | saniPEP Sanitaetshaus Muenchen",
+        "description": "Patientenorientierte Suche nach Beschwerden, Produkten und Situationen mit direktem Weg zu Termin, Rezeptupload, Portal oder Anfrage.",
+        "canonicalPath": "/hilfe-finden",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Hilfe finden",
+      "h2Structure": ["Datenschutzgrenze", "Empfohlene Wege"],
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Sanitaetshaus Muenchen Beratung",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/lymphoedem-lipoedem-narbenkompression",
+      "seo": {
+        "title": "Lymphoedem, Lipoedem & Narbenkompression | saniPEP",
+        "description": "Beratung zu Lymphoedem, Lipoedem, Narbenkompression und Flachstrick-Kompression in Muenchen mit Terminanfrage und Rezeptupload.",
+        "canonicalPath": "/lymphoedem-lipoedem-narbenkompression",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Lymphoedem, Lipoedem und Narbenkompression in Muenchen",
+      "h2Structure": ["Pruefbarer Ablauf", "Kontakt und Standort"],
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" }
+      ],
+      "localSeoFocus": "Kompressionsversorgung Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/brustprothetik",
+      "seo": {
+        "title": "Brustprothetik in Muenchen | saniPEP Sanitaetshaus",
+        "description": "Diskrete Brustprothetik-Beratung in Muenchen nach einer Brustoperation oder bei neuer Versorgung mit Terminanfrage und Rezeptupload.",
+        "canonicalPath": "/brustprothetik",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Brustprothetik in Muenchen",
+      "h2Structure": ["Pruefbarer Ablauf", "Kontakt und Standort"],
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Brustprothetik Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/bandagen-orthesen-reha-stoma",
+      "seo": {
+        "title": "Bandagen, Orthesen, Reha & Stoma | saniPEP",
+        "description": "Schneller Einstieg fuer Bandagen, Orthesen, Reha-Hilfsmittel und Stoma-Versorgung in Muenchen mit Rezeptupload und Rueckmeldung.",
+        "canonicalPath": "/bandagen-orthesen-reha-stoma",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Bandagen, Orthesen, Reha und Stoma in Muenchen",
+      "h2Structure": ["Pruefbarer Ablauf", "Kontakt und Standort"],
+      "internalLinks": [
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" },
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" }
+      ],
+      "localSeoFocus": "Sanitaetshaus Muenchen Hilfsmittel",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/inkontinenz-pflegehilfsmittel",
+      "seo": {
+        "title": "Inkontinenz & Pflegehilfsmittel in Muenchen | saniPEP",
+        "description": "Verstaendlicher Fragebogen fuer Inkontinenzversorgung und Pflegehilfsmittel in Muenchen mit Rezeptklaerung und pruefbarer Bestellanfrage.",
+        "canonicalPath": "/inkontinenz-pflegehilfsmittel",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Inkontinenz und Pflegehilfsmittel konfigurieren",
+      "h2Structure": ["Bedarf einordnen", "Hinweis ergaenzen"],
+      "internalLinks": [
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Pflegehilfsmittel Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/rezept-upload",
+      "seo": {
+        "title": "Rezeptupload | saniPEP Sanitaetshaus Muenchen",
+        "description": "Rezeptupload fuer saniPEP Muenchen als pruefbare Anfrage mit aktiver Einwilligung, Mitarbeiterpruefung und Statusrueckmeldung.",
+        "canonicalPath": "/rezept-upload",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Rezeptupload",
+      "h2Structure": ["Versorgung zuordnen", "Rezept auswaehlen", "Einwilligung bestaetigen"],
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Einwilligung", "route": "/einwilligung", "purpose": "legal" }
+      ],
+      "localSeoFocus": "Rezeptupload Sanitaetshaus Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/termin-anfragen",
+      "seo": {
+        "title": "Wunschtermin anfragen | saniPEP Muenchen",
+        "description": "Terminwunsch in Muenchen mit Datum, Zeitfenster, Anliegen, Fragebogen und optionalem Rezeptupload. Bestaetigung erfolgt durch Mitarbeiter.",
+        "canonicalPath": "/termin-anfragen",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Terminanfrage mit Wunschtermin",
+      "h2Structure": ["Anliegen waehlen", "Wunschfenster nennen", "Kontakt und Fragebogen"],
+      "internalLinks": [
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Sanitaetshaus Termin Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/kontakt",
+      "seo": {
+        "title": "Kontakt & Anfrage | saniPEP Muenchen",
+        "description": "Kontakt zu saniPEP Sanitaetshaus in Muenchen mit Telefon, WhatsApp, E-Mail, Oeffnungszeiten und schriftlicher Anfrage.",
+        "canonicalPath": "/kontakt",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Kontakt und Standort",
+      "h2Structure": ["Schriftliche Anfrage", "Parteiverkehr"],
+      "internalLinks": [
+        { "label": "Termin anfragen", "route": "/termin-anfragen", "purpose": "conversion" },
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" }
+      ],
+      "localSeoFocus": "Sanitaetshaus Muenchen Kontakt",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/impressum",
+      "seo": {
+        "title": "Impressum | saniPEP Sanitaetshaus Muenchen",
+        "description": "Platzhalter fuer Impressum und Anbieterkennzeichnung der oeffentlichen saniPEP Website. Vor Produktivgang juristisch finalisieren.",
+        "canonicalPath": "/impressum",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Impressum",
+      "h2Structure": ["Rechtlicher Platzhalter"],
+      "internalLinks": [
+        { "label": "Datenschutz", "route": "/datenschutz", "purpose": "legal" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "saniPEP Muenchen",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/datenschutz",
+      "seo": {
+        "title": "Datenschutz | saniPEP Sanitaetshaus Muenchen",
+        "description": "Platzhalter fuer Datenschutzhinweise zu Website, Kontaktanfragen, Terminanfragen, Rezeptupload und geplantem Kundenportal.",
+        "canonicalPath": "/datenschutz",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Datenschutz",
+      "h2Structure": ["Rechtlicher Platzhalter"],
+      "internalLinks": [
+        { "label": "Einwilligung", "route": "/einwilligung", "purpose": "legal" },
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "saniPEP Datenschutz",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/einwilligung",
+      "seo": {
+        "title": "Einwilligung | saniPEP Sanitaetshaus Muenchen",
+        "description": "Platzhalter fuer Einwilligungshinweise zu Kontakt-, Termin- und Upload-Prozessen mit Gesundheitsdaten und Mitarbeiterpruefung.",
+        "canonicalPath": "/einwilligung",
+        "robots": "index,follow",
+        "locality": "Muenchen"
+      },
+      "h1": "Einwilligung",
+      "h2Structure": ["Rechtlicher Platzhalter"],
+      "internalLinks": [
+        { "label": "Datenschutz", "route": "/datenschutz", "purpose": "legal" },
+        { "label": "Rezeptupload", "route": "/rezept-upload", "purpose": "conversion" }
+      ],
+      "localSeoFocus": "saniPEP Einwilligung",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    },
+    {
+      "route": "/portal/login",
+      "seo": {
+        "title": "Kundenportal Login | saniPEP",
+        "description": "Portalzugang aktivieren oder einloggen. Das Portal zeigt Status und erzeugt pruefbare Anfragen.",
+        "canonicalPath": "/portal/login",
+        "robots": "noindex,nofollow"
+      },
+      "h1": "Kundenportal Login",
+      "h2Structure": ["Portalzugang", "Hilfe"],
+      "internalLinks": [
+        { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
+      ],
+      "localSeoFocus": "Kundenportal",
+      "claimReviewStatus": "reviewed-no-healing-promise"
+    }
+  ],
+  "legalPages": [
+    {
+      "title": "Impressum",
+      "slug": "impressum",
+      "legalKind": "imprint",
+      "version": "placeholder-2026-06",
+      "placeholderNotice": "Platzhalter: Dieser Text ist nicht juristisch final freigegeben.",
+      "reviewStatus": "placeholder",
+      "body": "Platzhalter fuer Anbieterkennzeichnung, Verantwortliche und Kontaktangaben. Vor Produktivgang juristisch pruefen und vervollstaendigen."
+    },
+    {
+      "title": "Datenschutz",
+      "slug": "datenschutz",
+      "legalKind": "privacy",
+      "version": "placeholder-2026-06",
+      "placeholderNotice": "Platzhalter: Dieser Text ist nicht juristisch final freigegeben.",
+      "reviewStatus": "placeholder",
+      "body": "Platzhalter fuer Datenschutzhinweise zur Website, Kontaktformularen, Terminanfragen, Uploads und geplantem Portal. Vor Produktivgang mit Datenschutzberatung finalisieren."
+    },
+    {
+      "title": "Einwilligung",
+      "slug": "einwilligung",
+      "legalKind": "consent",
+      "version": "placeholder-2026-06",
+      "placeholderNotice": "Platzhalter: Dieser Text ist nicht juristisch final freigegeben.",
+      "reviewStatus": "placeholder",
+      "body": "Platzhalter fuer aktive Einwilligung in Kontakt-, Termin- und Upload-Prozesse. Vor Produktivgang fachlich und juristisch pruefen."
+    }
+  ],
+  "portalHelpContent": [
+    {
+      "topic": "Portalzugang",
+      "safeSummary": "Das Portal zeigt Statusinformationen und ermoeglicht pruefbare Anfragen. Es ist im MVP nur als Mock-Grenze vorbereitet.",
+      "nextAction": "Bei Problemen Kontakt aufnehmen.",
+      "roleVisibility": "anonymous",
+      "relatedRoute": "/portal/login"
+    },
+    {
+      "topic": "Rezeptstatus",
+      "safeSummary": "Statusanzeigen sollen ohne sensible Details auskommen und nur die naechste sichere Aktion zeigen.",
+      "nextAction": "Status im Portal pruefen oder eine Rueckfrage senden.",
+      "roleVisibility": "portal-customer",
+      "relatedRoute": "/portal/login"
+    }
+  ]
+}

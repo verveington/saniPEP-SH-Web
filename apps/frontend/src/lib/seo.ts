@@ -37,6 +37,7 @@ export const applyRouteMetadata = (route: Route) => {
   const metadata = getRouteMetadata(route);
   const origin = typeof window === "undefined" ? "https://www.sanipep.de" : window.location.origin;
   const canonicalUrl = `${origin}${metadata.canonicalPath}`;
+  const socialImageUrl = `${origin}/images/sanipep-consultation-hero-1280.webp`;
 
   document.title = metadata.title;
   upsertMeta("name", "description", metadata.description);
@@ -45,5 +46,13 @@ export const applyRouteMetadata = (route: Route) => {
   upsertMeta("property", "og:description", metadata.description);
   upsertMeta("property", "og:type", "website");
   upsertMeta("property", "og:url", canonicalUrl);
+  upsertMeta("property", "og:image", socialImageUrl);
+  upsertMeta("property", "og:image:width", "1280");
+  upsertMeta("property", "og:image:height", "720");
+  upsertMeta("property", "og:image:alt", "saniPEP Sanitätshaus München");
+  upsertMeta("name", "twitter:card", "summary_large_image");
+  upsertMeta("name", "twitter:title", metadata.title);
+  upsertMeta("name", "twitter:description", metadata.description);
+  upsertMeta("name", "twitter:image", socialImageUrl);
   upsertCanonical(canonicalUrl);
 };

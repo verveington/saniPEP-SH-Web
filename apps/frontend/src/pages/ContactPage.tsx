@@ -1,0 +1,135 @@
+import { Mail, MessageCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Button, FormControl, Text, TextArea, TextField, View } from "reshaped";
+import { createRequestId } from "../app/requestIds";
+import type { Navigate, TrackConversion } from "../app/routes";
+import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../components/common";
+import { LocationContact } from "../components/LocationContact";
+import { SecuritySidePanel } from "../components/SecuritySidePanel";
+import { validateContactInquiryInput } from "../lib/formValidation";
+import type { ContactInquiryInput } from "../lib/types";
+
+export default function ContactPage({ navigate, onConversion }: { navigate: Navigate; onConversion: TrackConversion }) {
+  return (
+    <>
+      <LocationContact navigate={navigate} standalone />
+      <section className="sectionTight" style={{ background: "var(--sani-page)" }}>
+        <div className="sectionInner gridTwo">
+          <ContactInquiryForm onConversion={onConversion} />
+          <SecuritySidePanel />
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion }) {
+  const [input, setInput] = useState<ContactInquiryInput>({
+    topic: "",
+    serviceContext: "",
+    message: "",
+    contactName: "",
+    contactEmail: "",
+    contactPhone: "",
+    preferredContactChannel: "email",
+    containsHealthData: false,
+  });
+  const [createdId, setCreatedId] = useState("");
+  const validation = useMemo(() => validateContactInquiryInput(input), [input]);
+  const errors = validation.fieldErrors;
+  const update = (key: keyof ContactInquiryInput, value: string | boolean) => setInput((current) => ({ ...current, [key]: value }));
+  const submit = () => {
+    if (!validation.valid) return;
+    setCreatedId(createRequestId("MSG"));
+    onConversion({ stage: "request-submitted", route: "/kontakt" });
+  };
+
+  return (
+    <div className="formPanel">
+      <View direction="column" gap={5} padding={6}>
+        <View direction="row" gap={3} align="center">
+          <IconBox icon={MessageCircle} />
+          <View direction="column" gap={1}>
+            <Text as="h2" variant="featured-5" weight="semibold">Schriftliche Anfrage</Text>
+            <Text variant="body-2" color="neutral-faded">Für Rückfragen, Vorabklärung und Kontaktwünsche.</Text>
+          </View>
+        </View>
+        <FormStep number={1} title="Anfrage zuordnen" copy="Thema und Fachbereich helfen bei der qualifizierten Rückmeldung.">
+          <div className="formGrid">
+            <label>
+              <Text variant="body-2" weight="medium">Thema</Text>
+              <select className="nativeSelect" value={input.topic} onChange={(event) => update("topic", event.target.value)} {...inputA11y("topic", errors)}>
+                <option value="">Bitte auswählen</option>
+                <option>Allgemeine Anfrage</option>
+                <option>Rückfrage zu Rezept</option>
+                <option>Neue Versorgung</option>
+                <option>Lieferung oder Status</option>
+                <option>Rückrufwunsch</option>
+              </select>
+              <FieldError id="topic-error" error={errors.topic} />
+            </label>
+            <label>
+              <Text variant="body-2" weight="medium">Fachbereich</Text>
+              <select className="nativeSelect" value={input.serviceContext} onChange={(event) => update("serviceContext", event.target.value)} {...inputA11y("serviceContext", errors)}>
+                <option value="">Bitte auswählen</option>
+                <option>Kompression</option>
+                <option>Brustprothetik</option>
+                <option>Inkontinenz & Pflege</option>
+                <option>Bandagen/Orthesen/Reha/Stoma</option>
+              </select>
+              <FieldError id="serviceContext-error" error={errors.serviceContext} />
+            </label>
+          </div>
+        </FormStep>
+        <FormStep number={2} title="Kontaktweg festlegen" copy="WhatsApp ist für Gesundheitsdaten gesperrt.">
+          <div className="formGrid">
+            <FormControl>
+              <FormControl.Label>Name</FormControl.Label>
+              <TextField name="contactInquiryName" value={input.contactName} onChange={({ value }) => update("contactName", value)} inputAttributes={inputA11y("contactName", errors)} />
+              <FieldError id="contactName-error" error={errors.contactName} />
+            </FormControl>
+            <FormControl>
+              <FormControl.Label>E-Mail</FormControl.Label>
+              <TextField name="contactInquiryEmail" value={input.contactEmail} onChange={({ value }) => update("contactEmail", value)} inputAttributes={{ type: "email", ...inputA11y("contactEmail", errors) }} />
+              <FieldError id="contactEmail-error" error={errors.contactEmail} />
+            </FormControl>
+            <FormControl>
+              <FormControl.Label>Telefon</FormControl.Label>
+              <TextField name="contactInquiryPhone" value={input.contactPhone} onChange={({ value }) => update("contactPhone", value)} inputAttributes={inputA11y("contactPhone", errors)} />
+              <FieldError id="contactPhone-error" error={errors.contactPhone} />
+            </FormControl>
+            <label>
+              <Text variant="body-2" weight="medium">Antwortweg</Text>
+              <select className="nativeSelect" value={input.preferredContactChannel} onChange={(event) => update("preferredContactChannel", event.target.value)} {...inputA11y("preferredContactChannel", errors)}>
+                <option value="email">E-Mail</option>
+                <option value="phone">Telefon</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+              <FieldError id="preferredContactChannel-error" error={errors.preferredContactChannel} />
+            </label>
+          </div>
+        </FormStep>
+        <FormStep number={3} title="Nachricht senden" copy="Bitte keine unnötigen medizinischen Details im freien Text.">
+          <div className="formGrid">
+            <FormControl>
+              <FormControl.Label>Nachricht</FormControl.Label>
+              <TextArea name="contactInquiryMessage" value={input.message} onChange={({ value }) => update("message", value)} placeholder="Worum geht es?" resize="auto" inputAttributes={inputA11y("message", errors)} />
+              <FieldError id="message-error" error={errors.message} />
+            </FormControl>
+            <label>
+              <Text variant="body-2" weight="medium">Enthält Gesundheitsdaten?</Text>
+              <select className="nativeSelect" value={input.containsHealthData ? "ja" : "nein"} onChange={(event) => update("containsHealthData", event.target.value === "ja")}>
+                <option value="nein">nein / allgemeine Anfrage</option>
+                <option value="ja">ja, bitte geschützt prüfen</option>
+              </select>
+            </label>
+          </div>
+        </FormStep>
+        <Button color="primary" onClick={submit} disabled={!validation.valid}>
+          <ButtonText icon={Mail}>Anfrage senden</ButtonText>
+        </Button>
+        {createdId && <RequestReceipt id={createdId} />}
+      </View>
+    </div>
+  );
+}

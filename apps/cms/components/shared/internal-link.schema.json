@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_shared_internal_links",
+  "info": {
+    "displayName": "Internal Link",
+    "description": "Interne, sprechende Zielroute fuer SEO- und Inhaltsmodule"
+  },
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "route": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "purpose": {
+      "type": "enumeration",
+      "required": true,
+      "default": "context",
+      "enum": [
+        "primary-navigation",
+        "context",
+        "conversion",
+        "legal",
+        "portal-help"
+      ]
+    }
+  }
+}

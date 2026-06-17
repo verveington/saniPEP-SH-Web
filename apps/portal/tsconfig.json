@@ -1,0 +1,10 @@
+{
+  "extends": "../frontend/tsconfig.json",
+  "include": [
+    "src",
+    "../shared/design/**/*.ts",
+    "../shared/security/accessControl.ts",
+    "../frontend/src/vite-env.d.ts",
+    "../frontend/src/lib/**/*.ts"
+  ]
+}

@@ -9,3 +9,5 @@ build/
 .DS_Store
 .tmp/
 uploads/
+.strapi/
+.strapi-updater.json

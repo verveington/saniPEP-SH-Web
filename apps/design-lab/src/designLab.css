@@ -1,0 +1,1221 @@
+.designLabApp {
+  --lab-bg: var(--sani-page);
+  --lab-primary: var(--sani-brand);
+  --lab-action: var(--sani-coral);
+  --lab-surface: var(--sani-white);
+  --lab-text: var(--sani-graphite);
+  --lab-muted: var(--sani-muted);
+  --lab-line: var(--sani-line);
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 250, 248, 0.96) 380px),
+    var(--lab-bg);
+  color: var(--lab-text);
+}
+
+.labHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid rgba(24, 35, 47, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.labHeaderInner {
+  width: min(1440px, calc(100% - 40px));
+  min-height: 82px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.labBrand {
+  display: grid;
+  gap: 3px;
+}
+
+.labBrand strong {
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.labBrand span {
+  color: var(--lab-primary);
+}
+
+.labToolbar,
+.labSegmented,
+.labVariantTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.labToolbar {
+  justify-content: flex-end;
+}
+
+.labControl {
+  display: grid;
+  gap: 5px;
+  min-width: 176px;
+}
+
+.labControl label,
+.labControlLabel {
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.labSelect {
+  min-height: 44px;
+  border: 1px solid var(--lab-line);
+  border-radius: 8px;
+  background: var(--lab-surface);
+  color: var(--lab-text);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.labIconButton,
+.labTab,
+.labVariantButton,
+.labPillButton {
+  border: 1px solid var(--lab-line);
+  border-radius: 8px;
+  background: var(--lab-surface);
+  color: var(--lab-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.labIconButton {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+}
+
+.labIconButton svg,
+.labTab svg {
+  width: 18px;
+  height: 18px;
+}
+
+.labIconButton[aria-pressed="true"],
+.labTab[aria-current="true"],
+.labVariantButton[aria-pressed="true"],
+.labPillButton[aria-pressed="true"] {
+  border-color: var(--lab-primary);
+  background: color-mix(in srgb, var(--lab-primary) 11%, white);
+  color: var(--lab-primary);
+}
+
+.labMain {
+  width: min(1440px, calc(100% - 40px));
+  margin-inline: auto;
+  padding: 28px 0 56px;
+}
+
+.labIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+
+.labHero,
+.labPanel,
+.labPreview,
+.labSummaryCard,
+.labAccessDenied {
+  border: 1px solid var(--lab-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 22px rgba(24, 35, 47, 0.06);
+}
+
+.labHero {
+  padding: 22px;
+}
+
+.labHeroTitle {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.labHeroIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--lab-primary) 12%, white);
+  color: var(--lab-primary);
+}
+
+.labHeroIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.labFacts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.labFact {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid rgba(24, 35, 47, 0.1);
+  border-radius: 8px;
+  background: var(--lab-surface);
+}
+
+.labFact strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.labGuard {
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.labGuardRow {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.labGuardIcon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--sani-brand-soft);
+  color: var(--sani-brand-strong);
+}
+
+.labWorkspace {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.labNav,
+.labEvaluation {
+  position: sticky;
+  top: 104px;
+  display: grid;
+  gap: 10px;
+}
+
+.labTab {
+  width: 100%;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.labTab span {
+  overflow-wrap: anywhere;
+}
+
+.labCenter {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.labPanel {
+  padding: 18px;
+  min-width: 0;
+}
+
+.labPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.labVariantTabs {
+  justify-content: flex-start;
+}
+
+.labVariantButton {
+  min-width: 92px;
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
+.labPreview {
+  padding: 16px;
+  background:
+    linear-gradient(135deg, rgba(24, 35, 47, 0.04), color-mix(in srgb, var(--lab-primary) 7%, transparent)),
+    rgba(255, 255, 255, 0.72);
+}
+
+.labDeviceFrame {
+  width: 100%;
+  margin-inline: auto;
+  border: 1px solid rgba(24, 35, 47, 0.14);
+  border-radius: 8px;
+  background: var(--sani-brand-soft);
+  padding: 12px;
+  transition: max-width 160ms ease;
+}
+
+.labDeviceFrame[data-device="mobile"] {
+  max-width: 430px;
+}
+
+.labDeviceFrame[data-device="tablet"] {
+  max-width: 820px;
+}
+
+.labDeviceFrame[data-device="desktop"] {
+  max-width: 100%;
+}
+
+.labDeviceTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.labDeviceDots {
+  display: flex;
+  gap: 5px;
+}
+
+.labDeviceDots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(24, 35, 47, 0.28);
+}
+
+.labCanvas {
+  min-height: 520px;
+  border: 1px solid rgba(24, 35, 47, 0.1);
+  border-radius: 8px;
+  background: var(--lab-surface);
+  padding: 18px;
+  overflow: hidden;
+}
+
+.labDeviceFrame[data-device="mobile"] .labCanvas {
+  padding: 14px;
+}
+
+.labCanvasHeader,
+.labRowSplit,
+.labPreviewGrid,
+.labStatusHeader,
+.labTimelineItem,
+.labScoreTop,
+.labSummaryHeader,
+.labTableRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.labCanvasHeader {
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--lab-line);
+  margin-bottom: 16px;
+}
+
+.labPreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.labPreviewGrid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.labDeviceFrame[data-device="mobile"] .labPreviewGrid,
+.labDeviceFrame[data-device="mobile"] .labPreviewGrid.two,
+.labDeviceFrame[data-device="tablet"] .labPreviewGrid {
+  grid-template-columns: 1fr;
+}
+
+.labMiniPanel,
+.labListItem,
+.labStep,
+.labStatusCard,
+.labTokenRow,
+.labTimelineItem,
+.labDropZone,
+.labTable {
+  border: 1px solid rgba(24, 35, 47, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  min-width: 0;
+}
+
+.labMiniPanel,
+.labStatusCard,
+.labDropZone,
+.labTable {
+  padding: 14px;
+}
+
+.labList {
+  display: grid;
+  gap: 10px;
+}
+
+.labListItem {
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.labStepList {
+  display: grid;
+  gap: 10px;
+}
+
+.labStep {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+}
+
+.labStepNumber {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lab-primary) 12%, white);
+  color: var(--lab-primary);
+  font-weight: 800;
+}
+
+.labPrimaryAction,
+.labSecondaryAction {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.labPrimaryAction {
+  border: 1px solid var(--lab-action);
+  background: var(--lab-action);
+  color: white;
+}
+
+.labSecondaryAction {
+  border: 1px solid var(--lab-line);
+  background: white;
+  color: var(--lab-text);
+}
+
+.labActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.labDeviceFrame[data-device="mobile"] .labActionRow {
+  display: grid;
+}
+
+.labTokenTable {
+  display: grid;
+  gap: 8px;
+}
+
+.labTokenRow {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.85fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+.labSwatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.labSwatch {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(24, 35, 47, 0.16);
+  border-radius: 8px;
+}
+
+.labLargeText {
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.labCompactText {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.labStatusHeader {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.labStatusDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--lab-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lab-primary) 12%, white);
+  flex: 0 0 auto;
+}
+
+.labProgress {
+  display: grid;
+  gap: 8px;
+}
+
+.labProgressTrack {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--sani-brand-soft);
+  overflow: hidden;
+}
+
+.labProgressTrack span {
+  display: block;
+  height: 100%;
+  width: var(--progress, 50%);
+  border-radius: inherit;
+  background: var(--lab-primary);
+}
+
+.labTimeline {
+  display: grid;
+  gap: 10px;
+}
+
+.labTimelineItem {
+  padding: 12px;
+}
+
+.labTimelineDate {
+  flex: 0 0 auto;
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.labTable {
+  display: grid;
+  gap: 0;
+  overflow-x: auto;
+}
+
+.labTableRow {
+  min-width: 620px;
+  display: grid;
+  grid-template-columns: 110px 1.2fr 130px 120px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(24, 35, 47, 0.1);
+}
+
+.labTableRow:last-child {
+  border-bottom: 0;
+}
+
+.labTableHead {
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.labDropZone {
+  min-height: 148px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-style: dashed;
+  background: color-mix(in srgb, var(--lab-primary) 7%, white);
+}
+
+.labChecklist {
+  display: grid;
+  gap: 10px;
+}
+
+.labCheck {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.labCheck svg {
+  width: 20px;
+  height: 20px;
+  color: var(--lab-primary);
+}
+
+.labScoreCard {
+  padding: 16px;
+  border: 1px solid var(--lab-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.labScoreTop {
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.labAverage {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--lab-primary);
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.labMetric {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.labMetricLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--lab-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.labMetricBar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sani-brand-soft);
+  overflow: hidden;
+}
+
+.labMetricBar span {
+  display: block;
+  height: 100%;
+  width: var(--score, 50%);
+  border-radius: inherit;
+  background: var(--lab-primary);
+}
+
+.labRecommendation {
+  border: 1px solid color-mix(in srgb, var(--lab-primary) 24%, white);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--lab-primary) 8%, white);
+  padding: 14px;
+}
+
+.labBullets {
+  display: grid;
+  gap: 8px;
+  padding-left: 18px;
+  margin: 10px 0 0;
+}
+
+.labMatrix {
+  display: grid;
+  gap: 10px;
+}
+
+.labMatrixRow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 64px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid rgba(24, 35, 47, 0.1);
+  border-radius: 8px;
+  background: white;
+}
+
+.labMatrixRow[data-recommended="true"] {
+  border-color: var(--lab-primary);
+  background: color-mix(in srgb, var(--lab-primary) 7%, white);
+}
+
+.labVariantId {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--lab-text);
+  color: white;
+  font-weight: 900;
+}
+
+.labSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.labSummaryCard {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.labSummaryHeader {
+  align-items: center;
+}
+
+.labSummaryVariants {
+  display: grid;
+  gap: 8px;
+}
+
+.labSummaryVariant {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.labSummaryVariant strong {
+  color: var(--lab-primary);
+}
+
+.labBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--lab-primary) 10%, white);
+  color: var(--lab-primary);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.labAccessDenied {
+  width: min(760px, calc(100% - 32px));
+  margin: 72px auto;
+  padding: 24px;
+}
+
+.labAccessDeniedIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--sani-coral-soft);
+  color: var(--sani-critical);
+  margin-bottom: 16px;
+}
+
+.brandWorkshop {
+  --brand-primary: var(--sani-brand);
+  --brand-secondary: var(--sani-secondary);
+  --brand-accent: var(--sani-accent);
+  --brand-bg: var(--sani-page);
+  --brand-surface: var(--sani-white);
+  --brand-border: var(--sani-line);
+  --brand-text: var(--sani-graphite);
+  --brand-muted: var(--sani-muted);
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--brand-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 7%, white), rgba(255, 255, 255, 0.88)),
+    var(--brand-bg);
+  padding: 18px;
+}
+
+.brandWorkshopHeader,
+.brandWorkshopGrid,
+.brandSimulationGrid,
+.brandPreviewBody,
+.brandPreviewHeader,
+.brandPreviewFooter,
+.brandPreviewActions {
+  display: grid;
+  gap: 16px;
+}
+
+.brandWorkshopHeader {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.brandWorkshopGrid,
+.brandSimulationGrid {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+}
+
+.brandPanel {
+  min-width: 0;
+  border: 1px solid var(--brand-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(54, 69, 147, 0.08);
+  padding: 18px;
+}
+
+.brandLogoStage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 172px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.brandLogoCard,
+.brandClaimCard {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  border: 1px solid var(--brand-border);
+  border-radius: 8px;
+  background: white;
+  padding: 18px;
+}
+
+.brandLogoCard img {
+  width: min(100%, 420px);
+  height: auto;
+}
+
+.brandClaimCard {
+  background: color-mix(in srgb, var(--brand-primary) 18%, white);
+}
+
+.brandClaimCard img {
+  width: min(100%, 132px);
+  height: auto;
+}
+
+.brandColorStrip,
+.brandTokenGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.brandColorChip {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid rgba(31, 36, 51, 0.1);
+  border-radius: 8px;
+  background: white;
+  padding: 10px;
+}
+
+.brandColorChip > span {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(31, 36, 51, 0.14);
+  border-radius: 8px;
+}
+
+.brandAnalysisList,
+.brandScoreGrid,
+.brandSystemSpecs,
+.brandSurfaceTabs {
+  display: grid;
+  gap: 10px;
+}
+
+.brandAnalysisItem,
+.brandSpecCard,
+.brandScore,
+.brandRecommendation,
+.brandTokenMeta {
+  min-width: 0;
+  border: 1px solid rgba(31, 36, 51, 0.1);
+  border-radius: 8px;
+  background: white;
+  padding: 12px;
+}
+
+.brandVariantTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.brandVariantTab,
+.brandSurfaceTab {
+  border: 1px solid var(--brand-border);
+  border-radius: 8px;
+  background: white;
+  color: var(--brand-text);
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.brandVariantTab {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  text-align: left;
+  padding: 10px;
+}
+
+.brandVariantTab strong {
+  color: var(--brand-primary);
+  font-size: 18px;
+}
+
+.brandVariantTab span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.brandVariantTab[aria-pressed="true"],
+.brandSurfaceTab[aria-pressed="true"] {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 10%, white);
+}
+
+.brandVariantHero {
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 13%, white), color-mix(in srgb, var(--brand-accent) 8%, white)),
+    white;
+  padding: 18px;
+}
+
+.brandScore div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--brand-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.brandSystemSpecs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.brandSpecCard dl {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.brandSpecCard div {
+  display: grid;
+  gap: 3px;
+}
+
+.brandSpecCard dt {
+  color: var(--brand-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.brandSpecCard dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.brandSurfaceTabs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.brandSurfaceTab {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.brandSurfaceTab svg {
+  width: 18px;
+  height: 18px;
+  color: var(--brand-primary);
+}
+
+.brandSurfacePreview {
+  overflow: hidden;
+  border: 1px solid var(--brand-border);
+  border-radius: 8px;
+  background: var(--brand-bg);
+}
+
+.brandPreviewHeader {
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  align-items: center;
+  border-bottom: 1px solid var(--brand-border);
+  background: white;
+  padding: 14px;
+}
+
+.brandPreviewHeader img {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+}
+
+.brandPreviewHeader nav,
+.brandPreviewFooter {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--brand-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.brandPreviewBody {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.42fr);
+  padding: 18px;
+}
+
+.brandPreviewHero,
+.brandPreviewStatus {
+  border: 1px solid rgba(31, 36, 51, 0.1);
+  border-radius: 8px;
+  background: white;
+  padding: 18px;
+}
+
+.brandPreviewHero {
+  display: grid;
+  gap: 14px;
+}
+
+.brandPreviewActions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.brandPrimaryButton,
+.brandSecondaryButton {
+  min-height: 48px;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.brandPrimaryButton {
+  border: 1px solid var(--brand-primary);
+  background: var(--brand-primary);
+  color: white;
+}
+
+.brandSecondaryButton {
+  border: 1px solid var(--brand-border);
+  background: white;
+  color: var(--brand-secondary);
+}
+
+.brandStatusRow {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.brandStatusRow span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.brandPreviewFooter {
+  justify-content: flex-start;
+  border-top: 1px solid var(--brand-border);
+  padding: 12px 14px;
+}
+
+.brandCodeBlock {
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid rgba(31, 36, 51, 0.12);
+  border-radius: 8px;
+  background: var(--sani-graphite);
+  color: var(--sani-white);
+  padding: 14px;
+  font-family: "Geist Mono", SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1180px) {
+  .labWorkspace {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .labEvaluation {
+    position: static;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brandWorkshopGrid,
+  .brandSimulationGrid,
+  .brandPreviewBody {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .labHeaderInner,
+  .labIntro,
+  .labWorkspace,
+  .labEvaluation,
+  .labSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .labToolbar {
+    justify-content: flex-start;
+  }
+
+  .labNav {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .labTab {
+    min-width: 220px;
+  }
+
+  .brandWorkshopHeader,
+  .brandLogoStage,
+  .brandPreviewHeader,
+  .brandSystemSpecs {
+    grid-template-columns: 1fr;
+  }
+
+  .brandPreviewHeader nav {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .labHeaderInner,
+  .labMain {
+    width: min(100% - 24px, 1440px);
+  }
+
+  .labHeaderInner {
+    min-height: 0;
+    padding: 14px 0;
+  }
+
+  .labFacts,
+  .labPreviewGrid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .labPanelHeader,
+  .labCanvasHeader,
+  .labRowSplit,
+  .labStatusHeader {
+    display: grid;
+  }
+
+  .labControl,
+  .labSelect,
+  .labVariantButton,
+  .labPrimaryAction,
+  .labSecondaryAction {
+    width: 100%;
+  }
+
+  .labSegmented {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+  }
+
+  .labTokenRow {
+    grid-template-columns: 1fr;
+  }
+
+  .brandWorkshop {
+    padding: 12px;
+  }
+
+  .brandVariantTabs,
+  .brandColorStrip,
+  .brandTokenGrid,
+  .brandSurfaceTabs,
+  .brandPreviewActions {
+    grid-template-columns: 1fr;
+  }
+
+  .brandPanel,
+  .brandPreviewHero,
+  .brandPreviewStatus {
+    padding: 14px;
+  }
+}

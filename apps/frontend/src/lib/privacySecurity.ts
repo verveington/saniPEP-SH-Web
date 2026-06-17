@@ -74,6 +74,32 @@ export const prescriptionUploadPolicy: UploadPolicy = {
     "Der Browser speichert keine Gesundheitsdaten dauerhaft. Der Upload wird verschlüsselt übertragen und durch Mitarbeiter geprüft.",
 };
 
+const acceptedUploadMimeTypes = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/heic",
+  "image/heif",
+]);
+
+const acceptedUploadExtensions = new Set(["pdf", "jpg", "jpeg", "png", "heic", "heif"]);
+
+export const uploadAcceptAttribute = [
+  ".pdf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".heic",
+  ".heif",
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/heic",
+  "image/heif",
+].join(",");
+
+export const maxUploadFileSizeBytes = prescriptionUploadPolicy.maxFileSizeMb * 1024 * 1024;
+
 export const consentCopy: Record<ConsentScope, string> = {
   "contact-processing": "saniPEP darf meine Kontaktdaten zur Bearbeitung meiner Anfrage verwenden.",
   "health-data-processing": "saniPEP darf übermittelte Gesundheitsdaten zur Versorgungsvorbereitung verarbeiten.",
@@ -83,7 +109,7 @@ export const consentCopy: Record<ConsentScope, string> = {
 };
 
 export const createUploadEnvelope = (input: UploadInput): UploadEnvelope => ({
-  uploadId: `UP-${Math.floor(Math.random() * 90000) + 10000}`,
+  uploadId: createSecureUploadId(),
   fileName: input.fileName,
   context: input.context,
   sensitivity: "health",
@@ -93,6 +119,32 @@ export const createUploadEnvelope = (input: UploadInput): UploadEnvelope => ({
   createdAt: new Date().toISOString(),
 });
 
+export const createSecureUploadId = () => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `UP-${crypto.randomUUID()}`;
+  }
+
+  return `UP-${Math.floor(Math.random() * 90000) + 10000}`;
+};
+
+export const getUploadFileSecurityError = (file: Pick<File, "name" | "size" | "type"> | null | undefined) => {
+  if (!file) return "Bitte eine Rezeptdatei auswählen.";
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const mimeTypeAllowed = file.type ? acceptedUploadMimeTypes.has(file.type) : false;
+  const extensionAllowed = acceptedUploadExtensions.has(extension);
+
+  if (!mimeTypeAllowed && !extensionAllowed) {
+    return "Bitte PDF, JPG, PNG oder HEIC hochladen.";
+  }
+
+  if (file.size > maxUploadFileSizeBytes) {
+    return `Die Datei darf maximal ${prescriptionUploadPolicy.maxFileSizeMb} MB groß sein.`;
+  }
+
+  return "";
+};
+
 export const getMissingConsentScopes = (
   provided: ConsentScope[] | undefined,
   required: ConsentScope[] = prescriptionUploadPolicy.consentScopes,
@@ -100,3 +152,19 @@ export const getMissingConsentScopes = (
   const providedSet = new Set(provided ?? []);
   return required.filter((scope) => !providedSet.has(scope));
 };
+
+export const uploadServerSecurityBoundary = {
+  target: "secure-upload-api",
+  requiredServerChecks: [
+    "authenticate-or-issue-public-upload-session",
+    "validate-consent-version-and-scope",
+    "verify-size-before-streaming",
+    "mime-sniff-file-signature",
+    "store-in-quarantine-bucket",
+    "assign-unguessable-upload-id",
+    "run-antivirus-scan-before-staff-review",
+    "write-retention-and-audit-metadata",
+  ],
+  productionInvariant:
+    "Client checks are only UX. Production uploads must be rejected server-side until MIME sniffing, quarantine storage and AV scan succeed.",
+} as const;

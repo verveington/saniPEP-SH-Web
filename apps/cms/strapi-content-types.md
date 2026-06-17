@@ -1,25 +1,56 @@
-# Strapi Content-Type Plan
+# Strapi Content-Type Struktur
 
 Strapi ist fuer redaktionelle Inhalte vorgesehen, nicht als fuehrendes System fuer Portal- oder Rezeptdaten.
 Omnia bleibt fuehrend fuer Stammdaten, Dauerrezepte, Dauerversorgungen und finale Bestellungen.
+Die JSON-Schemas in `apps/cms/content-types` und `apps/cms/components` sind die redaktionelle Quellstruktur.
+Die laufende Strapi-App nutzt die kopierte Runtime-Struktur unter `apps/cms/src/api` und `apps/cms/src/components`.
 
 ## Public Website
 
-- `landing-page-section`: Homepage-Abschnitte, Reihenfolge, CTA, Bildreferenzen.
-- `service-page`: Leistungsseiten fuer Lymphoedem, Lipoedem, Narbenkompression, Brustprothetik und weitere Bereiche.
-- `faq`: redaktionelle Fragen je Leistungsbereich und Portalprozess.
-- `symptom`: Suchbegriffe, Synonyme, Priorisierung nach Symptomen, Produkten und Situationen.
-- `product-group`: Produktgruppen ohne klassische Katalogdominanz.
-- `contact-setting`: Standort, Parteiverkehr, Erreichbarkeit, Telefon, Fax, E-Mail, WhatsApp.
-- `opening-hour`: strukturierte Oeffnungszeiten fuer Standortmodule.
-- `hero-content`: Hero-Copy, Media, CTA und Zielroute.
-- `seo-metadata`: Title, Description, Canonical, OpenGraph.
-- `legal-page`: Datenschutz, Impressum und versionierte Rechtstexte.
+- `landing-page-section`: Homepage-Abschnitte, H1/H2-Level, Reihenfolge, CTA, interne Links und Bildreferenzen.
+- `service-page`: Leistungsseiten fuer Lymphoedem, Lipoedem, Narbenkompression, Brustprothetik, Bandagen, Orthesen, Reha, Stoma und weitere Bereiche.
+- `symptom`: Patientensprache, Synonyme, Priorisierung nach Symptomen, Produkten und Situationen. Analytics bleibt auf grobe Ziele beschraenkt.
+- `product-group`: Produktgruppen als Orientierung, ohne klassischen Katalogfokus und ohne Heilversprechen.
+- `faq`: redaktionelle Fragen je Leistungsbereich, Portalprozess und Kontaktweg.
+- `legal-page`: Datenschutz, Impressum und Einwilligung mit `reviewStatus`. Platzhalter muessen sichtbar als Platzhalter markiert bleiben.
+- `contact-setting`: Standort, Erreichbarkeit, Telefon, Fax, E-Mail, WhatsApp, Locality und Service Area.
+- `opening-hour`: strukturierte Oeffnungszeiten fuer lokale SEO und Kontaktmodule.
+- `seo-metadata`: Meta Title, Description, Canonical, Robots, H1/H2-Struktur, lokale SEO und interne Links je Route.
+- `portal-help-content`: sichere Hilfetexte ohne sensible Listendaten.
 
 ## Portal-Hilfe und Formulare
 
-- `portal-help-content`: sichere Hilfetexte ohne sensible Listendaten.
 - `form-configuration`: Schritte, Felder, Validierung, Consent-Copy und Request-Ziel.
+
+## Medienbibliothek
+
+Das Seed-Skript legt Ordner fuer Logo, Teamfotos, Standortbilder, Leistungsseitenbilder, Produktgruppenbilder und Downloads an.
+Diese Medien sind redaktionelle Assets. Rezeptdateien, Patientendokumente und Formularuploads duerfen nicht in Strapi gespeichert werden.
+
+## Public API
+
+Die Users-&-Permissions-Rolle `Public` wird durch `npm run cms:seed` nur fuer `find` und `findOne` auf oeffentlichen Content-Types freigegeben.
+`form-configuration` bleibt oeffentlich gesperrt.
+Routenfelder sind in Strapi als Strings modelliert, weil Strapi-v5-Enumerations keine URL-Pfade mit `/` als Werte akzeptieren.
+
+## Pflichtseiten
+
+- `/lymphoedem-lipoedem-narbenkompression`
+- `/brustprothetik`
+- `/bandagen-orthesen-reha-stoma`
+- `/inkontinenz-pflegehilfsmittel`
+- `/rezept-upload`
+- `/termin-anfragen`
+- `/kontakt`
+- `/impressum`
+- `/datenschutz`
+- `/einwilligung`
+
+## Mock-Content
+
+Der Seed unter `apps/cms/mock-content/public-content.seed.json` ist realistisch, aber synthetisch.
+Er enthaelt keine echten Patientendaten, keine finalen Rechtstexte und keine Heilversprechen.
+Such- und Symptomtexte duerfen nicht in Analytics-Events uebernommen werden.
 
 ## Datenschutzgrenze
 

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "target": "ES2021",
+    "checkJs": false
+  },
+  "exclude": ["node_modules", "build", "dist", ".cache", ".tmp"]
+}

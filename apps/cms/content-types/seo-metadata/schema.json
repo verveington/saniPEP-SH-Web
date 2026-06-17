@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "seo_metadata",
+  "info": {
+    "singularName": "seo-metadata",
+    "pluralName": "seo-metadata-entries",
+    "displayName": "SEO Metadata",
+    "description": "Meta Titles, Descriptions, Canonicals, H1/H2-Struktur und interne Verlinkung je Route"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "route": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo",
+      "required": true
+    },
+    "h1": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "h2Structure": {
+      "type": "json",
+      "required": true
+    },
+    "internalLinks": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.internal-link"
+    },
+    "localSeoFocus": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "claimReviewStatus": {
+      "type": "enumeration",
+      "required": true,
+      "default": "reviewed-no-healing-promise",
+      "enum": [
+        "draft",
+        "reviewed-no-healing-promise"
+      ]
+    }
+  }
+}

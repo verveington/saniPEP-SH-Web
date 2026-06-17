@@ -1,0 +1,61 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    ports:
+      - "4100:4100"
+    environment:
+      NODE_ENV: development
+      PORT: 4100
+      PORTAL_BACKEND_BASE_URL: http://localhost:4100
+      TRUSTED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174
+      PORTAL_DATABASE_URL: postgres://sanipep:sanipep-local@postgres:5432/sanipep_portal
+      PORTAL_DATABASE_SSL: "false"
+      POSTGRES_POOL_MAX: 10
+      REDIS_URL: redis://redis:6379
+      REDIS_TLS: "false"
+      REDIS_KEY_PREFIX: sanipep:portal:local
+      PORTAL_SESSION_COOKIE_NAME: sanipep_portal_session
+      PORTAL_SESSION_SECRET: development-only-change-in-secret-store
+      CSRF_SECRET: development-only-change-in-secret-store
+      PORTAL_OTP_HASH_SECRET: development-only-change-in-secret-store
+      PORTAL_PASSWORD_PEPPER: development-only-change-in-secret-store
+      AUDIT_LOG_HASH_SECRET: development-only-change-in-secret-store
+      AV_SCANNER_MODE: stub-disabled
+      OMNIA_WRITE_MODE: read_only
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sanipep
+      POSTGRES_PASSWORD: sanipep-local
+      POSTGRES_DB: sanipep_portal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sanipep -d sanipep_portal"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - backend_postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  backend_postgres_data:

@@ -1,0 +1,267 @@
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import path from "node:path";
+import type { AuditEvent } from "../audit/models.js";
+import type { Session } from "../auth/models.js";
+import type { PortalRequestKind, PortalRequestSensitivity, PortalRequestStatus } from "../portalRequests/models.js";
+import type { UserRole } from "../users/models.js";
+
+export type PortalSessionRecord = {
+  session: Session;
+  rawCsrfToken: string;
+};
+
+export type PortalUserRecord = {
+  userId: string;
+  email: string;
+  role: UserRole;
+  status: "active" | "disabled";
+  developmentPassword: string;
+  customerProfileId?: string;
+  staffUserId?: string;
+  safeDisplayName: string;
+};
+
+export type StoredUploadObject = {
+  id: string;
+  extension: string;
+  mimeType: string;
+  sizeBytes: number;
+  storageMode: "metadata-only-no-file-content";
+  productionUpload: false;
+};
+
+export type StoredAppointmentWish = {
+  preferredDay: string;
+  timeWindow: "vormittag" | "mittag" | "nachmittag";
+  concern: "kompression" | "rezept" | "versorgungskontrolle";
+};
+
+export type StoredReorderWish = {
+  supplyAlias: "kompressionsversorgung" | "inkontinenzmaterial" | "bandage";
+  cadence: "einmalig" | "regelmaessig-pruefen";
+};
+
+export type StoredSubscriptionWish = {
+  supplyAlias: "kompressionsversorgung" | "inkontinenzmaterial" | "bandage";
+  cadence: "monatlich" | "quartalsweise" | "halbjaehrlich";
+};
+
+export type StoredContactWish = {
+  topic: "rueckfrage" | "beratung" | "unterlagen";
+  preferredChannel: "telefon" | "email";
+};
+
+export type StoredPortalRequest = {
+  id: string;
+  customerProfileId: string;
+  createdByUserId: string;
+  kind: PortalRequestKind;
+  status: PortalRequestStatus;
+  sensitivity: PortalRequestSensitivity;
+  safeSummary: string;
+  staffReviewRequired: true;
+  omniaWriteAllowed: false;
+  employeeStatus: "queued" | "in_review" | "approved" | "rejected" | "completed";
+  employeeStatusLabel: string;
+  uploadObject?: StoredUploadObject;
+  appointmentWish?: StoredAppointmentWish;
+  reorderWish?: StoredReorderWish;
+  subscriptionWish?: StoredSubscriptionWish;
+  contactWish?: StoredContactWish;
+  auditIds: string[];
+  submittedAt?: string;
+  reviewedByStaffUserId?: string;
+  reviewedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PortalMvpStoreData = {
+  schemaVersion: 1;
+  users: PortalUserRecord[];
+  sessions: PortalSessionRecord[];
+  requests: StoredPortalRequest[];
+  auditEvents: AuditEvent[];
+};
+
+export type PortalMvpRepository = {
+  findUserByEmail(email: string): Promise<PortalUserRecord | null>;
+  findUserById(userId: string): Promise<PortalUserRecord | null>;
+  saveSession(record: PortalSessionRecord): Promise<void>;
+  findSessionByTokenHash(tokenHash: string): Promise<PortalSessionRecord | null>;
+  deleteSession(tokenHash: string): Promise<void>;
+  listRequestsForCustomer(customerProfileId: string): Promise<StoredPortalRequest[]>;
+  getRequestById(id: string): Promise<StoredPortalRequest | null>;
+  saveRequest(request: StoredPortalRequest): Promise<void>;
+  updateRequest(request: StoredPortalRequest): Promise<void>;
+  appendAudit(event: AuditEvent): Promise<AuditEvent>;
+  appendAuditMany(events: AuditEvent[]): Promise<AuditEvent[]>;
+  listAuditEventsFor(input: { actorUserId?: string; requestIds: string[]; limit: number }): Promise<AuditEvent[]>;
+};
+
+export function createFilePortalMvpRepository(filePath: string): PortalMvpRepository {
+  let writeQueue = Promise.resolve();
+
+  const withStore = async <T>(mutator: (data: PortalMvpStoreData) => T | Promise<T>) => {
+    const operation = writeQueue.then(async () => {
+      const data = await readStore(filePath);
+      const result = await mutator(data);
+      await writeStore(filePath, data);
+      return result;
+    });
+    writeQueue = operation.then(() => undefined, () => undefined);
+    return operation;
+  };
+
+  return {
+    async findUserByEmail(email) {
+      const data = await readStore(filePath);
+      return data.users.find((user) => user.email.toLowerCase() === email.toLowerCase()) ?? null;
+    },
+
+    async findUserById(userId) {
+      const data = await readStore(filePath);
+      return data.users.find((user) => user.userId === userId) ?? null;
+    },
+
+    async saveSession(record) {
+      await withStore((data) => {
+        data.sessions = [
+          ...data.sessions.filter((item) => item.session.tokenHash !== record.session.tokenHash),
+          record,
+        ];
+      });
+    },
+
+    async findSessionByTokenHash(tokenHash) {
+      const data = await readStore(filePath);
+      return data.sessions.find((record) => record.session.tokenHash === tokenHash) ?? null;
+    },
+
+    async deleteSession(tokenHash) {
+      await withStore((data) => {
+        data.sessions = data.sessions.filter((record) => record.session.tokenHash !== tokenHash);
+      });
+    },
+
+    async listRequestsForCustomer(customerProfileId) {
+      const data = await readStore(filePath);
+      return data.requests.filter((request) => request.customerProfileId === customerProfileId);
+    },
+
+    async getRequestById(id) {
+      const data = await readStore(filePath);
+      return data.requests.find((request) => request.id === id) ?? null;
+    },
+
+    async saveRequest(request) {
+      await withStore((data) => {
+        if (data.requests.some((item) => item.id === request.id)) {
+          throw new Error(`Portal request ${request.id} already exists.`);
+        }
+        data.requests.push(request);
+      });
+    },
+
+    async updateRequest(request) {
+      await withStore((data) => {
+        data.requests = data.requests.map((item) => (item.id === request.id ? request : item));
+      });
+    },
+
+    async appendAudit(event) {
+      await withStore((data) => {
+        data.auditEvents.push(event);
+      });
+      return event;
+    },
+
+    async appendAuditMany(events) {
+      await withStore((data) => {
+        data.auditEvents.push(...events);
+      });
+      return events;
+    },
+
+    async listAuditEventsFor(input) {
+      const data = await readStore(filePath);
+      const requestIds = new Set(input.requestIds);
+      return data.auditEvents
+        .filter((event) => event.actorUserId === input.actorUserId || (event.requestId && requestIds.has(event.requestId)))
+        .slice(-input.limit)
+        .reverse();
+    },
+  };
+}
+
+async function readStore(filePath: string): Promise<PortalMvpStoreData> {
+  try {
+    const raw = await readFile(filePath, "utf8");
+    const parsed = JSON.parse(raw) as Partial<PortalMvpStoreData>;
+    if (parsed.schemaVersion !== 1) return initialStore();
+    return {
+      schemaVersion: 1,
+      users: parsed.users ?? initialUsers(),
+      sessions: parsed.sessions ?? [],
+      requests: parsed.requests ?? [],
+      auditEvents: parsed.auditEvents ?? [],
+    };
+  } catch (error) {
+    if (isMissingFile(error)) return initialStore();
+    throw error;
+  }
+}
+
+async function writeStore(filePath: string, data: PortalMvpStoreData) {
+  await mkdir(path.dirname(filePath), { recursive: true });
+  const tempPath = `${filePath}.${process.pid}.tmp`;
+  await writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+  await rename(tempPath, filePath);
+}
+
+function initialStore(): PortalMvpStoreData {
+  return {
+    schemaVersion: 1,
+    users: initialUsers(),
+    sessions: [],
+    requests: [],
+    auditEvents: [],
+  };
+}
+
+function initialUsers(): PortalUserRecord[] {
+  return [
+    {
+      userId: "usr_demo_customer",
+      email: "demo@example.test",
+      role: "customer",
+      status: "active",
+      developmentPassword: "demo-passwort",
+      customerProfileId: "cst_demo_portal",
+      safeDisplayName: "Demo-Kundenkonto",
+    },
+    {
+      userId: "usr_demo_staff",
+      email: "staff@example.test",
+      role: "staff",
+      status: "active",
+      developmentPassword: "staff-passwort",
+      staffUserId: "staff_demo",
+      safeDisplayName: "Demo-Mitarbeiter",
+    },
+    {
+      userId: "usr_demo_admin",
+      email: "admin@example.test",
+      role: "admin",
+      status: "active",
+      developmentPassword: "admin-passwort",
+      staffUserId: "admin_demo",
+      safeDisplayName: "Demo-Admin",
+    },
+  ];
+}
+
+function isMissingFile(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+}

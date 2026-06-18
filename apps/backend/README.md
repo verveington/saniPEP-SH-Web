@@ -22,7 +22,17 @@ Implemented as buildable TypeScript scaffold:
 - upload MIME/size policy, quarantine/clean states, AV interface and object-storage interface
 - portal request creation and status transition rules
 - Omnia read-only/prepared-change boundary stub
-- minimal runtime health endpoints: `/healthz`, `/readyz`
+- runtime health endpoints: `/healthz`, `/readyz`
+- development Portal-MVP HTTP API for:
+  - `POST /api/auth/login`
+  - `GET /api/auth/session`
+  - `POST /api/auth/logout`
+  - `GET /api/portal/dashboard`
+  - `POST /api/portal/requests`
+  - `PATCH /api/staff/requests/:id/status`
+- file-backed development repository for sessions, portal requests and audit events
+- request storage for prescription-upload metadata, appointment wishes, reorder wishes,
+  subscription wishes and contact wishes
 
 Not implemented:
 
@@ -33,6 +43,7 @@ Not implemented:
 - no real AV scanner
 - no real Omnia integration
 - no patient data or prescription files
+- no persisted production upload files or upload file names
 - no final legal text
 
 ## Query layer decision
@@ -55,9 +66,12 @@ npm run build:backend
 npm run check:backend:runtime
 npm run start:backend
 npm run dev:backend:compose
+npm run demo:portal-mvp
 ```
 
-The runtime starts only health endpoints. It does not expose production auth or upload APIs yet.
+The runtime exposes a development-only Portal-MVP API. It is functional enough for end-to-end
+login, session, request and audit demos, and stores data through the repository layer in a local
+JSON file. It is not production auth or a production upload API.
 
 `npm run check:backend` runs both the shared backend contracts and this runtime backend typecheck.
 
@@ -96,6 +110,27 @@ curl http://localhost:4100/readyz
 ```
 
 `/readyz` remains `not_ready` while AV scanning is `stub-disabled`, even if PostgreSQL and Redis are configured.
+
+End-to-end MVP demo:
+
+```bash
+npm run start:backend
+npm run demo:portal-mvp
+```
+
+The demo logs in with the development seed user, creates one prescription-upload request, one
+appointment request, one reorder request, one subscription-change request and one contact request.
+It also logs in as staff, changes status to review/approved/completed and rejected, then checks
+that the dashboard stores the data, shows staff review state, creates audit events and keeps Omnia
+writes at `0`.
+
+Local development persistence:
+
+```bash
+PORTAL_DEV_STORE_PATH=/tmp/sanipep-portal-mvp-store.json npm run start:backend
+```
+
+The file repository is the local development alternative until PostgreSQL repositories are wired.
 
 Production secrets must come from a secret store or hosting environment. Do not commit `.env`, `.env.local` or production values.
 
@@ -152,6 +187,8 @@ CSRF and cookies:
 - Unsafe HTTP methods require a trusted `Origin`.
 - Authenticated endpoints can pass a session to `checkCsrf` to verify `x-csrf-token` against the stored CSRF hash.
 - Session cookies are serialized as `HttpOnly`, `SameSite=Lax` or `Strict`, `Path=/`, high priority and `Secure` in production or when using `__Host-`.
+- In development, the default cookie name intentionally avoids `__Host-` so local HTTP sessions
+  can be exercised in browser-based MVP tests.
 
 ## Security notes
 
@@ -159,7 +196,9 @@ CSRF and cookies:
 - Session and CSRF tokens are stored only as hashes in the model.
 - Redis session storage persists only hashed tokens and sanitized session metadata.
 - OTP codes are returned only for letter/handout delivery and stored only as HMAC hashes.
-- Upload file names are hashed before metadata storage.
+- Upload file names must never be stored in clear text. The current Portal-MVP API goes further
+  and does not accept upload file names at all; it stores only extension,
+  MIME type, byte size, safe context, request ID and audit IDs.
 - Audit metadata is sanitized and must not contain diagnoses, free text, file contents or patient data.
 - Staff/admin role checks must be enforced server-side before any real endpoint is added.
 - Account lockout is prepared through Redis counters but must be wired into concrete login/OTP handlers.
@@ -168,9 +207,11 @@ CSRF and cookies:
 ## Known risks before production
 
 - Database repositories and migrations are not wired to a migration runner yet.
-- Redis adapters are prepared, but not yet exercised by real login/session endpoints.
+- Redis adapters are prepared, but the Portal-MVP runtime uses the file-backed development repository
+  unless Redis-/PostgreSQL-backed stores are wired in a later sprint.
 - Global backend rate limiting is active in the minimal handler when Redis is configured; route-specific auth/upload limits still need endpoint integration.
-- CSRF origin checks are active for unsafe methods; token verification must be connected when authenticated endpoints are added.
+- CSRF origin checks are active for unsafe methods; authenticated request creation and status changes
+  verify the CSRF token returned by login/session.
 - The password hasher is dependency-free `scrypt`; Argon2id should be evaluated before production.
 - Redis-backed sessions, CSRF token storage and rate limits are still interfaces/stubs.
 - Upload streams are not persisted; object storage and AV scanner are stubs.

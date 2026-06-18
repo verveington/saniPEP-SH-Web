@@ -56,6 +56,7 @@ export type BackendEnv = {
   logLevel: "debug" | "info" | "warn" | "error";
   errorTrackingDsn?: string;
   otelExporterOtlpEndpoint?: string;
+  portalDevStorePath: string;
   developmentWarnings: string[];
 };
 
@@ -112,7 +113,7 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     errors.push("PORTAL_BACKEND_BASE_URL must use https:// in production.");
   }
 
-  const sessionCookieName = source.PORTAL_SESSION_COOKIE_NAME ?? "__Host-sanipep_portal_session";
+  const sessionCookieName = source.PORTAL_SESSION_COOKIE_NAME ?? (production ? "__Host-sanipep_portal_session" : "sanipep_portal_session");
   if (production && !sessionCookieName.startsWith("__Host-")) {
     errors.push("PORTAL_SESSION_COOKIE_NAME must use the __Host- prefix in production.");
   }
@@ -173,6 +174,7 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     logLevel: readEnum(source.LOG_LEVEL, "LOG_LEVEL", ["debug", "info", "warn", "error"] as const, "info"),
     errorTrackingDsn: source.ERROR_TRACKING_DSN || undefined,
     otelExporterOtlpEndpoint: source.OTEL_EXPORTER_OTLP_ENDPOINT || undefined,
+    portalDevStorePath: source.PORTAL_DEV_STORE_PATH ?? "/tmp/sanipep-portal-mvp-store.json",
     developmentWarnings,
   };
 

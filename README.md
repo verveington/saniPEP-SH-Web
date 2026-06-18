@@ -21,6 +21,9 @@ und getrennten Development-only Vite-Builds fuer Portal, Staff-Admin und Design-
 - Kalender: Terminanfragen erzeugen nur einen `hold-request`, der spaeter an Nextcloud oder Notion
   angebunden werden kann. Es gibt keine finale Kalenderbuchung ohne Mitarbeiterbestaetigung.
 - Strapi: vorbereitet fuer redaktionelle Inhalte, nicht fuer sensible Portal- oder Rezeptdaten.
+- Portal Backend: `apps/backend` stellt im Development-MVP Login, HTTP-only Session-Cookie,
+  CSRF-Token, Dashboard, Request-Speicherung und Audit Events bereit. Es bleibt ohne Omnia-Anbindung
+  und ohne Produktiv-Uploads.
 
 ## Installierte Pakete
 
@@ -72,6 +75,15 @@ apps/cms/
   components/shared/
   content-types/
 assets/mock-images/
+apps/backend/
+  src/
+    app.ts
+    auth/
+    portalRequests/
+    audit/
+    uploads/
+scripts/
+  demo-portal-mvp.mjs
 ```
 
 ## Routing
@@ -109,7 +121,9 @@ Getrennte Development-only Apps:
 - Inkontinenz-/Pflege-Konfigurator als automatisierter Anfragefluss statt finaler Bestellung.
 - Oeffentliche Website verlinkt nur den Kundenportal-Login. Portalstatus, Staff-Admin und Design-Lab
   sind nicht Teil des oeffentlichen Produktivbuilds.
-- Portal-Mock mit Einmalpasswort-/Passwort-Adapter liegt in `apps/portal` und ist nicht produktiv.
+- Portal-MVP in `apps/portal` spricht gegen `apps/backend`: Login, Sessionpruefung,
+  Rezeptupload-Anfrage, Terminwunsch, Bestellanfrage, Mitarbeiterstatus und Audit Events.
+  Uploads speichern nur Metadaten; es gibt keine echten Gesundheitsdaten und keine Produktiv-Uploads.
 - Development-only Staff-Admin und Design-Lab sind separate Builds mit Mock-Gate und klarer
   Nicht-Produktionskennzeichnung.
 
@@ -166,9 +180,14 @@ Rechtstexte bleiben ausdruecklich als Platzhalter markiert, bis sie juristisch f
 
 - Public Website und Portal sind logisch getrennt.
 - Uploads sind abstrahiert und erzeugen Requests.
+- Das Portal-MVP nutzt serverseitige Sessions mit HTTP-only Cookie; CSRF bleibt im Arbeitsspeicher
+  der Portal-App und wird nicht persistiert.
 - Keine sensiblen Gesundheitsdaten im LocalStorage; Uploads erzeugen einen sicheren Envelope
   mit Consent-Scopes, Scanpflicht und Mitarbeiterpruefung.
+- Rezeptupload im Portal-MVP speichert nur Kontext, Dateityp, Groesse, Request-ID und Audit Events,
+  keine Dateiinhalte und keine Dateinamen.
 - Mitarbeiterpruefung und Audit-Log sind modelliert.
+- Omnia-Schreibzugriffe bleiben im Portal-MVP bei `0`.
 - Blockierte Omnia-Direktaktionen sind als Policy-Matrix fuer getrennte interne Builds vorbereitet.
 - Listenansichten zeigen nur datensparsame Statusinformationen.
 - Sichere Fehler-/Hinweistexte vermeiden medizinische Details in generischen UIs.
@@ -189,11 +208,14 @@ Rechtstexte bleiben ausdruecklich als Platzhalter markiert, bis sie juristisch f
 npm run dev
 npm run dev:frontend:vite
 npm run dev:portal
+npm run start:backend
 npm run dev:admin
 npm run dev:design-lab
+npm run demo:portal-mvp
 npm run check:responsive
 npm run check:flows
 npm run build
+npm run build:backend
 npm run build:frontend:vite
 npm run build:portal:mock
 npm run build:admin:mock
@@ -202,7 +224,9 @@ npm run build:design-lab:mock
 
 ## Offene Risiken und naechste Schritte
 
-- Echte Authentifizierung, Rollenmodell und Upload-Speicher muessen backendseitig umgesetzt werden.
+- Das Portal-MVP nutzt Development-Seed-Credentials und eine lokale dateibasierte Repository-Persistenz;
+  echte PostgreSQL-/Redis-Anbindung, produktive Authentifizierung, Rollenverwaltung und Upload-Speicher
+  muessen fuer Produktion backendseitig angebunden werden.
 - Portal, Staff-Admin und Design-Lab sind nur mit serverseitiger Auth-/Role-Grenze produktionsreif.
 - Omnia-API-Vertrag, Mapping und Konfliktbehandlung muessen mit dem Fachsystem validiert werden.
 - Kalenderadapter fuer Nextcloud oder Notion muss nach realem Terminprozess spezifiziert werden.

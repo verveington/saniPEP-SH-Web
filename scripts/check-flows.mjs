@@ -30,14 +30,23 @@ const publicUiSource = [
   ...readSourceFiles("apps/frontend/src/components"),
   ...readSourceFiles("apps/frontend/src/pages"),
 ].join("\n");
+const portalUiSource = readSourceFiles("apps/portal/src").join("\n");
 const workflow = read("apps/frontend/src/lib/requestWorkflow.ts");
 const search = read("apps/frontend/src/lib/searchIndex.ts");
 const privacy = read("apps/frontend/src/lib/privacySecurity.ts");
 const auth = read("apps/frontend/src/lib/authAdapter.ts");
 const conversion = read("apps/frontend/src/lib/conversionFunnel.ts");
 const accessControl = read("apps/shared/security/accessControl.ts");
+const backendApp = read("apps/backend/src/app.ts");
+const portalRepository = read("apps/backend/src/repositories/portalMvpRepository.ts");
+const portalApi = read("apps/portal/src/api.ts");
+const portalMigration = read("apps/backend/migrations/0002_portal_mvp_request_details.sql");
+const portalDemo = read("scripts/demo-portal-mvp.mjs");
 const sourceBundle = [
   publicUiSource,
+  portalUiSource,
+  backendApp,
+  portalRepository,
   workflow,
   search,
   privacy,
@@ -140,7 +149,57 @@ assert(accessControl.includes("\"public\", \"customer\", \"staff\", \"admin\""),
 assert(accessControl.includes("serverAuthBoundary"), "Server-side auth boundary must be prepared");
 assert(accessControl.includes("Client gates are only development diagnostics"), "Mock gates must be marked non-production");
 
+assert(portalUiSource.includes("portalApi.login"), "Portal app must login against backend API");
+assert(portalUiSource.includes("credentials: \"include\""), "Portal API must use cookie credentials");
+assert(portalUiSource.includes("csrfToken"), "Portal API must keep CSRF token in memory");
+assert(portalUiSource.includes("Rezeptupload-Anfrage"), "Portal MVP must expose prescription-upload request creation");
+assert(portalUiSource.includes("Terminwunsch"), "Portal MVP must expose appointment request creation");
+assert(portalUiSource.includes("Bestellanfrage"), "Portal MVP must expose reorder request creation");
+assert(portalUiSource.includes("Abo-Wunsch"), "Portal MVP must expose subscription-change request creation");
+assert(portalUiSource.includes("Kontaktanfrage"), "Portal MVP must expose contact request creation");
+assert(portalUiSource.includes("Mitarbeiterstatus"), "Portal MVP must display staff review status");
+assert(portalUiSource.includes("Letzte Aktivitäten"), "Portal MVP must display latest activities");
+assert(portalUiSource.includes("Audit Events"), "Portal MVP must display audit events");
+assert(!portalUiSource.includes("authAdapter"), "Portal MVP must not use the frontend mock auth adapter");
+assert(!portalUiSource.includes("portalDashboard"), "Portal MVP must not render mock portalDashboard data");
+assert(!portalApi.includes("fileName"), "Portal API must not send upload file names to the backend");
+assert(!backendApp.includes("fileName"), "Backend must not accept or store upload file names");
+
+assert(backendApp.includes("\"/api/auth/login\""), "Backend must expose auth login endpoint");
+assert(backendApp.includes("\"/api/auth/session\""), "Backend must expose session endpoint");
+assert(backendApp.includes("\"/api/portal/dashboard\""), "Backend must expose portal dashboard endpoint");
+assert(backendApp.includes("\"/api/portal/requests\""), "Backend must expose portal request creation endpoint");
+assert(backendApp.includes("statusRoute") && backendApp.includes("PATCH"), "Backend must expose server-side staff status endpoint");
+assert(backendApp.includes("metadata-only-no-file-content"), "Backend upload MVP must store metadata only");
+assert(backendApp.includes("productionUpload: false"), "Backend must mark upload requests as non-production");
+assert(backendApp.includes("omniaWriteAllowed: false"), "Backend portal requests must block Omnia writes");
+assert(backendApp.includes("portal-request-created"), "Backend must audit created portal requests");
+assert(backendApp.includes("portal-request-submitted"), "Backend must audit submitted portal requests");
+assert(backendApp.includes("portal-request-changed"), "Backend must audit changed portal requests");
+assert(backendApp.includes("portal-request-approved"), "Backend must audit approved portal requests");
+assert(backendApp.includes("portal-request-rejected"), "Backend must audit rejected portal requests");
+assert(backendApp.includes("requireRole"), "Backend must enforce server-side role checks");
+assert(!backendApp.includes("OMNIA_API_BASE_URL"), "Portal MVP request path must not call Omnia");
+assert(!backendApp.includes("createPortalMvpState"), "Backend MVP must not use in-memory portal state");
+
+assert(portalRepository.includes("createFilePortalMvpRepository"), "Portal MVP must use repository-layer persistence");
+assert(portalRepository.includes("readFile") && portalRepository.includes("writeFile"), "Local development repository must persist data to disk");
+assert(portalRepository.includes("staff@example.test") && portalRepository.includes("admin@example.test"), "Repository seed must model staff and admin roles");
+assert(portalMigration.includes("portal_request_details"), "Portal MVP request detail migration is missing");
+assert(portalMigration.includes("safe-metadata-only"), "Portal MVP migration must constrain request details to safe metadata");
+
+assert(portalDemo.includes("/api/auth/login"), "Portal MVP demo must exercise backend login");
+assert(portalDemo.includes("prescription_upload"), "Portal MVP demo must create prescription upload request");
+assert(portalDemo.includes("appointment_request"), "Portal MVP demo must create appointment request");
+assert(portalDemo.includes("reorder_request"), "Portal MVP demo must create reorder request");
+assert(portalDemo.includes("subscription_change_request"), "Portal MVP demo must create subscription-change request");
+assert(portalDemo.includes("health_contact_request"), "Portal MVP demo must create contact request");
+assert(portalDemo.includes("staff@example.test"), "Portal MVP demo must exercise staff role status changes");
+assert(portalDemo.includes("portal-request-approved"), "Portal MVP demo must assert approved audit action");
+assert(portalDemo.includes("portal-request-rejected"), "Portal MVP demo must assert rejected audit action");
+assert(portalDemo.includes("omniaWrites === 0"), "Portal MVP demo must assert no Omnia writes");
+
 assert(!/\b(localStorage|sessionStorage|indexedDB)\b/.test(sourceBundle), "Sensitive MVP flows must not use browser persistence");
 
 console.log("Flow check passed");
-console.log("Public forms, upload security, auth boundary, coarse analytics and privacy boundaries checked");
+console.log("Public forms, portal MVP, upload security, auth boundary, coarse analytics and privacy boundaries checked");

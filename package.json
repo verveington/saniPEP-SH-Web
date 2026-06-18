@@ -23,6 +23,7 @@
     "check:flows": "node scripts/check-flows.mjs",
     "check:responsive": "node scripts/check-responsive.mjs",
     "cms:seed": "npm --prefix apps/cms run seed",
+    "demo:portal-mvp": "node scripts/demo-portal-mvp.mjs",
     "dev:backend:compose": "docker compose -f apps/backend/docker-compose.yml up --build",
     "preview": "next start apps/web",
     "start:backend": "node apps/backend/dist/main.js",

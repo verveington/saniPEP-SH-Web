@@ -1,6 +1,6 @@
 # Mobile-Checkliste
 
-Stand: 2026-06-16
+Stand: 2026-06-17
 
 ## Gepruefte Viewports
 
@@ -21,6 +21,8 @@ Stand: 2026-06-16
 - Terminanfrage bleibt als gegliedertes Formular mit Datum, Zeitfenster, Anliegen und Kontaktfeldern nutzbar.
 - Kernformulare nutzen mobile Step-Abschnitte: Bedarf, Upload/Consent, Terminfenster, Kontaktweg und Nachricht.
 - Portal-Dashboard nutzt mobile Tabs, KPI-Karten, Request-Karten, Dauerversorgungs-Karten und leere Zustände.
+- Portal-MVP nutzt mobile KPI-Karten, drei einspaltig fallende Request-Formulare, Mitarbeiterstatus-Karten
+  und Audit-Event-Karten ohne Tabellen.
 - Bestellverlauf/Request-Verlauf wird als Timeline oder Karten dargestellt, nicht als Mobile-Tabelle.
 - Sticky Sidebars werden unter 980px statisch, damit Header/Footer keinen Content ueberdecken.
 - Lade-, Fehler- und leere Zustände sind im Design-Lab als responsive Kartenmuster sichtbar.
@@ -31,11 +33,29 @@ Stand: 2026-06-16
 npm run check:responsive
 npm run check:flows
 npm run check:architecture
+npm run build:backend
+npm run build:portal:mock
+npm run demo:portal-mvp
 npm run build
 ```
+
+## Letzte groessere UI-Aenderung: Portal-MVP
+
+- 360px: Portal-Login, Rezeptupload-Anfrage, Terminwunsch, Bestellanfrage, Mitarbeiterstatus und Audit
+  sind als einspaltige Karten/Formularbereiche angelegt; statisch ueber `check:responsive` abgesichert.
+- 390px: Request-Formulare nutzen native 44px+ Controls und volle Breite.
+- 430px: Datei-Auswahl, Consent-Checkbox und CTA bleiben im Formularfluss; kein Sticky CTA verdeckt Inhalte.
+- 768px: Grid-Layouts bleiben flexibel und fallen bei Bedarf auf Karten untereinander.
+- 1024px: Zwei-Spaltenbereiche fuer Session/Sicherheitsgrenzen und Status/Audit greifen ohne Tabellen.
+- 1280px+: Standard-Container bleibt auf 1180px begrenzt.
+- Bekannte Probleme: keine visuelle Screenshot-Verifikation, weil Playwright Chromium wegen fehlender
+  Systembibliothek `libatk-1.0.so.0` nicht startet.
 
 ## Bekannte Probleme
 
 - Echte visuelle Browser-QA je Viewport ist in dieser Umgebung weiterhin nicht vollstaendig moeglich, weil Chromium wegen fehlender Linux-Systembibliothek `libatk-1.0.so.0` nicht startet.
-- In der aktuellen eingeschraenkten Sandbox kann Vite ausserdem keinen lokalen Port oeffnen (`listen EPERM` auf `127.0.0.1:5175`), daher war nach dieser UI-Aenderung kein neuer HTTP-Routencheck moeglich.
-- Der aktuelle Mobile-Nachweis ist deshalb statisch plus erfolgreicher Produktionsbuild. Vor Produktionsfreigabe muessen Screenshots/Klicktests fuer 360, 390, 430, 768, 1024 und 1280px in einer Browser-Umgebung mit installierten Chromium-Abhaengigkeiten und erlaubtem lokalen Port nachgezogen werden.
+- Lokale Serverports sind verfuegbar; der Portal-MVP wurde per HTTP-End-to-End-Demo geprueft.
+- Der aktuelle Mobile-Nachweis ist deshalb statisch plus erfolgreicher Portal-/Backend-Build und
+  funktionalem E2E-Demo-Flow. Vor Produktionsfreigabe muessen Screenshots/Klicktests fuer 360, 390,
+  430, 768, 1024 und 1280px in einer Browser-Umgebung mit installierten Chromium-Abhaengigkeiten
+  nachgezogen werden.

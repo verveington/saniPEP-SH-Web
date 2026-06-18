@@ -1,11 +1,12 @@
-import { Calendar, FileText, MessageCircle, Upload, User } from "lucide-react";
+import { Calendar, Upload, User } from "lucide-react";
 import { Text, View } from "reshaped";
 import { serviceAreas } from "../app/publicContent";
 import type { Navigate } from "../app/routes";
-import { ButtonText, IconBox } from "../components/common";
+import { ButtonText } from "../components/common";
 import { LocationContact } from "../components/LocationContact";
 import { RouteLink } from "../components/RouteLink";
 import { ServiceCard } from "../components/ServiceCard";
+import { SharedIconBox } from "../../../shared/icons/SharedIcon";
 
 const heroAvifSrcSet = [
   "/images/sanipep-consultation-hero-960.avif 960w",
@@ -82,12 +83,12 @@ export default function LandingPage({ navigate, portalLoginHref }: { navigate: N
       <section className="quickAccess">
         <div className="sectionInner gridAuto">
             {[
-              { title: "Ich habe ein Rezept", copy: "Sicher hochladen und als geprüfte Anfrage starten.", route: "/rezept-upload" as const, icon: FileText },
-              { title: "Ich brauche einen Termin", copy: "Wunschtermin mit Anliegen und Kontaktweg senden.", route: "/termin-anfragen" as const, icon: Calendar },
-              { title: "Ich möchte schreiben", copy: "Schriftliche Anfrage an den passenden Fachbereich.", route: "/kontakt" as const, icon: MessageCircle },
+              { title: "Ich habe ein Rezept", copy: "Sicher hochladen und als geprüfte Anfrage starten.", route: "/rezept-upload" as const, icon: "symbols/rx" as const },
+              { title: "Ich brauche einen Termin", copy: "Wunschtermin mit Anliegen und Kontaktweg senden.", route: "/termin-anfragen" as const, icon: "symbols/i_schedule_school_date_time" as const },
+              { title: "Ich möchte schreiben", copy: "Schriftliche Anfrage an den passenden Fachbereich.", route: "/kontakt" as const, icon: "symbols/secure_communication" as const },
             ].map((item) => (
             <RouteLink className="accessCard" key={item.title} route={item.route} navigate={navigate}>
-              <IconBox icon={item.icon} />
+              <SharedIconBox name={item.icon} />
               <View direction="column" gap={1}>
                 <Text weight="semibold">{item.title}</Text>
                 <Text variant="body-2" color="neutral-faded">

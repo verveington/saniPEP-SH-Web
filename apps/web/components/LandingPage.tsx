@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { Calendar, FileText, MessageCircle, Upload, User } from "lucide-react";
+import { Calendar, Upload, User } from "lucide-react";
 import { Text, View } from "reshaped";
 import { serviceAreas } from "@frontend/app/publicContent";
 import { getLandingPageSections } from "../lib/cms/strapi";
 import { portalLoginHref } from "../lib/routes/publicRoutes";
-import { ButtonText, IconBox } from "./common";
+import { ButtonText } from "./common";
 import { LocationContact } from "./LocationContact";
 import { ServiceCard } from "./ServiceCard";
+import { SharedIconBox } from "../../shared/icons/SharedIcon";
 
 const heroAvifSrcSet = [
   "/images/sanipep-consultation-hero-960.avif 960w",
@@ -85,12 +86,12 @@ export async function LandingPage() {
       <section className="quickAccess">
         <div className="sectionInner gridAuto">
           {[
-            { title: "Ich habe ein Rezept", copy: "Sicher hochladen und als geprüfte Anfrage starten.", route: "/rezept-upload", icon: FileText },
-            { title: "Ich brauche einen Termin", copy: "Wunschtermin mit Anliegen und Kontaktweg senden.", route: "/termin-anfragen", icon: Calendar },
-            { title: "Ich möchte schreiben", copy: "Schriftliche Anfrage an den passenden Fachbereich.", route: "/kontakt", icon: MessageCircle },
+            { title: "Ich habe ein Rezept", copy: "Sicher hochladen und als geprüfte Anfrage starten.", route: "/rezept-upload", icon: "symbols/rx" as const },
+            { title: "Ich brauche einen Termin", copy: "Wunschtermin mit Anliegen und Kontaktweg senden.", route: "/termin-anfragen", icon: "symbols/i_schedule_school_date_time" as const },
+            { title: "Ich möchte schreiben", copy: "Schriftliche Anfrage an den passenden Fachbereich.", route: "/kontakt", icon: "symbols/secure_communication" as const },
           ].map((item) => (
             <Link className="accessCard" key={item.title} href={item.route}>
-              <IconBox icon={item.icon} />
+              <SharedIconBox name={item.icon} />
               <View direction="column" gap={1}>
                 <Text weight="semibold">{item.title}</Text>
                 <Text variant="body-2" color="neutral-faded">

@@ -218,6 +218,13 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
         return;
       }
 
+      if (request.method === "GET" && url.pathname === "/api/staff/requests") {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        writeJson(response, 200, await buildStaffRequestsResponse(auth, repository, readStaffFilters(url.searchParams)));
+        return;
+      }
+
       const statusRoute = url.pathname.match(/^\/api\/staff\/requests\/([^/]+)\/status$/);
       if (request.method === "PATCH" && statusRoute?.[1]) {
         const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
@@ -239,6 +246,11 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
     }
   };
 }
+
+type StaffRequestFilters = {
+  status?: PortalRequestStatus;
+  kind?: PortalRequestKind;
+};
 
 async function handleLogin(
   request: IncomingMessage,
@@ -458,6 +470,75 @@ async function buildDashboardResponse(auth: AuthenticatedSession, repository: Po
       "Rezeptupload speichert nur Dateityp, Groesse, Kontext und Request-ID.",
       "Session liegt serverseitig; der Browser bekommt nur ein HTTP-only Cookie und ein CSRF-Token im Arbeitsspeicher.",
     ],
+  };
+}
+
+async function buildStaffRequestsResponse(
+  auth: AuthenticatedSession,
+  repository: PortalMvpRepository,
+  filters: StaffRequestFilters,
+) {
+  if (!auth.actor.staffUserId) throw new SafeHttpError(403, "staff_profile_required");
+
+  const allRequests = (await repository.listAllRequests())
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const requests = allRequests.filter((request) => {
+    if (filters.status && request.status !== filters.status) return false;
+    if (filters.kind && request.kind !== filters.kind) return false;
+    return true;
+  });
+  const requestIds = requests.map((request) => request.id);
+  const auditEvents = await repository.listAuditEventsFor({
+    requestIds,
+    limit: 80,
+  });
+
+  return {
+    profile: {
+      staffUserId: auth.actor.staffUserId,
+      safeDisplayName: auth.user.safeDisplayName,
+      role: auth.actor.role,
+      portalMode: "development-mvp",
+    },
+    filters,
+    summary: {
+      totalRequests: allRequests.length,
+      filteredRequests: requests.length,
+      submittedRequests: allRequests.filter((request) => request.status === "submitted").length,
+      staffReviewRequests: allRequests.filter((request) => request.status === "staff_review").length,
+      approvedRequests: allRequests.filter((request) => request.status === "approved").length,
+      rejectedRequests: allRequests.filter((request) => request.status === "rejected").length,
+      completedRequests: allRequests.filter((request) => request.status === "completed").length,
+      omniaWrites: 0,
+      auditEvents: auditEvents.length,
+    },
+    requests: requests.map(toRequestDto),
+    auditEvents: auditEvents.map(toAuditDto),
+    latestActivities: auditEvents.slice(0, 8).map(toAuditDto),
+    boundaries: [
+      "Staff/Admin-Zugriff ist serverseitig rollenbegrenzet.",
+      "Diese Arbeitsliste zeigt nur sichere Request-Metadaten und Statusinformationen.",
+      "Rezeptupload-Anfragen bleiben Metadaten-only; keine Datei wird gespeichert oder ausgeliefert.",
+      "Keine Omnia-Anbindung und keine Omnia-Schreibzugriffe in diesem MVP.",
+    ],
+  };
+}
+
+function readStaffFilters(searchParams: URLSearchParams): StaffRequestFilters {
+  const status = readOptionalEnumValue(
+    searchParams.get("status"),
+    ["draft", "submitted", "staff_review", "approved", "rejected", "completed"] as const,
+    "status",
+  );
+  const kind = readOptionalEnumValue(
+    searchParams.get("kind"),
+    ["prescription_upload", "appointment_request", "reorder_request", "subscription_change_request", "health_contact_request"] as const,
+    "kind",
+  );
+
+  return {
+    ...(status ? { status } : {}),
+    ...(kind ? { kind } : {}),
   };
 }
 
@@ -752,6 +833,7 @@ function employeeStatusForStatus(status: PortalRequestStatus): StoredPortalReque
 function toRequestDto(request: StoredPortalRequest) {
   return {
     id: request.id,
+    customerProfileId: request.customerProfileId,
     kind: request.kind,
     kindLabel: requestKindLabels[request.kind],
     status: request.status,
@@ -887,6 +969,15 @@ function readKnownValue<const Values extends Record<string, string>>(value: stri
 function readEnumValue<const Values extends readonly string[]>(value: unknown, values: Values, field: string): Values[number] {
   if (typeof value !== "string" || !(values as readonly string[]).includes(value)) throw new SafeHttpError(400, `invalid_${field}`);
   return value as Values[number];
+}
+
+function readOptionalEnumValue<const Values extends readonly string[]>(
+  value: string | null,
+  values: Values,
+  field: string,
+): Values[number] | undefined {
+  if (value === null || value.length === 0 || value === "all") return undefined;
+  return readEnumValue(value, values, field);
 }
 
 function readDateString(value: unknown, field: string) {

@@ -1,3 +1,5 @@
+import type { SharedIconName } from "../../../shared/icons/iconRegistry";
+
 export type Route =
   | "/"
   | "/hilfe-finden"
@@ -19,6 +21,8 @@ export type Route =
 
 export type ServicePriority = "primary" | "secondary" | "automated";
 
+export type ContentIconName = SharedIconName;
+
 export type SearchCategory = "symptom" | "product" | "situation";
 
 export type SearchIntentResult = {
@@ -32,6 +36,17 @@ export type SearchIntentResult = {
   relatedTerms: string[];
   priority: number;
   score: number;
+};
+
+export type ServiceArea = {
+  id: string;
+  title: string;
+  summary: string;
+  route: Route;
+  priority: ServicePriority;
+  intent: string;
+  icon: ContentIconName;
+  searchSignals: string[];
 };
 
 export type RouteAudience = "public" | "portal" | "admin";
@@ -166,16 +181,6 @@ export type ActionPolicyDecision = {
   auditRequired: boolean;
   dataSensitivity: DataSensitivity;
   reason: string;
-};
-
-export type ServiceArea = {
-  id: string;
-  title: string;
-  summary: string;
-  route: Route;
-  priority: ServicePriority;
-  intent: string;
-  searchSignals: string[];
 };
 
 export type Prescription = {

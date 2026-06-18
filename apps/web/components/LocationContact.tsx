@@ -1,9 +1,17 @@
 import Link from "next/link";
-import { Calendar, Mail, MapPin, MessageCircle, Phone, Shield, Upload, type LucideIcon } from "lucide-react";
+import { Calendar, Upload } from "lucide-react";
 import { Card, Text, View } from "reshaped";
 import { contact } from "@frontend/app/publicContent";
 import { getContactContent } from "../lib/cms/strapi";
-import { ButtonText, IconBox } from "./common";
+import { SharedIconBox, type SharedIconName } from "../../shared/icons/SharedIcon";
+import { ButtonText } from "./common";
+
+const contactIconByLabel = {
+  Telefon: "objects/phone",
+  "E-Mail": "symbols/secure_communication",
+  WhatsApp: "symbols/forum",
+  Adresse: "symbols/geo_location",
+} satisfies Record<string, SharedIconName>;
 
 export async function LocationContact({ standalone = false }: { standalone?: boolean }) {
   const { contactSetting, openingHours } = await getContactContent();
@@ -35,14 +43,14 @@ export async function LocationContact({ standalone = false }: { standalone?: boo
           </View>
           <div className="gridAuto">
             {[
-              [Phone, "Telefon", contactView.phone],
-              [Mail, "E-Mail", contactView.email],
-              [MessageCircle, "WhatsApp", contactView.whatsapp],
-              [MapPin, "Adresse", contactView.address],
-            ].map(([Icon, label, value]) => (
+              ["Telefon", contactView.phone],
+              ["E-Mail", contactView.email],
+              ["WhatsApp", contactView.whatsapp],
+              ["Adresse", contactView.address],
+            ].map(([label, value]) => (
               <Card padding={4} key={label as string}>
                 <View direction="row" gap={3} align="center">
-                  <IconBox icon={Icon as LucideIcon} />
+                  <SharedIconBox name={contactIconByLabel[label as keyof typeof contactIconByLabel]} />
                   <View direction="column" gap={1}>
                     <Text variant="body-2" color="neutral-faded">
                       {label as string}
@@ -74,7 +82,7 @@ export async function LocationContact({ standalone = false }: { standalone?: boo
               </View>
             ))}
             <div className="privacyNote">
-              <Shield aria-hidden />
+              <SharedIconBox name="symbols/health_data_security" />
               <Text variant="body-2">
                 Gesundheitsdaten bitte bevorzugt über Upload oder das getrennte Portal senden, nicht frei per E-Mail oder WhatsApp.
               </Text>

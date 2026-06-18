@@ -1,9 +1,17 @@
-import { Calendar, Mail, MapPin, MessageCircle, Phone, Shield, Upload, type LucideIcon } from "lucide-react";
+import { Calendar, Upload } from "lucide-react";
 import { Card, Text, View } from "reshaped";
 import { contact } from "../app/publicContent";
 import type { Navigate } from "../app/routes";
-import { ButtonText, IconBox } from "./common";
+import { SharedIconBox, type SharedIconName } from "../../../shared/icons/SharedIcon";
+import { ButtonText } from "./common";
 import { RouteLink } from "./RouteLink";
+
+const contactIconByLabel = {
+  Telefon: "objects/phone",
+  "E-Mail": "symbols/secure_communication",
+  WhatsApp: "symbols/forum",
+  Adresse: "symbols/geo_location",
+} satisfies Record<string, SharedIconName>;
 
 export function LocationContact({ navigate, standalone = false }: { navigate: Navigate; standalone?: boolean }) {
   return (
@@ -20,14 +28,14 @@ export function LocationContact({ navigate, standalone = false }: { navigate: Na
           </View>
           <div className="gridAuto">
             {[
-              [Phone, "Telefon", contact.phone],
-              [Mail, "E-Mail", contact.email],
-              [MessageCircle, "WhatsApp", contact.whatsapp],
-              [MapPin, "Adresse", contact.address],
-            ].map(([Icon, label, value]) => (
+              ["Telefon", contact.phone],
+              ["E-Mail", contact.email],
+              ["WhatsApp", contact.whatsapp],
+              ["Adresse", contact.address],
+            ].map(([label, value]) => (
               <Card padding={4} key={label as string}>
                 <View direction="row" gap={3} align="center">
-                  <IconBox icon={Icon as LucideIcon} />
+                  <SharedIconBox name={contactIconByLabel[label as keyof typeof contactIconByLabel]} />
                   <View direction="column" gap={1}>
                     <Text variant="body-2" color="neutral-faded">
                       {label as string}
@@ -59,7 +67,7 @@ export function LocationContact({ navigate, standalone = false }: { navigate: Na
               </View>
             ))}
             <div className="privacyNote">
-              <Shield aria-hidden />
+              <SharedIconBox name="symbols/health_data_security" />
               <Text variant="body-2">
                 Gesundheitsdaten bitte bevorzugt über Upload oder das getrennte Portal senden, nicht frei per E-Mail oder WhatsApp.
               </Text>

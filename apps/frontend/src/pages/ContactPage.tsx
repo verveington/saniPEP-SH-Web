@@ -1,9 +1,10 @@
-import { Mail, MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FormControl, Text, TextArea, TextField, View } from "reshaped";
 import { createRequestId } from "../app/requestIds";
 import type { Navigate, TrackConversion } from "../app/routes";
-import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../components/common";
+import { SharedIconBox } from "../../../shared/icons/SharedIcon";
+import { ButtonText, FieldError, FormStep, RequestReceipt, inputA11y } from "../components/common";
 import { LocationContact } from "../components/LocationContact";
 import { SecuritySidePanel } from "../components/SecuritySidePanel";
 import { validateContactInquiryInput } from "../lib/formValidation";
@@ -48,7 +49,7 @@ function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion })
     <div className="formPanel">
       <View direction="column" gap={5} padding={6}>
         <View direction="row" gap={3} align="center">
-          <IconBox icon={MessageCircle} />
+          <SharedIconBox name="symbols/secure_communication" />
           <View direction="column" gap={1}>
             <Text as="h2" variant="featured-5" weight="semibold">Schriftliche Anfrage</Text>
             <Text variant="body-2" color="neutral-faded">Für Rückfragen, Vorabklärung und Kontaktwünsche.</Text>

@@ -425,6 +425,14 @@ a {
   height: 21px;
 }
 
+.iconBox img,
+.sharedIcon {
+  display: block;
+  width: var(--shared-icon-size, 21px);
+  height: var(--shared-icon-size, 21px);
+  object-fit: contain;
+}
+
 .serviceCard {
   min-height: 248px;
   display: grid;
@@ -530,7 +538,8 @@ a {
   overflow-wrap: anywhere;
 }
 
-.privacyNote svg {
+.privacyNote svg,
+.privacyNote img {
   flex: 0 0 auto;
 }
 

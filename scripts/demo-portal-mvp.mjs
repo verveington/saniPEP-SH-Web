@@ -112,6 +112,11 @@ const staffLogin = await staff.request("/api/auth/login", {
 assert(staffLogin.session.role === "staff", "Staff login did not return staff role");
 
 const approvedRequestId = created[0].request.id;
+const staffSubmittedList = await staff.request("/api/staff/requests?status=submitted&kind=prescription_upload");
+assert(staffSubmittedList.profile.role === "staff", "Staff request list did not return staff profile");
+assert(staffSubmittedList.requests.some((item) => item.id === approvedRequestId), "Staff list did not include the customer prescription request");
+assert(staffSubmittedList.summary.omniaWrites === 0, "Staff request list must not report Omnia writes");
+
 await staff.request(`/api/staff/requests/${approvedRequestId}/status`, {
   method: "PATCH",
   csrfToken: staffLogin.csrfToken,
@@ -135,14 +140,20 @@ await staff.request(`/api/staff/requests/${rejectedRequestId}/status`, {
   body: JSON.stringify({ status: "rejected" }),
 });
 
+const staffCompletedList = await staff.request("/api/staff/requests?status=completed");
+assert(staffCompletedList.requests.some((item) => item.id === approvedRequestId), "Staff completed filter did not include the completed request");
+assert(staffCompletedList.auditEvents.some((event) => event.requestId === approvedRequestId && event.action === "portal-request-approved"), "Staff audit trail did not include approval event");
+
 const dashboard = await customer.request("/api/portal/dashboard");
 const kinds = new Set(dashboard.requests.map((item) => item.kind));
 const actions = new Set(dashboard.auditEvents.map((event) => event.action));
+const customerCompletedRequest = dashboard.requests.find((item) => item.id === approvedRequestId);
 
 assert(created.every((item) => item.request?.id), "Not every create response returned a request id");
 for (const input of requestInputs) {
   assert(kinds.has(input.kind), `${input.kind} is missing from dashboard`);
 }
+assert(customerCompletedRequest?.status === "completed", "Customer dashboard did not show the staff-updated completed status");
 assert(dashboard.summary.storedRequests >= 5, "Dashboard did not store at least five request types");
 assert(dashboard.summary.openRequests >= 3, "Dashboard should show remaining open requests");
 assert(dashboard.summary.completedRequests >= 1, "Dashboard should show completed requests");
@@ -170,6 +181,7 @@ console.log(JSON.stringify({
   customerSession: customerLogin.session.id,
   staffSession: staffLogin.session.id,
   createdRequestIds: created.map((item) => item.request.id),
+  staffFilteredRequests: staffSubmittedList.summary.filteredRequests,
   storedRequests: dashboard.summary.storedRequests,
   openRequests: dashboard.summary.openRequests,
   completedRequests: dashboard.summary.completedRequests,

@@ -40,6 +40,8 @@
     "../frontend/src/lib/**/*.ts",
     "../frontend/src/app/**/*.ts",
     "../shared/design/**/*.ts",
+    "../shared/icons/**/*.ts",
+    "../shared/icons/**/*.tsx",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

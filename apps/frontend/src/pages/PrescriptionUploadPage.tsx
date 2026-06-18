@@ -1,8 +1,9 @@
-import { Shield, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FileUpload, Text, View } from "reshaped";
 import { createRequestId } from "../app/requestIds";
 import type { TrackConversion } from "../app/routes";
+import { SharedIconBox } from "../../../shared/icons/SharedIcon";
 import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../components/common";
 import { SecuritySidePanel } from "../components/SecuritySidePanel";
 import { validateUploadInput } from "../lib/formValidation";
@@ -111,13 +112,13 @@ export default function PrescriptionUploadPage({ onConversion }: { onConversion:
                 </View>
               </FormStep>
               <div className="privacyNote">
-                <Shield aria-hidden />
+                <SharedIconBox name="symbols/health_data_security" />
                 <Text variant="body-2">
                   Serverpflicht: {uploadServerSecurityBoundary.requiredServerChecks.join(", ")}.
                 </Text>
               </div>
               <Button color="primary" onClick={submit} disabled={!validation.valid}>
-                <ButtonText icon={Shield}>Upload-Anfrage erzeugen</ButtonText>
+                <ButtonText icon={Upload}>Upload-Anfrage erzeugen</ButtonText>
               </Button>
               {createdId && <RequestReceipt id={createdId} />}
             </View>

@@ -1,6 +1,6 @@
-import { CheckCircle } from "lucide-react";
 import { Text, View } from "reshaped";
 import { uploadServerSecurityBoundary } from "@frontend/lib/privacySecurity";
+import { SharedIcon } from "../../shared/icons/SharedIcon";
 
 export function SecuritySidePanel() {
   return (
@@ -16,7 +16,7 @@ export function SecuritySidePanel() {
           uploadServerSecurityBoundary.productionInvariant,
         ].map((item) => (
           <div className="safeRow" key={item}>
-            <CheckCircle aria-hidden size={17} />
+            <SharedIcon name="symbols/yes" decorative size={17} />
             <Text variant="body-2">{item}</Text>
           </div>
         ))}

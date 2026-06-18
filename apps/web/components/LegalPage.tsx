@@ -1,8 +1,13 @@
-import { Clipboard, Lock, Shield } from "lucide-react";
 import { Text, View } from "reshaped";
 import { getLegalPageByKind } from "../lib/cms/strapi";
-import { IconBox } from "./common";
 import { SecuritySidePanel } from "./SecuritySidePanel";
+import { SharedIconBox, type SharedIconName } from "../../shared/icons/SharedIcon";
+
+const legalIconByKind = {
+  imprint: "symbols/i_documents_accepted",
+  privacy: "symbols/health_data_security",
+  consent: "symbols/medical_advice",
+} satisfies Record<"imprint" | "privacy" | "consent", SharedIconName>;
 
 export async function LegalPage({ kind, title }: { kind: "imprint" | "privacy" | "consent"; title: string }) {
   const cmsPage = await getLegalPageByKind(kind);
@@ -29,7 +34,7 @@ export async function LegalPage({ kind, title }: { kind: "imprint" | "privacy" |
     <section className="section">
       <div className="sectionInner gridTwo">
         <View direction="column" gap={5}>
-          <IconBox icon={kind === "imprint" ? Clipboard : kind === "privacy" ? Lock : Shield} />
+          <SharedIconBox name={legalIconByKind[kind]} />
           <Text as="h1" variant="featured-1" weight="semibold">
             {title}
           </Text>

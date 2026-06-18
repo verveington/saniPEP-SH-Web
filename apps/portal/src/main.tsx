@@ -16,6 +16,7 @@ import { Badge, Button, FormControl, Reshaped, Text, TextField, View } from "res
 import "reshaped/bundle.css";
 import "reshaped/themes/slate/theme.css";
 import "../../frontend/src/styles/global.css";
+import "./staff-admin.css";
 import { installDesignTokens } from "../../shared/design/saniPepDesignTokens";
 import { serverAuthBoundary } from "../../shared/security/accessControl";
 import {
@@ -25,6 +26,7 @@ import {
   type PortalDashboardResponse,
   type PortalRequestDto,
   type PortalSessionResponse,
+  type StaffRequestsResponse,
 } from "./api";
 
 installDesignTokens();
@@ -50,11 +52,30 @@ const sensitivityLabels: Record<PortalRequestDto["sensitivity"], string> = {
   omnia_reference: "Bestandsreferenz",
 };
 
+const kindFilterLabels: Record<PortalRequestDto["kind"], string> = {
+  prescription_upload: "Rezeptupload-Anfrage",
+  appointment_request: "Terminwunsch",
+  reorder_request: "Bestellanfrage",
+  subscription_change_request: "Abo-Wunsch",
+  health_contact_request: "Kontaktanfrage",
+};
+
+const staffActionStatuses = ["staff_review", "approved", "rejected", "completed"] as const;
+
 const acceptedUploadExtensions = ".pdf,.jpg,.jpeg,.png,.heic,.heif";
+
+type StaffRequestFilters = {
+  status?: PortalRequestDto["status"];
+  kind?: PortalRequestDto["kind"];
+};
+
+type StatusFilterValue = PortalRequestDto["status"] | "all";
+type KindFilterValue = PortalRequestDto["kind"] | "all";
 
 function PortalMvpApp() {
   const [session, setSession] = useState<PortalSessionResponse | null>(null);
   const [dashboard, setDashboard] = useState<PortalDashboardResponse | null>(null);
+  const [staffRequests, setStaffRequests] = useState<StaffRequestsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<Notice | null>(null);
 
@@ -67,7 +88,7 @@ function PortalMvpApp() {
         if (!active) return;
         if (restored.authenticated) {
           setSession(restored);
-          setDashboard(await portalApi.dashboard());
+          await loadSessionData(restored);
         }
       } catch (error) {
         if (active) setNotice(apiNotice(error, "Session konnte nicht geladen werden."));
@@ -82,9 +103,26 @@ function PortalMvpApp() {
     };
   }, []);
 
+  const loadSessionData = async (activeSession: PortalSessionResponse) => {
+    if (isStaffSession(activeSession)) {
+      setDashboard(null);
+      setStaffRequests(await portalApi.staffRequests());
+      return;
+    }
+
+    setStaffRequests(null);
+    setDashboard(await portalApi.dashboard());
+  };
+
   const refreshDashboard = async () => {
     const refreshed = await portalApi.dashboard();
     setDashboard(refreshed);
+    return refreshed;
+  };
+
+  const refreshStaffRequests = async (filters: StaffRequestFilters = {}) => {
+    const refreshed = await portalApi.staffRequests(filters);
+    setStaffRequests(refreshed);
     return refreshed;
   };
 
@@ -92,8 +130,7 @@ function PortalMvpApp() {
     setNotice(null);
     const login = await portalApi.login(input);
     setSession(login);
-    const nextDashboard = await portalApi.dashboard();
-    setDashboard(nextDashboard);
+    await loadSessionData(login);
     setNotice({
       tone: "positive",
       title: "Backend-Login aktiv",
@@ -105,10 +142,27 @@ function PortalMvpApp() {
     if (session) await portalApi.logout(session.csrfToken);
     setSession(null);
     setDashboard(null);
+    setStaffRequests(null);
     setNotice({
       tone: "neutral",
       title: "Abgemeldet",
       body: "Das Backend hat das Session-Cookie geloescht.",
+    });
+  };
+
+  const handleStaffStatusChange = async (
+    requestId: string,
+    status: PortalRequestDto["status"],
+    filters: StaffRequestFilters,
+  ) => {
+    if (!session || !isStaffSession(session)) return;
+    setNotice(null);
+    const result = await portalApi.updateRequestStatus({ requestId, status }, session.csrfToken);
+    await refreshStaffRequests(filters);
+    setNotice({
+      tone: "positive",
+      title: "Status aktualisiert",
+      body: `${result.request.kindLabel} ${result.request.id} steht jetzt auf ${statusLabels[result.request.status]}.`,
     });
   };
 
@@ -138,13 +192,22 @@ function PortalMvpApp() {
         {notice && <StateNotice tone={notice.tone} title={notice.title} body={notice.body} />}
         {!session ? (
           <LoginPanel onLogin={handleLogin} />
-        ) : (
+        ) : isStaffSession(session) ? (
+          <StaffAdminWorkbench
+            session={session}
+            workspace={staffRequests}
+            onRefresh={refreshStaffRequests}
+            onChangeStatus={handleStaffStatusChange}
+          />
+        ) : session.session.role === "customer" ? (
           <PortalDashboard
             session={session}
             dashboard={dashboard}
             onRefresh={refreshDashboard}
             onCreateRequest={handleCreateRequest}
           />
+        ) : (
+          <StateNotice tone="warning" title="Rolle nicht unterstützt" body="Diese Portaloberfläche erlaubt customer, staff und admin." />
         )}
       </View>
     </PortalShell>
@@ -206,10 +269,15 @@ function PortalShell({
 }
 
 function LoginPanel({ onLogin }: { onLogin: (input: { email: string; password: string }) => Promise<void> }) {
-  const [email, setEmail] = useState("demo@example.test");
-  const [password, setPassword] = useState("demo-passwort");
+  const [email, setEmail] = useState("staff@example.test");
+  const [password, setPassword] = useState("staff-passwort");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const presets = [
+    { label: "Staff", email: "staff@example.test", password: "staff-passwort" },
+    { label: "Admin", email: "admin@example.test", password: "admin-passwort" },
+    { label: "Kunde", email: "demo@example.test", password: "demo-passwort" },
+  ];
 
   const submit = async () => {
     setSubmitting(true);
@@ -232,8 +300,23 @@ function LoginPanel({ onLogin }: { onLogin: (input: { email: string; password: s
               Backend Login
             </Text>
             <Text variant="body-2" color="neutral-faded">
-              Demo-Zugang: `demo@example.test` mit `demo-passwort`. Die Session kommt vom Backend-Cookie.
+              Demo-Zugänge laufen gegen das Backend. Staff/Admin öffnen die Request-Workbench, Kunde öffnet das Portal-Dashboard.
             </Text>
+          </View>
+          <View direction="row" gap={2} wrap>
+            {presets.map((preset) => (
+              <Button
+                key={preset.email}
+                variant="outline"
+                color="neutral"
+                onClick={() => {
+                  setEmail(preset.email);
+                  setPassword(preset.password);
+                }}
+              >
+                {preset.label}
+              </Button>
+            ))}
           </View>
           <FormControl>
             <FormControl.Label>E-Mail</FormControl.Label>
@@ -352,6 +435,352 @@ function PortalDashboard({
         <AuditTrail dashboard={dashboard} />
       </div>
     </View>
+  );
+}
+
+function StaffAdminWorkbench({
+  session,
+  workspace,
+  onRefresh,
+  onChangeStatus,
+}: {
+  session: PortalSessionResponse;
+  workspace: StaffRequestsResponse | null;
+  onRefresh: (filters?: StaffRequestFilters) => Promise<StaffRequestsResponse>;
+  onChangeStatus: (
+    requestId: string,
+    status: PortalRequestDto["status"],
+    filters: StaffRequestFilters,
+  ) => Promise<void>;
+}) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("all");
+  const [kindFilter, setKindFilter] = useState<KindFilterValue>("all");
+  const [selectedRequestId, setSelectedRequestId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!workspace) return;
+    if (workspace.requests.some((request) => request.id === selectedRequestId)) return;
+    setSelectedRequestId(workspace.requests[0]?.id ?? "");
+  }, [workspace, selectedRequestId]);
+
+  if (!workspace) {
+    return <StateNotice tone="neutral" title="Staff-Workbench lädt" body="Portal-Requests werden serverseitig abgefragt." />;
+  }
+
+  const activeFilters = staffFiltersFromValues(statusFilter, kindFilter);
+  const selectedRequest = workspace.requests.find((request) => request.id === selectedRequestId) ?? null;
+  const selectedAuditEvents = selectedRequest
+    ? workspace.auditEvents.filter((event) => event.requestId === selectedRequest.id)
+    : [];
+
+  const applyFilters = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await onRefresh(activeFilters);
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const changeStatus = async (status: PortalRequestDto["status"]) => {
+    if (!selectedRequest) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onChangeStatus(selectedRequest.id, status, activeFilters);
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View direction="column" gap={5}>
+      <div className="gridAuto" aria-label="Staff Request Kennzahlen">
+        <Kpi icon={ClipboardList} label="Alle Requests" value={workspace.summary.totalRequests.toString()} />
+        <Kpi icon={FileText} label="Gefiltert" value={workspace.summary.filteredRequests.toString()} />
+        <Kpi icon={User} label="Staff Review" value={workspace.summary.staffReviewRequests.toString()} />
+        <Kpi icon={CheckCircle} label="Freigegeben" value={workspace.summary.approvedRequests.toString()} />
+        <Kpi icon={Shield} label="Omnia Writes" value={workspace.summary.omniaWrites.toString()} />
+        <Kpi icon={CheckCircle} label="Audit Events" value={workspace.summary.auditEvents.toString()} />
+      </div>
+
+      <div className="plainPanel">
+        <View direction="column" gap={4} padding={6}>
+          <View direction="row" justify="space-between" align="center" gap={3} wrap>
+            <View direction="column" gap={1}>
+              <Text as="h2" variant="featured-5" weight="semibold">
+                Staff/Admin Request-Filter
+              </Text>
+              <Text variant="body-2" color="neutral-faded">
+                Angemeldet als {session.profile.safeDisplayName} ({session.session.role}).
+              </Text>
+            </View>
+            <Button variant="outline" color="neutral" onClick={applyFilters} disabled={busy}>
+              <span className="buttonLabel">
+                <ClipboardList aria-hidden />
+                Filter anwenden
+              </span>
+            </Button>
+          </View>
+
+          <div className="staffFilterGrid">
+            <FormControl>
+              <FormControl.Label>Status</FormControl.Label>
+              <select
+                className="nativeSelect"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as StatusFilterValue)}
+              >
+                <option value="all">Alle Status</option>
+                {Object.entries(statusLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </FormControl>
+            <FormControl>
+              <FormControl.Label>Request-Typ</FormControl.Label>
+              <select
+                className="nativeSelect"
+                value={kindFilter}
+                onChange={(event) => setKindFilter(event.target.value as KindFilterValue)}
+              >
+                <option value="all">Alle Typen</option>
+                {Object.entries(kindFilterLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </FormControl>
+          </div>
+
+          {workspace.boundaries.map((boundary) => (
+            <div className="privacyNote" key={boundary}>
+              <Shield aria-hidden />
+              <Text variant="body-2">{boundary}</Text>
+            </div>
+          ))}
+          {error && <StateNotice tone="warning" title="Staff-Aktion fehlgeschlagen" body={error} />}
+        </View>
+      </div>
+
+      <div className="gridTwo staffWorkbenchGrid">
+        <div className="plainPanel">
+          <View direction="column" gap={4} padding={6}>
+            <Text as="h2" variant="featured-5" weight="semibold">
+              Alle Portal-Requests
+            </Text>
+            {workspace.requests.length === 0 ? (
+              <StateNotice tone="neutral" title="Keine Treffer" body="Passe Status oder Request-Typ an, um weitere Requests zu sehen." />
+            ) : (
+              <div className="staffRequestList">
+                {workspace.requests.map((request) => (
+                  <button
+                    type="button"
+                    className={`staffRequestCard${selectedRequestId === request.id ? " staffRequestCardActive" : ""}`}
+                    key={request.id}
+                    onClick={() => setSelectedRequestId(request.id)}
+                  >
+                    <View direction="row" justify="space-between" align="start" gap={3}>
+                      <View direction="column" gap={1}>
+                        <Text weight="semibold">{request.kindLabel}</Text>
+                        <Text variant="caption-1" color="neutral-faded">
+                          {request.id}
+                        </Text>
+                      </View>
+                      <Badge color={statusBadgeColor(request.status)} variant="faded">
+                        {statusLabels[request.status]}
+                      </Badge>
+                    </View>
+                    <Text variant="body-2" color="neutral-faded">
+                      {request.safeSummary}
+                    </Text>
+                    <View direction="row" gap={2} wrap>
+                      <Badge color="neutral" variant="faded">
+                        {request.customerProfileId}
+                      </Badge>
+                      <Badge color="primary" variant="faded">
+                        {request.employeeStatusLabel}
+                      </Badge>
+                    </View>
+                  </button>
+                ))}
+              </div>
+            )}
+          </View>
+        </div>
+
+        <StaffRequestDetails
+          request={selectedRequest}
+          auditEvents={selectedAuditEvents}
+          busy={busy}
+          onChangeStatus={changeStatus}
+        />
+      </div>
+
+      <StaffAuditTrail events={workspace.auditEvents} />
+    </View>
+  );
+}
+
+function StaffRequestDetails({
+  request,
+  auditEvents,
+  busy,
+  onChangeStatus,
+}: {
+  request: PortalRequestDto | null;
+  auditEvents: PortalDashboardResponse["auditEvents"];
+  busy: boolean;
+  onChangeStatus: (status: PortalRequestDto["status"]) => Promise<void>;
+}) {
+  if (!request) {
+    return (
+      <div className="plainPanel">
+        <View direction="column" gap={4} padding={6}>
+          <StateNotice tone="neutral" title="Keine Anfrage ausgewählt" body="Wähle links einen Portal-Request für Details und Statusaktionen." />
+        </View>
+      </div>
+    );
+  }
+
+  return (
+    <div className="plainPanel">
+      <View direction="column" gap={4} padding={6}>
+        <View direction="row" justify="space-between" align="start" gap={3} wrap>
+          <View direction="column" gap={1}>
+            <Text as="h2" variant="featured-5" weight="semibold">
+              Detailansicht
+            </Text>
+            <Text variant="body-2" color="neutral-faded">
+              {request.id} · {request.kindLabel}
+            </Text>
+          </View>
+          <Badge color={statusBadgeColor(request.status)} variant="faded">
+            {statusLabels[request.status]}
+          </Badge>
+        </View>
+
+        <div className="staffDetailSummary">
+          <Text weight="semibold">{request.safeSummary}</Text>
+          <Text variant="body-2" color="neutral-faded">
+            Angelegt {formatDateTime(request.createdAt)} · aktualisiert {formatDateTime(request.updatedAt)}
+          </Text>
+        </div>
+
+        <div className="staffDataGrid">
+          <StaffDataItem label="Kundenprofil-ID" value={request.customerProfileId} />
+          <StaffDataItem label="Mitarbeiterstatus" value={request.employeeStatusLabel} />
+          <StaffDataItem label="Schutzklasse" value={sensitivityLabels[request.sensitivity]} />
+          <StaffDataItem label="Omnia Write" value={request.omniaWriteAllowed ? "ja" : "nein"} />
+        </div>
+
+        <RequestSpecificDetails request={request} />
+
+        <View direction="column" gap={3}>
+          <Text as="h3" variant="featured-6" weight="semibold">
+            Status ändern
+          </Text>
+          <div className="staffStatusActions">
+            {staffActionStatuses.map((status) => (
+              <Button
+                key={status}
+                color={status === "rejected" ? "critical" : "primary"}
+                variant={status === "rejected" ? "outline" : undefined}
+                onClick={() => void onChangeStatus(status)}
+                disabled={busy || !canTransitionTo(request.status, status)}
+              >
+                {statusLabels[status]}
+              </Button>
+            ))}
+          </div>
+        </View>
+
+        <View direction="column" gap={3}>
+          <Text as="h3" variant="featured-6" weight="semibold">
+            Audit Events dieser Anfrage
+          </Text>
+          {auditEvents.length === 0 ? (
+            <StateNotice tone="neutral" title="Keine Audit Events im Filter" body="Für diese Anfrage liegen im aktuellen Staff-Filter keine Events vor." />
+          ) : (
+            auditEvents.map((event) => <AuditEventCard event={event} key={event.id} />)
+          )}
+        </View>
+      </View>
+    </div>
+  );
+}
+
+function RequestSpecificDetails({ request }: { request: PortalRequestDto }) {
+  const rows = requestDetailRows(request);
+  if (rows.length === 0) return null;
+
+  return (
+    <View direction="column" gap={3}>
+      <Text as="h3" variant="featured-6" weight="semibold">
+        Request-Metadaten
+      </Text>
+      <div className="staffDataGrid">
+        {rows.map((row) => (
+          <StaffDataItem label={row.label} value={row.value} key={row.label} />
+        ))}
+      </div>
+    </View>
+  );
+}
+
+function StaffAuditTrail({ events }: { events: StaffRequestsResponse["auditEvents"] }) {
+  return (
+    <div className="plainPanel">
+      <View direction="column" gap={4} padding={6}>
+        <Text as="h2" variant="featured-5" weight="semibold">
+          Audit Events
+        </Text>
+        {events.length === 0 ? (
+          <StateNotice tone="neutral" title="Keine Audit Events" body="Audit Events erscheinen, sobald gefilterte Requests erstellt oder bearbeitet wurden." />
+        ) : (
+          <div className="gridAuto">
+            {events.map((event) => <AuditEventCard event={event} key={event.id} />)}
+          </div>
+        )}
+      </View>
+    </div>
+  );
+}
+
+function AuditEventCard({ event }: { event: StaffRequestsResponse["auditEvents"][number] }) {
+  return (
+    <div className="safeRow">
+      <View direction="row" justify="space-between" gap={3} wrap>
+        <Text weight="semibold">{event.action}</Text>
+        <Badge color={event.outcome === "rejected" ? "warning" : "positive"} variant="faded">
+          {event.outcome}
+        </Badge>
+      </View>
+      <Text variant="caption-1" color="neutral-faded">
+        {formatDateTime(event.occurredAt)} · {event.actorRole} · {event.requestId ?? event.objectType ?? "portal"}
+      </Text>
+    </div>
+  );
+}
+
+function StaffDataItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="staffDataItem">
+      <Text variant="caption-1" color="neutral-faded">
+        {label}
+      </Text>
+      <Text weight="semibold">{value}</Text>
+    </div>
   );
 }
 
@@ -819,6 +1248,88 @@ function StateNotice({ tone, title, body }: Notice) {
       </View>
     </div>
   );
+}
+
+function isStaffSession(session: PortalSessionResponse) {
+  return session.session.role === "staff" || session.session.role === "admin";
+}
+
+function staffFiltersFromValues(status: StatusFilterValue, kind: KindFilterValue): StaffRequestFilters {
+  return {
+    ...(status === "all" ? {} : { status }),
+    ...(kind === "all" ? {} : { kind }),
+  };
+}
+
+function canTransitionTo(current: PortalRequestDto["status"], next: PortalRequestDto["status"]) {
+  const allowed: Record<PortalRequestDto["status"], readonly PortalRequestDto["status"][]> = {
+    draft: ["rejected"],
+    submitted: ["staff_review", "rejected"],
+    staff_review: ["approved", "rejected"],
+    approved: ["completed", "rejected"],
+    rejected: [],
+    completed: [],
+  };
+  return allowed[current].includes(next);
+}
+
+function statusBadgeColor(status: PortalRequestDto["status"]) {
+  const colors: Record<PortalRequestDto["status"], "neutral" | "primary" | "positive" | "critical" | "warning"> = {
+    draft: "neutral",
+    submitted: "warning",
+    staff_review: "primary",
+    approved: "positive",
+    rejected: "critical",
+    completed: "positive",
+  };
+  return colors[status];
+}
+
+function requestDetailRows(request: PortalRequestDto) {
+  if (request.uploadObject) {
+    return [
+      { label: "Dateityp", value: `${request.uploadObject.extension.toUpperCase()} · ${request.uploadObject.mimeType}` },
+      { label: "Größe", value: formatByteSize(request.uploadObject.sizeBytes) },
+      { label: "Speichermodus", value: request.uploadObject.storageMode },
+      { label: "Produktiv-Upload", value: request.uploadObject.productionUpload ? "ja" : "nein" },
+    ];
+  }
+
+  if (request.appointmentWish) {
+    return [
+      { label: "Wunschtag", value: request.appointmentWish.preferredDay },
+      { label: "Zeitfenster", value: request.appointmentWish.timeWindow },
+      { label: "Anliegen", value: request.appointmentWish.concern },
+    ];
+  }
+
+  if (request.reorderWish) {
+    return [
+      { label: "Versorgung", value: request.reorderWish.supplyAlias },
+      { label: "Wunsch", value: request.reorderWish.cadence },
+    ];
+  }
+
+  if (request.subscriptionWish) {
+    return [
+      { label: "Versorgung", value: request.subscriptionWish.supplyAlias },
+      { label: "Rhythmus", value: request.subscriptionWish.cadence },
+    ];
+  }
+
+  if (request.contactWish) {
+    return [
+      { label: "Thema", value: request.contactWish.topic },
+      { label: "Kontaktweg", value: request.contactWish.preferredChannel },
+    ];
+  }
+
+  return [];
+}
+
+function formatByteSize(sizeBytes: number) {
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  return `${Math.round(sizeBytes / 1024)} KB`;
 }
 
 function apiNotice(error: unknown, fallback: string): Notice {

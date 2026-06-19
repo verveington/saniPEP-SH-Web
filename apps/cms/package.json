@@ -8,6 +8,7 @@
     "console": "strapi console",
     "develop": "strapi develop",
     "dev": "strapi develop",
+    "icons:import": "node scripts/import-icon-assets.mjs",
     "seed": "node scripts/seed-public-content.mjs",
     "start": "strapi start",
     "strapi": "strapi"

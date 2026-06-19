@@ -1,5 +1,6 @@
 import seedContent from "../../../cms/mock-content/public-content.seed.json";
 import type { Route } from "@frontend/lib/types";
+import { verifiedContact } from "../verifiedContact";
 import { getRouteMetadata } from "./metadata";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sanipep.de";
@@ -7,17 +8,19 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sanipep.de";
 const localBusiness = {
   "@type": "LocalBusiness",
   "@id": `${siteUrl}/#localbusiness`,
-  name: "saniPEP Sanitätshaus",
+  name: verifiedContact.name,
   url: `${siteUrl}/`,
   telephone: "+49-89-678048-0",
-  email: "sani@sanipep.de",
+  faxNumber: "+49-89-678048-70",
+  email: verifiedContact.email,
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Charles-de-Gaulle-Str. 4",
-    addressLocality: "München",
+    streetAddress: verifiedContact.streetAddress,
+    postalCode: verifiedContact.postalCode,
+    addressLocality: verifiedContact.locality,
     addressCountry: "DE",
   },
-  areaServed: "München",
+  areaServed: verifiedContact.locality,
   openingHoursSpecification: seedContent.openingHours.map((entry) => ({
     "@type": "OpeningHoursSpecification",
     dayOfWeek: entry.weekday,

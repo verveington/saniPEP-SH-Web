@@ -10,6 +10,7 @@ Aus dem Repo-Root:
 npm --prefix apps/cms install
 npm run dev:cms
 npm run cms:seed
+npm run cms:icons:import
 npm run build:cms
 ```
 
@@ -19,6 +20,7 @@ Direkt aus `apps/cms`:
 npm install
 npm run develop
 npm run seed
+npm run icons:import
 npm run build
 npm run start
 ```
@@ -65,6 +67,7 @@ Ohne `STRAPI_API_URL` nutzt die Public Website weiterhin den Seed-Fallback.
 - `portal-help-content`
 - `form-configuration`
 - `hero-content`
+- `icon-asset`
 
 Draft/Publish ist fuer redaktionelle Inhalte aktiv. `form-configuration` bleibt nicht in der Public-API freigegeben.
 
@@ -75,6 +78,7 @@ Der Seed setzt die Users-&-Permissions-Rolle `Public` auf read-only fuer:
 - `contact-setting`
 - `faq`
 - `hero-content`
+- `icon-asset`
 - `landing-page-section`
 - `legal-page`
 - `opening-hour`
@@ -106,8 +110,30 @@ Das Seed-Skript legt diese Ordner an:
 - `Leistungsseitenbilder`
 - `Produktgruppenbilder`
 - `Downloads`
+- `Icons`
 
 Medien sind nur fuer redaktionelle Assets vorgesehen. Keine Rezeptdateien, Uploads aus Formularen oder Patientendokumente in Strapi speichern.
+
+## Icon Assets
+
+Globale Content-Icons werden lokal in Strapi verwaltet:
+
+1. Datei in der Medienbibliothek in den Ordner `Icons` hochladen.
+2. Content Manager -> `Icon Asset` -> neuen Eintrag anlegen.
+3. `key` stabil setzen, z. B. `body/lymph_nodes`, `symbols/secure_communication` oder `objects/phone`.
+4. `file` mit dem hochgeladenen Medium verknuepfen.
+5. `safeForPublic=true` und `isGlobal=true` lassen, wenn die Website das Icon verwenden darf.
+6. Eintrag veroeffentlichen.
+
+Die Website soll weiterhin stabile Icon-Keys referenzieren, nicht freie Upload-URLs. Bedienung und Navigation duerfen Reshaped/Lucide-Glyphen verwenden; Bedeutungs-, Fach- und Service-Icons kommen aus `Icon Asset`.
+
+Wenn die Icon-Datenbank als Dateien unter `apps/cms/public/uploads/icons` liegt, importiert dieser Befehl die erlaubten Outline-PNGs in Strapi Media Library und legt passende `Icon Asset`-Eintraege an:
+
+```bash
+npm run cms:icons:import
+```
+
+Der Import liest nur `public/uploads/icons/png/outline/**/*.png`, ignoriert standardmaessig `@2x`-Varianten und legt stabile Keys aus dem Pfad an, z. B. `body/lymph_nodes`.
 
 ## Seed
 

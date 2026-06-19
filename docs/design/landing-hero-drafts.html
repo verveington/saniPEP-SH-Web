@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>saniPEP Landingpage Hero Entwuerfe</title>
+    <style>
+      :root {
+        --ci-blue: #354693;
+        --ci-blue-dark: #26366f;
+        --ci-rose: #b45986;
+        --ci-rose-dark: #8f3e67;
+        --ci-ice: #eef3f7;
+        --ci-mint: #dcefe9;
+        --ci-sky: #ddeaf6;
+        --ci-sand: #f4efe6;
+        --ci-paper: #fffdf9;
+        --ci-ink: #1f2937;
+        --ci-muted: #5f6877;
+        --ci-line: #d9dee8;
+        --focus: #111827;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ci-ink);
+        background: #f7f8fb;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .page {
+        min-height: 100vh;
+      }
+
+      .draftHeader {
+        border-bottom: 1px solid var(--ci-line);
+        background: white;
+      }
+
+      .draftHeaderInner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 14px 0;
+      }
+
+      .draftBrand {
+        width: 178px;
+      }
+
+      .draftNav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .draftNav a {
+        min-height: 40px;
+        padding: 10px 13px;
+        border: 1px solid var(--ci-line);
+        border-radius: 999px;
+        background: white;
+        color: var(--ci-blue-dark);
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .intro,
+      .draftMeta {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .intro {
+        padding: 42px 0 20px;
+      }
+
+      .introEyebrow,
+      .variantEyebrow {
+        margin: 0 0 10px;
+        color: var(--ci-rose-dark);
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .intro h1 {
+        max-width: 900px;
+        margin: 0;
+        color: var(--ci-blue-dark);
+        font-size: clamp(2rem, 5vw, 4.25rem);
+        line-height: 1;
+      }
+
+      .intro p {
+        max-width: 760px;
+        margin: 18px 0 0;
+        color: var(--ci-muted);
+        font-size: 1.08rem;
+        line-height: 1.6;
+      }
+
+      .draftMeta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        overflow: hidden;
+        border: 1px solid var(--ci-line);
+        border-radius: 10px;
+        background: var(--ci-line);
+      }
+
+      .draftMeta div {
+        min-width: 0;
+        padding: 16px;
+        background: white;
+      }
+
+      .draftMeta strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--ci-blue-dark);
+      }
+
+      .draftMeta span {
+        color: var(--ci-muted);
+        line-height: 1.45;
+      }
+
+      .variant {
+        width: min(1280px, calc(100% - 32px));
+        margin: 42px auto 64px;
+        overflow: clip;
+        border: 1px solid var(--ci-line);
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 24px 80px rgb(31 41 55 / 10%);
+      }
+
+      .variantHeader {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 24px 28px;
+        border-bottom: 1px solid var(--ci-line);
+        background: #fbfcff;
+      }
+
+      .variantHeader h2 {
+        margin: 0;
+        color: var(--ci-blue-dark);
+        font-size: clamp(1.4rem, 3vw, 2.1rem);
+      }
+
+      .variantHeader p {
+        max-width: 580px;
+        margin: 8px 0 0;
+        color: var(--ci-muted);
+        line-height: 1.55;
+      }
+
+      .variantTag {
+        min-width: max-content;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: var(--ci-ice);
+        color: var(--ci-blue-dark);
+        font-weight: 800;
+      }
+
+      .siteShell {
+        background: var(--ci-paper);
+      }
+
+      .siteNav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 18px 0;
+      }
+
+      .siteNav img {
+        width: 172px;
+      }
+
+      .navLinks {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: var(--ci-muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .navLinks span {
+        white-space: nowrap;
+      }
+
+      .heroA,
+      .heroB,
+      .heroC {
+        width: min(1160px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .heroA {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(440px, 1.05fr);
+        gap: clamp(28px, 5vw, 66px);
+        align-items: center;
+        min-height: 660px;
+        padding: 34px 0 56px;
+      }
+
+      .heroCopy h3,
+      .heroCopy h1 {
+        margin: 0;
+        color: var(--ci-blue-dark);
+        font-size: clamp(2.45rem, 5vw, 5rem);
+        line-height: 0.97;
+      }
+
+      .heroCopy p {
+        max-width: 620px;
+        margin: 22px 0 0;
+        color: var(--ci-muted);
+        font-size: clamp(1.02rem, 1.8vw, 1.22rem);
+        line-height: 1.6;
+      }
+
+      .heroActions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .heroActions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 18px;
+        border: 1px solid var(--ci-line);
+        border-radius: 8px;
+        background: white;
+        color: var(--ci-blue-dark);
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .heroActions a:first-child {
+        border-color: var(--ci-blue);
+        background: var(--ci-blue);
+        color: white;
+      }
+
+      .servicePills {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 30px;
+      }
+
+      .servicePill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 54px;
+        padding: 10px 12px;
+        border: 1px solid var(--ci-line);
+        border-radius: 8px;
+        background: white;
+        color: var(--ci-blue-dark);
+        font-weight: 750;
+      }
+
+      .servicePill img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+      }
+
+      .tileGrid {
+        display: grid;
+        gap: 0;
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid var(--ci-line);
+        background: var(--ci-line);
+        isolation: isolate;
+      }
+
+      .tileGridA {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .tileGridB {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .tileGridC {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .tile {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-width: 0;
+        aspect-ratio: 1 / 1;
+        border: 0.5px solid color-mix(in srgb, var(--ci-line) 82%, white);
+        overflow: hidden;
+      }
+
+      .tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .tileLogo {
+        padding: 18%;
+        background: white;
+      }
+
+      .tileLogo img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+      }
+
+      .tileIcon {
+        padding: 21%;
+        background: var(--ci-ice);
+      }
+
+      .tileIcon img {
+        width: 64%;
+        height: 64%;
+        object-fit: contain;
+        filter: invert(25%) sepia(44%) saturate(1297%) hue-rotate(207deg) brightness(85%) contrast(89%);
+      }
+
+      .tileLabel {
+        align-content: end;
+        justify-items: start;
+        padding: 14px;
+        color: white;
+        text-align: left;
+      }
+
+      .tileLabel strong {
+        max-width: 100%;
+        font-size: clamp(0.82rem, 1.5vw, 1.05rem);
+        line-height: 1.12;
+        overflow-wrap: anywhere;
+      }
+
+      .tileBlue {
+        background: var(--ci-blue);
+      }
+
+      .tileBlueDark {
+        background: var(--ci-blue-dark);
+      }
+
+      .tileRose {
+        background: var(--ci-rose);
+      }
+
+      .tileRoseDark {
+        background: var(--ci-rose-dark);
+      }
+
+      .tileMint {
+        background: var(--ci-mint);
+      }
+
+      .tileSky {
+        background: var(--ci-sky);
+      }
+
+      .tileSand {
+        background: var(--ci-sand);
+      }
+
+      .tilePaper {
+        background: white;
+      }
+
+      .tilePhoto::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background: linear-gradient(180deg, transparent 48%, rgb(20 30 58 / 36%));
+      }
+
+      .tilePhoto strong {
+        position: relative;
+        z-index: 1;
+      }
+
+      .heroB {
+        padding: 0 0 52px;
+      }
+
+      .heroBTop {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 26px;
+        align-items: end;
+        padding: 42px 0 28px;
+      }
+
+      .heroBTop h3 {
+        max-width: 890px;
+        margin: 0;
+        color: var(--ci-blue-dark);
+        font-size: clamp(2.4rem, 6vw, 5.1rem);
+        line-height: 0.96;
+      }
+
+      .heroBTop p {
+        max-width: 340px;
+        margin: 0 0 6px;
+        color: var(--ci-muted);
+        line-height: 1.6;
+      }
+
+      .heroB .heroActions {
+        margin-top: 22px;
+      }
+
+      .stripCaption {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1px;
+        margin-top: 1px;
+        background: var(--ci-line);
+      }
+
+      .stripCaption div {
+        padding: 15px;
+        background: white;
+        color: var(--ci-muted);
+        line-height: 1.45;
+      }
+
+      .stripCaption strong {
+        display: block;
+        color: var(--ci-blue-dark);
+      }
+
+      .heroCWrap {
+        background:
+          linear-gradient(90deg, rgb(53 70 147 / 7%), transparent 58%),
+          var(--ci-paper);
+      }
+
+      .heroC {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(460px, 1.1fr);
+        gap: clamp(28px, 4vw, 58px);
+        align-items: center;
+        padding: 44px 0 56px;
+      }
+
+      .heroC .heroCopy {
+        padding: 16px 0;
+      }
+
+      .heroC .tileGrid {
+        border-radius: 0;
+        box-shadow: 0 26px 70px rgb(38 54 111 / 18%);
+      }
+
+      .noteList {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        width: min(1160px, calc(100% - 32px));
+        margin: 22px auto 0;
+        padding-bottom: 28px;
+      }
+
+      .noteList div {
+        padding: 16px;
+        border: 1px solid var(--ci-line);
+        border-radius: 10px;
+        background: white;
+        color: var(--ci-muted);
+        line-height: 1.45;
+      }
+
+      .noteList strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ci-blue-dark);
+      }
+
+      .focusable:focus-visible,
+      a:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 980px) {
+        .draftHeaderInner,
+        .variantHeader,
+        .siteNav,
+        .heroBTop {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .siteNav {
+          display: grid;
+        }
+
+        .navLinks {
+          flex-wrap: wrap;
+        }
+
+        .heroA,
+        .heroC {
+          grid-template-columns: 1fr;
+          min-height: auto;
+        }
+
+        .heroA,
+        .heroC,
+        .heroB {
+          padding-top: 22px;
+        }
+
+        .heroBTop {
+          grid-template-columns: 1fr;
+        }
+
+        .tileGridA,
+        .tileGridC {
+          max-width: 680px;
+        }
+
+        .draftMeta,
+        .noteList,
+        .stripCaption {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .variant,
+        .intro,
+        .draftMeta {
+          width: min(100% - 20px, 1280px);
+        }
+
+        .variantHeader {
+          padding: 18px;
+        }
+
+        .siteNav,
+        .heroA,
+        .heroB,
+        .heroC,
+        .noteList {
+          width: min(100% - 20px, 1160px);
+        }
+
+        .draftBrand,
+        .siteNav img {
+          width: 150px;
+        }
+
+        .heroCopy h3,
+        .heroCopy h1,
+        .heroBTop h3 {
+          font-size: clamp(2rem, 12vw, 3.25rem);
+        }
+
+        .heroBTop h3 {
+          font-size: clamp(2rem, 9vw, 2.7rem);
+        }
+
+        .heroActions a {
+          width: 100%;
+        }
+
+        .servicePills {
+          grid-template-columns: 1fr;
+        }
+
+        .tileGridB {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .tileLabel {
+          padding: 10px;
+        }
+
+        .tileLabel strong {
+          font-size: 0.78rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="draftHeader">
+        <div class="draftHeaderInner">
+          <img
+            class="draftBrand"
+            src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg"
+            alt="saniPEP Sanitaetshaus"
+          />
+          <nav class="draftNav" aria-label="Entwurfsvarianten">
+            <a href="#variante-a">Variante A</a>
+            <a href="#variante-b">Variante B</a>
+            <a href="#variante-c">Variante C</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="draft-title">
+          <p class="introEyebrow">Landingpage Hero Entwuerfe</p>
+          <h1 id="draft-title">Kachelraster nach Briefkopf-Prinzip, vorbereitet fuer Produktbilder.</h1>
+          <p>
+            Die quadratischen Kacheln sind bewusst ohne Abstand gebaut: gleich gross, nahtlos und nicht
+            ueberlappend. Das Logo sitzt jeweils als eigene Kachel im Raster. Die vorhandenen Icons und
+            das Beratungsbild dienen nur als austauschbare Platzhalter, bis die finalen Produktbilder
+            geliefert sind.
+          </p>
+        </section>
+
+        <section class="draftMeta" aria-label="Rasterregeln">
+          <div>
+            <strong>Raster</strong>
+            <span>Alle Kacheln nutzen <code>aspect-ratio: 1 / 1</code>, <code>gap: 0</code> und identische Spaltenbreiten.</span>
+          </div>
+          <div>
+            <strong>Logo</strong>
+            <span>Das Logo ist kein Overlay, sondern eine eigene quadratische Kachel zwischen den Motiven.</span>
+          </div>
+          <div>
+            <strong>Assets</strong>
+            <span>Produktbilder koennen spaeter tile-fuer-tile ersetzt werden, ohne das Layout neu zu bauen.</span>
+          </div>
+        </section>
+
+        <section id="variante-a" class="variant" aria-labelledby="variant-a-title">
+          <div class="variantHeader">
+            <div>
+              <p class="variantEyebrow">Variante A</p>
+              <h2 id="variant-a-title">Ruhige Beratung links, Produktmosaik rechts</h2>
+              <p>
+                Naechste Naehe zur aktuellen Homepage: klare Conversion-Fuehrung, aber das bisherige
+                abstrakte Hero-Objekt wird durch ein sauberes 4x3-Kachelbild ersetzt.
+              </p>
+            </div>
+            <div class="variantTag">4 x 3 Quadrate</div>
+          </div>
+
+          <div class="siteShell">
+            <nav class="siteNav" aria-label="Demo Navigation Variante A">
+              <img src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg" alt="saniPEP Sanitaetshaus" />
+              <div class="navLinks">
+                <span>Kompression</span>
+                <span>Brustprothetik</span>
+                <span>Pflege</span>
+                <span>Kontakt</span>
+              </div>
+            </nav>
+
+            <div class="heroA">
+              <div class="heroCopy">
+                <h3>Versorgung, die vorbereitet und persoenlich bleibt.</h3>
+                <p>
+                  Digital starten, in Muenchen persoenlich beraten werden und sensible Versorgung mit
+                  einem klaren naechsten Schritt angehen.
+                </p>
+                <div class="heroActions">
+                  <a href="#">Termin anfragen</a>
+                  <a href="#">Rezept hochladen</a>
+                </div>
+                <div class="servicePills" aria-label="Leistungsbereiche">
+                  <div class="servicePill">
+                    <img src="../../apps/cms/public/uploads/icons/png/outline/body/lymph_nodes.png" alt="" />
+                    <span>Kompression</span>
+                  </div>
+                  <div class="servicePill">
+                    <img src="../../apps/cms/public/uploads/icons/png/outline/body/breasts.png" alt="" />
+                    <span>Brustprothetik</span>
+                  </div>
+                  <div class="servicePill">
+                    <img src="../../apps/cms/public/uploads/icons/png/outline/devices/orthotics.png" alt="" />
+                    <span>Orthesen & Reha</span>
+                  </div>
+                  <div class="servicePill">
+                    <img src="../../apps/cms/public/uploads/icons/png/outline/symbols/nappy_diaper.png" alt="" />
+                    <span>Pflegehilfsmittel</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tileGrid tileGridA" aria-label="Hero Kachelmosaik Variante A">
+                <div class="tile tilePhoto tileLabel">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-960.webp" alt="" />
+                  <strong>Beratung</strong>
+                </div>
+                <div class="tile tileIcon tileSky">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/body/lymph_nodes.png" alt="" />
+                </div>
+                <div class="tile tileRose tileLabel"><strong>Diskret</strong></div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-1280.webp" alt="" />
+                </div>
+                <div class="tile tileBlue tileLabel"><strong>Muenchen</strong></div>
+                <div class="tile tileLogo">
+                  <img src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg" alt="saniPEP Sanitaetshaus" />
+                </div>
+                <div class="tile tileIcon tileMint">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/body/breasts.png" alt="" />
+                </div>
+                <div class="tile tileSand"></div>
+                <div class="tile tileIcon tilePaper">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/devices/orthotics.png" alt="" />
+                </div>
+                <div class="tile tileRoseDark tileLabel"><strong>Rezept Upload</strong></div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-1672.webp" alt="" />
+                </div>
+                <div class="tile tileIcon tileSky">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/symbols/nappy_diaper.png" alt="" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="variante-b" class="variant" aria-labelledby="variant-b-title">
+          <div class="variantHeader">
+            <div>
+              <p class="variantEyebrow">Variante B</p>
+              <h2 id="variant-b-title">Grosses Markenstatement mit Kachelband</h2>
+              <p>
+                Editorialer und praegnanter: Das Kachelband wirkt wie ein Markenbild und laesst viel
+                Raum fuer SEO-starke Headline und lokale Positionierung.
+              </p>
+            </div>
+            <div class="variantTag">6 x 2 Quadrate</div>
+          </div>
+
+          <div class="siteShell">
+            <nav class="siteNav" aria-label="Demo Navigation Variante B">
+              <img src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg" alt="saniPEP Sanitaetshaus" />
+              <div class="navLinks">
+                <span>Leistungen</span>
+                <span>Rezeptupload</span>
+                <span>Termin</span>
+                <span>Kontakt</span>
+              </div>
+            </nav>
+
+            <div class="heroB">
+              <div class="heroBTop">
+                <div>
+                  <h3>Sanitaetshaus in Muenchen. Klar vorbereitet.</h3>
+                  <div class="heroActions">
+                    <a href="#">Termin anfragen</a>
+                    <a href="#">Kundenportal Login</a>
+                  </div>
+                </div>
+                <p>
+                  Fuer Kompression, Brustprothetik, Bandagen, Orthesen, Reha, Stoma,
+                  Inkontinenz und Pflegehilfsmittel.
+                </p>
+              </div>
+
+              <div class="tileGrid tileGridB" aria-label="Hero Kachelband Variante B">
+                <div class="tile tileBlue tileLabel"><strong>Kompression</strong></div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-960.webp" alt="" />
+                </div>
+                <div class="tile tileIcon tileMint">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/body/lymph_nodes.png" alt="" />
+                </div>
+                <div class="tile tileLogo">
+                  <img src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg" alt="saniPEP Sanitaetshaus" />
+                </div>
+                <div class="tile tileRose tileLabel"><strong>Brustprothetik</strong></div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-1280.webp" alt="" />
+                </div>
+                <div class="tile tileIcon tileSky">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/body/breasts.png" alt="" />
+                </div>
+                <div class="tile tileSand"></div>
+                <div class="tile tileBlueDark tileLabel"><strong>Rezept</strong></div>
+                <div class="tile tileIcon tilePaper">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/objects/prescription_document.png" alt="" />
+                </div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-1672.webp" alt="" />
+                </div>
+                <div class="tile tileIcon tileMint">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/symbols/secure_communication.png" alt="" />
+                </div>
+              </div>
+
+              <div class="stripCaption">
+                <div><strong>Nahtlos</strong> Keine Zwischenraeume, keine Ueberlagerung, klare Kanten.</div>
+                <div><strong>Austauschbar</strong> Jede Kachel kann spaeter ein Produktfoto aufnehmen.</div>
+                <div><strong>Markenstark</strong> Logo bleibt sichtbar, aber ruhig in das Raster eingebunden.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="variante-c" class="variant" aria-labelledby="variant-c-title">
+          <div class="variantHeader">
+            <div>
+              <p class="variantEyebrow">Variante C</p>
+              <h2 id="variant-c-title">Premium-Mosaik als Hero-Bildflaeche</h2>
+              <p>
+                Staerker visuell: Das 5x3-Raster wird zum zentralen Hero-Bild. Gut geeignet, wenn die
+                gelieferten Produktbilder hochwertig, hell und einheitlich freigestellt sind.
+              </p>
+            </div>
+            <div class="variantTag">5 x 3 Quadrate</div>
+          </div>
+
+          <div class="heroCWrap">
+            <nav class="siteNav" aria-label="Demo Navigation Variante C">
+              <img src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg" alt="saniPEP Sanitaetshaus" />
+              <div class="navLinks">
+                <span>Kompression</span>
+                <span>Brustprothetik</span>
+                <span>Upload</span>
+                <span>Portal</span>
+              </div>
+            </nav>
+
+            <div class="heroC">
+              <div class="heroCopy">
+                <h3>Gut versorgt, ohne unnoetige Wege.</h3>
+                <p>
+                  Digitale Vorbereitung, persoenliche Beratung und ein klarer Versorgungsablauf fuer
+                  sensible Hilfsmittel und Rezepte.
+                </p>
+                <div class="heroActions">
+                  <a href="#">Rezept hochladen</a>
+                  <a href="#">Termin anfragen</a>
+                </div>
+              </div>
+
+              <div class="tileGrid tileGridC" aria-label="Hero Kachelmosaik Variante C">
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-1672.webp" alt="" />
+                </div>
+                <div class="tile tileIcon tileSky">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/body/lymph_nodes.png" alt="" />
+                </div>
+                <div class="tile tileBlue tileLabel"><strong>Team</strong></div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-960.webp" alt="" />
+                </div>
+                <div class="tile tileRose"></div>
+                <div class="tile tileIcon tileMint">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/body/breasts.png" alt="" />
+                </div>
+                <div class="tile tileSand"></div>
+                <div class="tile tileLogo">
+                  <img src="../../apps/web/public/brand/sanipep-sanitaetshaus-logo.svg" alt="saniPEP Sanitaetshaus" />
+                </div>
+                <div class="tile tileIcon tilePaper">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/devices/orthotics.png" alt="" />
+                </div>
+                <div class="tile tileBlueDark tileLabel"><strong>Sicher</strong></div>
+                <div class="tile tileRoseDark tileLabel"><strong>Diskret</strong></div>
+                <div class="tile tilePhoto">
+                  <img src="../../apps/web/public/images/sanipep-consultation-hero-1280.webp" alt="" />
+                </div>
+                <div class="tile tileIcon tileSky">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/symbols/nappy_diaper.png" alt="" />
+                </div>
+                <div class="tile tilePaper"></div>
+                <div class="tile tileIcon tileMint">
+                  <img src="../../apps/cms/public/uploads/icons/png/outline/symbols/health_data_security.png" alt="" />
+                </div>
+              </div>
+            </div>
+
+            <div class="noteList">
+              <div><strong>Staerke</strong> Sehr bildstark, sobald echte Produktmotive vorliegen.</div>
+              <div><strong>Risiko</strong> Braucht konsequente Bildregeln, sonst wirkt das Raster unruhig.</div>
+              <div><strong>Empfehlung</strong> Produktbilder hell, frontal, freigestellt oder mit ruhigem Hintergrund.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

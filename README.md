@@ -222,6 +222,53 @@ npm run build:admin:mock
 npm run build:design-lab:mock
 ```
 
+## Dauerbetrieb mit Docker Compose
+
+Die oeffentliche Next.js-Website, das Portal-Backend, PostgreSQL und Redis koennen dauerhaft
+als Docker-Compose-Stack laufen:
+
+```bash
+docker compose up -d --build
+```
+
+Danach sind die Dienste hier erreichbar:
+
+- Public Website: `http://localhost:3000`
+- Portal Backend Healthcheck: `http://localhost:4100/healthz`
+
+Die Container nutzen `restart: unless-stopped`. Solange Docker beim Systemstart gestartet wird,
+kommen die Dienste nach einem Reboot automatisch wieder hoch.
+
+Nuetzliche Befehle:
+
+```bash
+npm run compose:ps
+npm run compose:logs -- web
+npm run compose:logs -- backend
+docker compose restart web
+npm run compose:down
+```
+
+Persistente lokale Daten liegen in benannten Docker-Volumes fuer PostgreSQL, Redis und den
+Development-Store des Portal-MVPs. Nur wenn diese Daten bewusst geloescht werden sollen:
+
+```bash
+docker compose down -v
+```
+
+Optional kann der Compose-Stack als systemd-Service auf dem Host eingetragen werden. Die Vorlage
+liegt in `ops/systemd/sanipep-sh-web.service.example`:
+
+```bash
+sudo cp ops/systemd/sanipep-sh-web.service.example /etc/systemd/system/sanipep-sh-web.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now sanipep-sh-web.service
+sudo systemctl status sanipep-sh-web.service
+```
+
+Falls `docker` auf dem Host nicht unter `/usr/bin/docker` liegt, muss `ExecStart` in der Service-Datei
+auf den Pfad aus `command -v docker` angepasst werden.
+
 ## Offene Risiken und naechste Schritte
 
 - Das Portal-MVP nutzt Development-Seed-Credentials und eine lokale dateibasierte Repository-Persistenz;

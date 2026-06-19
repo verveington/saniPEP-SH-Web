@@ -658,6 +658,68 @@ export interface ApiHeroContentHeroContent extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiIconAssetIconAsset extends Struct.CollectionTypeSchema {
+  collectionName: 'icon_assets';
+  info: {
+    description: 'Globale Outline-Icons fuer Content- und Bedeutungsicons mit stabilen Keys';
+    displayName: 'Icon Asset';
+    pluralName: 'icon-assets';
+    singularName: 'icon-asset';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    altText: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 160;
+      }>;
+    category: Schema.Attribute.Enumeration<
+      ['body', 'devices', 'objects', 'symbols', 'other']
+    > &
+      Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    editorialNote: Schema.Attribute.Text;
+    file: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+    isGlobal: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    label: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120;
+      }>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::icon-asset.icon-asset'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    purpose: Schema.Attribute.Enumeration<
+      ['content', 'service', 'contact', 'legal', 'status', 'form']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'content'>;
+    safeForPublic: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<true>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    usageBoundary: Schema.Attribute.Text &
+      Schema.Attribute.DefaultTo<'Nur fuer Bedeutungs-, Content- und Service-Icons. Bedienung und Navigation nutzen Reshaped/Lucide-Glyphen.'>;
+  };
+}
+
 export interface ApiLandingPageSectionLandingPageSection
   extends Struct.CollectionTypeSchema {
   collectionName: 'landing_page_sections';
@@ -1614,6 +1676,7 @@ declare module '@strapi/strapi' {
       'api::faq.faq': ApiFaqFaq;
       'api::form-configuration.form-configuration': ApiFormConfigurationFormConfiguration;
       'api::hero-content.hero-content': ApiHeroContentHeroContent;
+      'api::icon-asset.icon-asset': ApiIconAssetIconAsset;
       'api::landing-page-section.landing-page-section': ApiLandingPageSectionLandingPageSection;
       'api::legal-page.legal-page': ApiLegalPageLegalPage;
       'api::opening-hour.opening-hour': ApiOpeningHourOpeningHour;

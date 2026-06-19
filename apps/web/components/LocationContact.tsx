@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Calendar, Mail, MapPin, MessageCircle, Phone, Shield, Upload, type LucideIcon } from "lucide-react";
 import { Card, Text, View } from "reshaped";
-import { contact } from "@frontend/app/publicContent";
 import { getContactContent } from "../lib/cms/strapi";
+import { verifiedAddress, verifiedContact } from "../lib/verifiedContact";
 import { ButtonText, IconBox } from "./common";
 
 export async function LocationContact({ standalone = false }: { standalone?: boolean }) {
@@ -12,17 +12,17 @@ export async function LocationContact({ standalone = false }: { standalone?: boo
     `${item.opensAt.slice(0, 5)} - ${item.closesAt.slice(0, 5)}`,
   ]);
   const contactView = {
-    name: contactSetting.name ?? contact.name,
-    address: contactSetting.address ?? contact.address,
-    phone: contactSetting.phone ?? contact.phone,
-    email: contactSetting.email ?? contact.email,
-    whatsapp: contactSetting.whatsapp ?? contact.whatsapp,
-    reachable: contactSetting.reachableHours ?? contact.reachable,
-    publicHours: publicHours.length > 0 ? publicHours : contact.publicHours,
+    name: verifiedContact.name,
+    address: verifiedAddress,
+    phone: contactSetting.phone ?? verifiedContact.phone,
+    email: contactSetting.email ?? verifiedContact.email,
+    whatsapp: contactSetting.whatsapp ?? verifiedContact.whatsapp,
+    reachable: contactSetting.reachableHours ?? verifiedContact.reachable,
+    publicHours: publicHours.length > 0 ? publicHours : verifiedContact.publicHours,
   };
 
   return (
-    <section className={standalone ? "section" : "sectionTight"} style={{ background: "var(--sani-white)" }}>
+    <section className={`${standalone ? "section" : "sectionTight"} locationSection`}>
       <div className="sectionInner gridTwo">
         <View direction="column" gap={5}>
           <View direction="column" gap={2}>

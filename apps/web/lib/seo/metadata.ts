@@ -5,9 +5,9 @@ import { getSeoEntry } from "../cms/strapi";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sanipep.de";
 const socialImage = {
-  url: new URL("/images/sanipep-consultation-hero-1280.webp", siteUrl),
-  width: 1280,
-  height: 720,
+  url: new URL("/brand/sanipep-social-preview.svg", siteUrl),
+  width: 1200,
+  height: 630,
   alt: "saniPEP Sanitätshaus München",
 };
 const metadataByRoute = routeMetadataJson as Record<Route, RouteMetadata>;

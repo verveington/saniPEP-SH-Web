@@ -70,6 +70,7 @@ const requiredContentTypes = [
   "legal-page",
   "faq",
   "hero-content",
+  "icon-asset",
 ];
 
 const forbiddenCmsAttributePatterns = [
@@ -86,6 +87,7 @@ const forbiddenCmsAttributePatterns = [
 
 const routeMetadata = readJson("apps/frontend/src/lib/routeMetadata.json");
 const cmsSeed = readJson("apps/cms/mock-content/public-content.seed.json");
+const saniPepCmsConfig = fs.readFileSync(path.join(root, "apps/cms/config/sanipep.js"), "utf8");
 const routeKeys = Object.keys(routeMetadata);
 const publicApp = [
   fs.readFileSync(path.join(root, "apps/frontend/src/App.tsx"), "utf8"),
@@ -173,6 +175,20 @@ assert(
   symptom.attributes.category.enum.join(",") === "symptom,product,situation",
   "Symptom search categories must preserve symptom > product > situation architecture",
 );
+
+const iconAsset = readJson("apps/cms/content-types/icon-asset/schema.json");
+assert(iconAsset.attributes.key?.unique === true, "Icon assets must use unique stable keys");
+assert(iconAsset.attributes.file?.type === "media", "Icon assets must reference Strapi media");
+assert(iconAsset.attributes.file?.required === true, "Icon assets must require a media file");
+assert(
+  iconAsset.attributes.file?.allowedTypes?.join(",") === "images",
+  "Icon assets must only allow image uploads",
+);
+assert(
+  saniPepCmsConfig.includes("'api::icon-asset.icon-asset'"),
+  "Icon assets must be public read content for future public pages",
+);
+assert(saniPepCmsConfig.includes("'Icons'"), "Strapi media folders must include Icons");
 
 assert(cmsSeed.contentPolicy?.containsRealPatientData === false, "CMS seed must not contain real patient data");
 assert(cmsSeed.contentPolicy?.containsFinalLegalTexts === false, "CMS seed must not contain final legal texts");

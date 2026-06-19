@@ -1,16 +1,42 @@
+name: sanipep-sh
+
 services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
+      STRAPI_API_URL: "${STRAPI_API_URL:-}"
+      STRAPI_API_TOKEN: "${STRAPI_API_TOKEN:-}"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   backend:
     build:
-      context: ../..
+      context: .
       dockerfile: apps/backend/Dockerfile
     restart: unless-stopped
     ports:
-      - "4100:4100"
+      - "${BACKEND_PORT:-4100}:4100"
     environment:
       NODE_ENV: development
       PORT: 4100
-      PORTAL_BACKEND_BASE_URL: http://localhost:4100
-      TRUSTED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:5174
+      PORTAL_BACKEND_BASE_URL: "${PORTAL_BACKEND_BASE_URL:-http://localhost:4100}"
+      TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}"
       PORTAL_DATABASE_URL: postgres://sanipep:sanipep-local@postgres:5432/sanipep_portal
       PORTAL_DATABASE_SSL: "false"
       POSTGRES_POOL_MAX: 10
@@ -33,12 +59,20 @@ services:
         condition: service_healthy
     volumes:
       - backend_dev_store:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:4100/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   postgres:
     image: postgres:16
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: sanipep
       POSTGRES_PASSWORD: sanipep-local
@@ -50,13 +84,11 @@ services:
       retries: 20
     volumes:
       - backend_postgres_data:/var/lib/postgresql/data
-      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - ./apps/backend/migrations:/docker-entrypoint-initdb.d:ro
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

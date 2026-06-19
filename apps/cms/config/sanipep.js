@@ -4,6 +4,7 @@ const publicContentUids = [
   'api::contact-setting.contact-setting',
   'api::faq.faq',
   'api::hero-content.hero-content',
+  'api::icon-asset.icon-asset',
   'api::landing-page-section.landing-page-section',
   'api::legal-page.legal-page',
   'api::opening-hour.opening-hour',
@@ -25,6 +26,7 @@ const mediaFolders = [
   'Leistungsseitenbilder',
   'Produktgruppenbilder',
   'Downloads',
+  'Icons',
 ];
 
 const editorialRoles = [

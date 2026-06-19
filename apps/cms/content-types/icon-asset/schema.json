@@ -1,0 +1,79 @@
+{
+  "kind": "collectionType",
+  "collectionName": "icon_assets",
+  "info": {
+    "singularName": "icon-asset",
+    "pluralName": "icon-assets",
+    "displayName": "Icon Asset",
+    "description": "Globale Outline-Icons fuer Content- und Bedeutungsicons mit stabilen Keys"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 120
+    },
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "category": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "body",
+        "devices",
+        "objects",
+        "symbols",
+        "other"
+      ]
+    },
+    "purpose": {
+      "type": "enumeration",
+      "required": true,
+      "default": "content",
+      "enum": [
+        "content",
+        "service",
+        "contact",
+        "legal",
+        "status",
+        "form"
+      ]
+    },
+    "file": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "altText": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "isGlobal": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    },
+    "safeForPublic": {
+      "type": "boolean",
+      "required": true,
+      "default": true
+    },
+    "usageBoundary": {
+      "type": "text",
+      "default": "Nur fuer Bedeutungs-, Content- und Service-Icons. Bedienung und Navigation nutzen Reshaped/Lucide-Glyphen."
+    },
+    "editorialNote": {
+      "type": "text"
+    }
+  }
+}

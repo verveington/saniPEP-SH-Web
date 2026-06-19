@@ -1,0 +1,835 @@
+:root {
+  --sani-brand: #364593;
+  --sani-brand-strong: #283579;
+  --sani-brand-soft: #eef1fb;
+  --sani-secondary: #6f3d66;
+  --sani-secondary-soft: #f5edf4;
+  --sani-accent: #b35985;
+  --sani-action: #9f4778;
+  --sani-action-soft: #f8edf4;
+  --sani-page: #f8f6fb;
+  --sani-line: #ddd7eb;
+  --sani-graphite: #1f2433;
+  --sani-muted: #667085;
+  --sani-shadow: 0 22px 48px rgba(54, 69, 147, 0.16);
+}
+
+body {
+  background: var(--sani-page);
+}
+
+.appShell {
+  background:
+    linear-gradient(180deg, rgba(248, 246, 251, 0.98), rgba(255, 255, 255, 0.98) 50%, rgba(248, 246, 251, 0.96)),
+    var(--sani-page);
+}
+
+.siteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(248, 246, 251, 0.94);
+  border-bottom: 1px solid color-mix(in srgb, var(--sani-brand) 16%, transparent);
+  box-shadow: 0 14px 34px rgba(54, 69, 147, 0.07);
+  backdrop-filter: blur(18px);
+}
+
+.headerInner {
+  min-height: 88px;
+  flex-wrap: nowrap;
+}
+
+.navLinks {
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--sani-brand) 20%, var(--sani-line));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(54, 69, 147, 0.08);
+}
+
+.brandLinkLogo {
+  width: 190px;
+  min-height: 58px;
+}
+
+.brandLogo,
+.footerLogo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.navLink,
+.textButton,
+.portalLoginAnchor,
+.actionLink {
+  color: var(--sani-graphite);
+  font-weight: 650;
+  min-height: 44px;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 13px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--sani-brand-soft) 72%, white);
+  color: var(--sani-brand-strong);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navLink[aria-current="page"],
+.drawerNavLink[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--sani-brand) 54%, var(--sani-line));
+  background: var(--sani-brand);
+  color: var(--sani-white);
+}
+
+.navLink:hover,
+.navLink:focus-visible,
+.textButton:hover,
+.textButton:focus-visible,
+.portalLoginAnchor:hover,
+.portalLoginAnchor:focus-visible,
+.actionLink:hover,
+.actionLink:focus-visible {
+  background: var(--sani-secondary-soft);
+  color: var(--sani-secondary);
+}
+
+.navLink:hover,
+.navLink:focus-visible {
+  border-color: color-mix(in srgb, var(--sani-accent) 34%, var(--sani-line));
+  box-shadow: 0 8px 18px rgba(54, 69, 147, 0.1);
+}
+
+.actionLink,
+.portalLoginAnchor {
+  border-color: color-mix(in srgb, var(--sani-brand) 24%, var(--sani-line));
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.actionLinkPrimary {
+  background: var(--sani-brand);
+  border-color: var(--sani-brand);
+  color: var(--sani-white);
+  box-shadow: 0 10px 24px rgba(54, 69, 147, 0.16);
+}
+
+.actionLinkPrimary:hover,
+.actionLinkPrimary:focus-visible {
+  background: var(--sani-brand-strong);
+  color: var(--sani-white);
+}
+
+.headerActions {
+  flex-wrap: nowrap;
+}
+
+.menuButton {
+  display: none;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--sani-brand) 24%, var(--sani-line));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--sani-brand-strong);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mobileNavDrawer {
+  display: none;
+}
+
+.boutiqueHero {
+  position: relative;
+  isolation: isolate;
+  min-height: min(820px, calc(100svh - 84px));
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #eaf6fb 0%, #eaf6fb 48%, #f8f6fb 48%, #f8f6fb 100%),
+    var(--sani-page);
+}
+
+.boutiqueHero::before,
+.boutiqueHero::after {
+  content: none;
+}
+
+.boutiqueHero .heroContent {
+  display: grid;
+  grid-template-columns: minmax(0, 0.96fr) minmax(380px, 0.86fr);
+  gap: 44px;
+  align-items: center;
+  padding: 64px 0 86px;
+  position: relative;
+  z-index: 1;
+}
+
+.boutiqueHero .heroCopy {
+  width: min(720px, 100%);
+  gap: 24px;
+}
+
+.boutiqueHero .heroTitle {
+  max-width: min(800px, 100%);
+}
+
+.boutiqueHero .heroTitle :is(h1, h2, h3) {
+  color: var(--sani-brand);
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+.heroTitleLine {
+  display: inline;
+}
+
+.heroActions {
+  gap: 10px;
+}
+
+.heroContactRail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  width: min(760px, 100%);
+}
+
+.heroContactItem {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+  min-height: 92px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--sani-brand) 17%, var(--sani-line));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 28px rgba(54, 69, 147, 0.08);
+  overflow-wrap: anywhere;
+}
+
+.heroContactItem svg {
+  width: 22px;
+  height: 22px;
+  color: var(--sani-accent);
+}
+
+.heroProductStage {
+  position: relative;
+  min-height: 560px;
+  width: min(520px, 100%);
+  justify-self: end;
+  overflow: hidden;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, transparent 0 70%, rgba(255, 255, 255, 0.92) 70%),
+    #d6eaf3;
+  box-shadow: 0 28px 70px rgba(54, 69, 147, 0.22);
+}
+
+.shapeTileGrid,
+.productCard,
+.stockingDisplay,
+.qualityBadge {
+  position: absolute;
+}
+
+.shapeTileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 0;
+  width: 360px;
+  aspect-ratio: 1;
+  left: 0;
+  bottom: 92px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 18px 42px rgba(54, 69, 147, 0.12);
+}
+
+.shapeTile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(54, 69, 147, 0.12);
+  overflow: hidden;
+}
+
+.shapeMotif {
+  display: block;
+  width: 70%;
+  aspect-ratio: 1;
+}
+
+.shapeMotifCircle {
+  border-radius: 50%;
+}
+
+.shapeMotifHalf {
+  width: 76%;
+  height: 38%;
+  border-radius: 999px 999px 0 0;
+}
+
+.shapeTileIndigo .shapeMotif {
+  background: var(--sani-brand);
+}
+
+.shapeTileRose .shapeMotif {
+  background: linear-gradient(180deg, #d4a0c0, var(--sani-accent));
+}
+
+.shapeTileLavender .shapeMotif {
+  width: 78%;
+  background: #aebae0;
+}
+
+.shapeTileCream {
+  padding: 22px;
+  background: #fff6e4;
+  color: var(--sani-brand);
+  text-align: center;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.shapeTileText {
+  display: grid;
+  place-items: center;
+  width: 74%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.productCardTall {
+  display: grid;
+  gap: 4px;
+  width: 145px;
+  min-height: 174px;
+  right: 34px;
+  bottom: 28px;
+  padding: 18px;
+  border: 1px solid rgba(54, 69, 147, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--sani-brand);
+  box-shadow: 0 16px 34px rgba(31, 36, 51, 0.12);
+}
+
+.productCardTall strong {
+  align-self: end;
+  font-size: 21px;
+  line-height: 1.05;
+}
+
+.productCardTall small {
+  color: var(--sani-secondary);
+  font-weight: 700;
+}
+
+.productCode {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sani-brand);
+  color: white;
+  font-weight: 800;
+}
+
+.stockingDisplay {
+  inset: 0;
+  pointer-events: none;
+}
+
+.stockingLeg {
+  position: absolute;
+  display: block;
+  width: 120px;
+  height: 390px;
+  border-radius: 80px 80px 42px 42px;
+  background:
+    radial-gradient(circle at 58% 14%, rgba(255, 255, 255, 0.16), transparent 28%),
+    linear-gradient(90deg, #051d25, #0d3542 46%, #021019);
+  box-shadow: 0 22px 40px rgba(1, 16, 24, 0.38);
+  transform-origin: center bottom;
+}
+
+.stockingLeg::after {
+  content: "";
+  position: absolute;
+  width: 122px;
+  height: 58px;
+  left: -30px;
+  bottom: -18px;
+  border-radius: 70px 22px 42px 70px;
+  background: inherit;
+  transform: rotate(-9deg);
+}
+
+.stockingLegFront {
+  right: 132px;
+  top: 112px;
+  transform: rotate(38deg);
+}
+
+.stockingLegBack {
+  right: 24px;
+  top: 90px;
+  transform: rotate(68deg);
+  opacity: 0.96;
+}
+
+.qualityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  left: 204px;
+  bottom: 42px;
+  min-height: 56px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--sani-brand);
+  color: white;
+  font-weight: 800;
+  box-shadow: 0 16px 36px rgba(54, 69, 147, 0.22);
+}
+
+.qualityBadge svg {
+  width: 18px;
+  height: 18px;
+}
+
+.heroCards {
+  width: min(920px, 100%);
+  margin-top: 10px;
+  gap: 14px;
+}
+
+.heroCard {
+  min-height: 128px;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: color-mix(in srgb, var(--sani-accent) 24%, var(--sani-line));
+}
+
+.quickAccess {
+  margin-top: 0;
+  padding: 44px 0 0;
+}
+
+.accessCard,
+.plainPanel,
+.portalPanel,
+.formPanel,
+.serviceCard {
+  border-color: var(--sani-line);
+  box-shadow: 0 12px 28px rgba(54, 69, 147, 0.08);
+}
+
+.accessCard {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.iconBox {
+  background: var(--sani-secondary-soft);
+  color: var(--sani-secondary);
+}
+
+.serviceCard {
+  border-top-color: var(--sani-brand);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 246, 251, 0.76)),
+    var(--sani-white);
+}
+
+.serviceCard[data-priority="automated"] {
+  border-top-color: var(--sani-accent);
+}
+
+.serviceCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--sani-secondary);
+}
+
+.serviceCardRule {
+  display: block;
+  width: 34px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--sani-accent);
+}
+
+.locationSection {
+  background: var(--sani-white);
+}
+
+.footer {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 246, 251, 0.98)),
+    var(--sani-page);
+  border-top: 1px solid var(--sani-line);
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.footerLogo {
+  width: 164px;
+  max-width: 100%;
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+@media (max-width: 980px) {
+  .brandLinkLogo {
+    width: 174px;
+  }
+
+  .headerInner {
+    flex-direction: row;
+    align-items: center;
+    padding: 0;
+  }
+
+  .boutiqueHero {
+    min-height: auto;
+  }
+
+  .boutiqueHero .heroContent {
+    grid-template-columns: 1fr;
+    padding: 52px 0 76px;
+  }
+
+  .navLinks {
+    width: auto;
+    justify-content: center;
+  }
+
+  .navLink {
+    flex: 0 0 auto;
+  }
+
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 54px;
+  }
+
+  .heroProductStage {
+    justify-self: stretch;
+    width: 100%;
+    min-height: 500px;
+  }
+
+  .stockingLegFront {
+    right: 38%;
+  }
+
+  .stockingLegBack {
+    right: 20%;
+  }
+
+  .heroContactRail,
+  .footerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footerLinks {
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 981px) and (max-width: 1120px) {
+  .boutiqueHero .heroContent {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.7fr);
+    gap: 32px;
+    padding: 54px 0 72px;
+  }
+
+  .boutiqueHero .heroCopy {
+    gap: 20px;
+  }
+
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 52px;
+    line-height: 1.04;
+  }
+
+  .heroContactItem {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .siteHeader {
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .headerInner {
+    min-height: 86px;
+    gap: 10px;
+    padding: 8px 0;
+  }
+
+  .brandLinkLogo {
+    width: 150px;
+  }
+
+  .desktopNav,
+  .headerSecondaryAction {
+    display: none;
+  }
+
+  .headerActions {
+    display: flex;
+    width: auto;
+    margin-left: auto;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .menuButton {
+    display: inline-flex;
+    padding: 0 12px;
+  }
+
+  .mobileNavDrawer {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    z-index: 31;
+    padding: 12px;
+    border-bottom: 1px solid var(--sani-line);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 22px 48px rgba(54, 69, 147, 0.16);
+  }
+
+  .mobileNavDrawer[data-open="true"] {
+    display: grid;
+    gap: 12px;
+  }
+
+  .drawerNavLinks,
+  .drawerActions {
+    display: grid;
+    gap: 8px;
+    width: min(100%, 420px);
+    margin-inline: auto;
+  }
+
+  .drawerNavLink {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 0 14px;
+    border: 1px solid var(--sani-line);
+    border-radius: 8px;
+    background: var(--sani-brand-soft);
+    color: var(--sani-brand-strong);
+    font-weight: 760;
+    text-decoration: none;
+  }
+
+  .heroTitleLine {
+    display: block;
+  }
+
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 46px;
+    line-height: 1.08;
+  }
+}
+
+@media (max-width: 660px) {
+  .siteHeader {
+    background: var(--sani-white);
+  }
+
+  .brandLinkLogo {
+    width: 146px;
+  }
+
+  .boutiqueHero .heroContent {
+    padding: 38px 0 62px;
+  }
+
+  .boutiqueHero .heroCopy {
+    gap: 18px;
+  }
+
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 38px;
+    line-height: 1.08;
+  }
+
+  .heroActions {
+    width: 100%;
+  }
+
+  .heroActions > * {
+    width: 100%;
+  }
+
+  .desktopNav {
+    display: none;
+  }
+
+  .headerActions {
+    display: flex;
+    width: auto;
+  }
+
+  .heroContactRail {
+    gap: 8px;
+  }
+
+  .heroContactItem {
+    min-height: 78px;
+    padding: 12px;
+  }
+
+  .heroProductStage {
+    min-height: 410px;
+  }
+
+  .shapeTileGrid {
+    width: min(100%, 304px);
+    bottom: 70px;
+  }
+
+  .shapeTileCream {
+    padding: 18px;
+  }
+
+  .stockingLeg {
+    width: 92px;
+    height: 300px;
+  }
+
+  .stockingLeg::after {
+    width: 96px;
+    height: 48px;
+  }
+
+  .stockingLegFront {
+    right: 42%;
+    top: 82px;
+  }
+
+  .stockingLegBack {
+    right: 21%;
+    top: 76px;
+  }
+
+  .qualityBadge {
+    left: 178px;
+    bottom: 26px;
+  }
+
+  .productCardTall {
+    right: 18px;
+    bottom: 18px;
+    width: 132px;
+    min-height: 150px;
+  }
+
+  .quickAccess {
+    margin-top: 0;
+    padding-top: 30px;
+  }
+}
+
+@media (max-width: 430px) {
+  .brandLinkLogo {
+    width: 138px;
+  }
+
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 34px;
+  }
+
+  .headerActions {
+    display: flex;
+  }
+
+  .footerLinks {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .footerLink {
+    width: 100%;
+  }
+
+  .heroProductStage {
+    min-height: 360px;
+  }
+
+  .shapeTileGrid {
+    width: min(100%, 278px);
+  }
+
+  .qualityBadge {
+    left: 18px;
+  }
+
+  .productCardTall {
+    display: none;
+  }
+}
+
+@media (max-width: 390px) {
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 32px;
+  }
+
+  .heroContactItem {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 360px) {
+  .brandLinkLogo {
+    width: 128px;
+  }
+
+  .boutiqueHero .heroTitle :is(h1, h2, h3) {
+    font-size: 30px;
+  }
+
+}

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "reshaped/bundle.css";
 import "reshaped/themes/slate/theme.css";
 import "../../frontend/src/styles/global.css";
+import "./public-site.css";
 import { designTokenCssText } from "../../shared/design/saniPepDesignTokens";
 import { AppProvider } from "../components/AppProvider";
 import { PublicLayout } from "../components/PublicLayout";

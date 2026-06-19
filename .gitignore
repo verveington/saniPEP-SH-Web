@@ -3,6 +3,7 @@ dist/
 build/
 .next/
 .cache/
+*.tsbuildinfo
 .env
 .env.local
 .env.production

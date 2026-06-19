@@ -1,0 +1,37 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">saniPEP Sanitaetshaus Social Preview</title>
+  <desc id="desc">Geometrische saniPEP Markenflaeche in Indigo, Lavendel, Rose und Creme.</desc>
+  <rect width="1200" height="630" fill="#EAF6FB"/>
+  <rect y="378" width="1200" height="252" fill="#F8F6FB"/>
+  <g opacity="0.96">
+    <rect x="646" y="64" width="154" height="154" fill="#F8F6FB" stroke="#DDD7EB"/>
+    <circle cx="723" cy="141" r="54" fill="#AEBADF"/>
+    <rect x="800" y="64" width="154" height="154" fill="#F8F6FB" stroke="#DDD7EB"/>
+    <path d="M831 164A46 46 0 0 1 923 164H831Z" fill="#D4A0C0"/>
+    <rect x="646" y="218" width="154" height="154" fill="#B35985"/>
+    <circle cx="723" cy="295" r="54" fill="#FFF6E4"/>
+    <rect x="800" y="218" width="154" height="154" fill="#D6EAF3" stroke="#DDD7EB"/>
+    <path d="M877 246C890 277 908 295 939 308C908 321 890 339 877 370C864 339 846 321 815 308C846 295 864 277 877 246Z" fill="#364593"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M815 182C902 174 989 220 1070 254C1118 274 1166 292 1214 303V439C1136 426 1060 409 982 393C910 378 862 416 814 466C776 506 732 540 681 564C647 580 614 587 581 580C571 578 563 570 564 560C566 548 578 541 591 537C672 510 724 456 760 386C789 330 790 272 815 182Z" fill="#06202A"/>
+    <path d="M651 278C728 278 799 316 866 355C914 383 962 406 1018 408V525C946 520 878 499 812 474C759 454 721 482 685 520C656 551 618 579 574 592C539 602 505 600 472 586C462 582 456 572 459 562C462 552 474 547 488 547C556 547 602 505 633 449C662 397 638 337 651 278Z" fill="#092936"/>
+    <path d="M815 182C902 174 989 220 1070 254C1118 274 1166 292 1214 303V439C1136 426 1060 409 982 393C910 378 862 416 814 466C776 506 732 540 681 564C647 580 614 587 581 580C571 578 563 570 564 560C566 548 578 541 591 537C672 510 724 456 760 386C789 330 790 272 815 182Z" fill="url(#legHighlight)" opacity="0.72"/>
+  </g>
+  <text x="70" y="112" fill="#364593" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="800" letter-spacing="0">saniPEP</text>
+  <text x="74" y="164" fill="#B35985" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" letter-spacing="4">SANITAETSHAUS</text>
+  <text x="70" y="284" fill="#364593" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" letter-spacing="0">Versorgung ohne Kompromisse</text>
+  <text x="73" y="338" fill="#6F3D66" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Digital vorbereiten. Persoenlich begleitet werden.</text>
+  <rect x="70" y="416" width="320" height="74" rx="37" fill="#364593"/>
+  <text x="114" y="464" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800">Termin online anfragen</text>
+  <defs>
+    <filter id="shadow" x="408" y="126" width="856" height="526" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="28" stdDeviation="24" flood-color="#011018" flood-opacity="0.34"/>
+    </filter>
+    <linearGradient id="legHighlight" x1="575" y1="252" x2="1116" y2="491" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#123F4B"/>
+      <stop offset="0.42" stop-color="#06202A"/>
+      <stop offset="1" stop-color="#000910"/>
+    </linearGradient>
+  </defs>
+</svg>

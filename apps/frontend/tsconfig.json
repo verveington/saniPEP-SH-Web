@@ -16,6 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "../shared/design/**/*.ts"],
+  "include": ["src", "../shared/design/**/*.ts", "../shared/icons/**/*.ts", "../shared/icons/**/*.tsx"],
   "references": []
 }

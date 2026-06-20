@@ -1,9 +1,10 @@
-import { Activity, Calendar, Search, Shield, Upload } from "lucide-react";
+import { Calendar, Upload } from "lucide-react";
 import { Text, View } from "reshaped";
 import { serviceAreas } from "../app/publicContent";
 import type { Navigate, ServicePageRoute } from "../app/routes";
-import { ButtonText, IconBox } from "../components/common";
+import { ButtonText } from "../components/common";
 import { RouteLink } from "../components/RouteLink";
+import { SharedIcon, SharedIconBox } from "../../../shared/icons/SharedIcon";
 
 const servicePageContent: Record<ServicePageRoute, { index: number; title: string; lead: string }> = {
   "/lymphoedem-lipoedem-narbenkompression": {
@@ -31,7 +32,7 @@ export default function ServicePage({ route, navigate }: { route: ServicePageRou
     <section className="section">
       <div className="sectionInner gridTwo">
         <View direction="column" gap={5}>
-          <IconBox icon={Activity} />
+          <SharedIconBox name={area.icon} />
           <Text as="h1" variant="featured-1" weight="semibold" wrap="balance">
             {content.title}
           </Text>
@@ -39,7 +40,7 @@ export default function ServicePage({ route, navigate }: { route: ServicePageRou
           <div className="gridAuto">
             {area.searchSignals.map((signal) => (
               <div className="safeRow" key={signal}>
-                <Search aria-hidden size={16} />
+                <SharedIcon name="symbols/question_circle" decorative size={16} />
                 <Text variant="body-2">{signal}</Text>
               </div>
             ))}
@@ -55,7 +56,7 @@ export default function ServicePage({ route, navigate }: { route: ServicePageRou
         </View>
         <div className="plainPanel">
           <View direction="column" gap={4} padding={6}>
-            <IconBox icon={Shield} />
+            <SharedIconBox name="symbols/health_data_security" />
             <Text as="h2" variant="featured-5" weight="semibold">
               Prüfbarer Ablauf
             </Text>

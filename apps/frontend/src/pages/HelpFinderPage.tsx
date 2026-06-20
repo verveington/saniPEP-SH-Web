@@ -1,11 +1,11 @@
-import { ChevronRight, Search, Shield, ShoppingCart, Upload } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useMemo, useState } from "react";
 import { Badge, Card, FormControl, Text, TextField, View } from "reshaped";
 import { isPublicRoute } from "../app/routes";
 import type { Navigate } from "../app/routes";
 import type { Route } from "../lib/types";
-import { ButtonText, IconBox } from "../components/common";
+import { ButtonText } from "../components/common";
 import { handleRouteLinkClick } from "../components/RouteLink";
 import {
   categoryLabel,
@@ -13,6 +13,15 @@ import {
   primaryActionLabel,
   searchPatientIntent,
 } from "../lib/searchIndex";
+import { SharedIconBox, type SharedIconName } from "../../../shared/icons/SharedIcon";
+
+const actionIconByGoal = {
+  appointment: "symbols/i_schedule_school_date_time",
+  upload: "symbols/rx",
+  configure: "symbols/nappy_diaper",
+  portal: "symbols/ui_secure",
+  inquiry: "symbols/secure_communication",
+} satisfies Record<string, SharedIconName>;
 
 export default function HelpFinderPage({ navigate, portalLoginHref }: { navigate: Navigate; portalLoginHref: string }) {
   const [query, setQuery] = useState("");
@@ -63,7 +72,7 @@ export default function HelpFinderPage({ navigate, portalLoginHref }: { navigate
                   <View direction="column" gap={4}>
                     <View direction="row" justify="space-between" gap={3} wrap>
                       <View direction="row" gap={3} align="center">
-                        <IconBox icon={item.primaryAction === "configure" ? ShoppingCart : item.primaryAction === "upload" ? Upload : Search} />
+                        <SharedIconBox name={actionIconByGoal[item.primaryAction]} />
                         <View direction="column" gap={1}>
                           <Text weight="semibold">{item.title}</Text>
                           <Text variant="caption-1" color="neutral-faded">
@@ -93,7 +102,7 @@ export default function HelpFinderPage({ navigate, portalLoginHref }: { navigate
         </View>
         <div className="plainPanel">
           <View direction="column" gap={4} padding={6}>
-            <IconBox icon={Shield} />
+            <SharedIconBox name="symbols/health_data_security" />
             <Text as="h2" variant="featured-5" weight="semibold">
               Datenschutzgrenze
             </Text>

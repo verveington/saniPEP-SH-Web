@@ -5,17 +5,21 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const readJson = (relativePath) =>
   JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8"));
-const readSourceFiles = (relativeDir) => {
+const readSourceFileEntries = (relativeDir) => {
   const absoluteDir = path.join(root, relativeDir);
   return fs
     .readdirSync(absoluteDir, { withFileTypes: true })
     .flatMap((entry) => {
       const entryPath = path.join(relativeDir, entry.name);
-      if (entry.isDirectory()) return readSourceFiles(entryPath);
+      if (entry.isDirectory()) return readSourceFileEntries(entryPath);
       if (!/\.(ts|tsx)$/.test(entry.name)) return [];
-      return fs.readFileSync(path.join(root, entryPath), "utf8");
+      return {
+        relativePath: entryPath.split(path.sep).join("/"),
+        source: fs.readFileSync(path.join(root, entryPath), "utf8"),
+      };
     });
 };
+const readSourceFiles = (relativeDir) => readSourceFileEntries(relativeDir).map((entry) => entry.source);
 
 const fail = (message) => {
   throw new Error(message);
@@ -133,6 +137,66 @@ assert(fs.existsSync(path.join(root, "apps/portal/vite.config.ts")), "Portal mus
 assert(fs.existsSync(path.join(root, "apps/admin/vite.config.ts")), "Admin must have a separate build config");
 assert(fs.existsSync(path.join(root, "apps/design-lab/vite.config.ts")), "Design-Lab must have a separate build config");
 assert(fs.existsSync(path.join(root, "apps/shared/security/accessControl.ts")), "Shared server auth boundary must exist");
+assert(fs.existsSync(path.join(root, "apps/shared/icons/png/outline")), "Shared outline icon database must exist");
+assert(fs.existsSync(path.join(root, "apps/shared/icons/SharedIcon.tsx")), "SharedIcon renderer must exist");
+assert(fs.existsSync(path.join(root, "apps/shared/icons/README.md")), "Icon governance documentation must exist");
+
+const iconRegistrySource = fs.readFileSync(path.join(root, "apps/shared/icons/iconRegistry.ts"), "utf8");
+for (const match of iconRegistrySource.matchAll(/from\s+["'](.+)["']/g)) {
+  assert(
+    match[1].startsWith("./png/outline/"),
+    `Shared icon registry must import only outline assets, found ${match[1]}`,
+  );
+}
+
+const sourceEntriesForIconPolicy = [
+  ...readSourceFileEntries("apps/web/components"),
+  ...readSourceFileEntries("apps/frontend/src/components"),
+  ...readSourceFileEntries("apps/frontend/src/pages"),
+  ...readSourceFileEntries("apps/portal/src"),
+  ...readSourceFileEntries("apps/admin/src"),
+  ...readSourceFileEntries("apps/design-lab/src"),
+];
+const lucideControlGlyphFiles = new Set([
+  "apps/web/components/common.tsx",
+  "apps/web/components/PublicLayout.tsx",
+  "apps/web/components/LandingPage.tsx",
+  "apps/web/components/ServiceCard.tsx",
+  "apps/web/components/ServicePage.tsx",
+  "apps/web/components/HelpFinderClient.tsx",
+  "apps/web/components/LocationContact.tsx",
+  "apps/web/components/forms/AppointmentRequestForm.tsx",
+  "apps/web/components/forms/CareConfiguratorForm.tsx",
+  "apps/web/components/forms/ContactInquiryForm.tsx",
+  "apps/web/components/forms/PrescriptionUploadForm.tsx",
+  "apps/frontend/src/components/common.tsx",
+  "apps/frontend/src/components/PublicLayout.tsx",
+  "apps/frontend/src/components/ServiceCard.tsx",
+  "apps/frontend/src/components/LocationContact.tsx",
+  "apps/frontend/src/pages/AppointmentRequestPage.tsx",
+  "apps/frontend/src/pages/ConfiguratorPage.tsx",
+  "apps/frontend/src/pages/ContactPage.tsx",
+  "apps/frontend/src/pages/HelpFinderPage.tsx",
+  "apps/frontend/src/pages/LandingPage.tsx",
+  "apps/frontend/src/pages/PrescriptionUploadPage.tsx",
+  "apps/frontend/src/pages/ServicePage.tsx",
+  "apps/portal/src/main.tsx",
+  "apps/admin/src/main.tsx",
+  "apps/design-lab/src/main.tsx",
+  "apps/design-lab/src/BrandSystemWorkshop.tsx",
+]);
+for (const { relativePath, source } of sourceEntriesForIconPolicy) {
+  assert(
+    !source.includes("shared/icons/png/outline") && !source.includes("../icons/png/outline"),
+    `${relativePath} must use SharedIconName/SharedIcon instead of direct outline asset paths`,
+  );
+  if (source.includes("lucide-react")) {
+    assert(
+      lucideControlGlyphFiles.has(relativePath),
+      `${relativePath} imports lucide-react. Content/meaning icons must use SharedIcon; add Lucide only for control/navigation glyphs and update the policy allowlist intentionally.`,
+    );
+  }
+}
 
 const contentTypeUids = new Set();
 const allCmsAttributeKeys = [];

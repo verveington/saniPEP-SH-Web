@@ -25,6 +25,7 @@ export const serviceAreas: ServiceArea[] = [
     route: "/lymphoedem-lipoedem-narbenkompression",
     priority: "primary",
     intent: "Termin",
+    icon: "body/lymph_nodes",
     searchSignals: ["geschwollene Beine", "schwere Beine", "Kompressionsstrümpfe nach Maß"],
   },
   {
@@ -34,6 +35,7 @@ export const serviceAreas: ServiceArea[] = [
     route: "/brustprothetik",
     priority: "primary",
     intent: "Diskreter Termin",
+    icon: "body/breasts",
     searchSignals: ["Brustprothetik", "Erstversorgung", "neue Versorgung"],
   },
   {
@@ -43,6 +45,7 @@ export const serviceAreas: ServiceArea[] = [
     route: "/bandagen-orthesen-reha-stoma",
     priority: "secondary",
     intent: "Rezept und Beratung",
+    icon: "devices/orthotics",
     searchSignals: ["Bandage Rezept", "Orthese Knie", "Reha Hilfsmittel", "Stoma Versorgung"],
   },
   {
@@ -52,6 +55,7 @@ export const serviceAreas: ServiceArea[] = [
     route: "/inkontinenz-pflegehilfsmittel",
     priority: "automated",
     intent: "Anfrage",
+    icon: "symbols/nappy_diaper",
     searchSignals: ["Inkontinenz-Bedarf", "Pflegehilfsmittel beantragen", "monatliche Lieferung"],
   },
 ];

@@ -3,6 +3,8 @@
   "include": [
     "src",
     "../shared/design/**/*.ts",
+    "../shared/icons/**/*.ts",
+    "../shared/icons/**/*.tsx",
     "../shared/security/accessControl.ts",
     "../frontend/src/vite-env.d.ts",
     "../frontend/src/lib/**/*.ts"

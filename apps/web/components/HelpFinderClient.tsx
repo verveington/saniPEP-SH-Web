@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Search, Shield, ShoppingCart, Upload } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge, Card, FormControl, Text, TextField, View } from "reshaped";
 import type { Route } from "@frontend/lib/types";
@@ -11,8 +11,17 @@ import {
   primaryActionLabel,
   searchPatientIntent,
 } from "@frontend/lib/searchIndex";
-import { ButtonText, IconBox } from "./common";
+import { ButtonText } from "./common";
 import { isPublicRoute, portalLoginHref } from "../lib/routes/publicRoutes";
+import { SharedIconBox, type SharedIconName } from "../../shared/icons/SharedIcon";
+
+const actionIconByGoal = {
+  appointment: "symbols/i_schedule_school_date_time",
+  upload: "symbols/rx",
+  configure: "symbols/nappy_diaper",
+  portal: "symbols/ui_secure",
+  inquiry: "symbols/secure_communication",
+} satisfies Record<string, SharedIconName>;
 
 export function HelpFinderClient() {
   const [query, setQuery] = useState("");
@@ -55,7 +64,7 @@ export function HelpFinderClient() {
                   <View direction="column" gap={4}>
                     <View direction="row" justify="space-between" gap={3} wrap>
                       <View direction="row" gap={3} align="center">
-                        <IconBox icon={item.primaryAction === "configure" ? ShoppingCart : item.primaryAction === "upload" ? Upload : Search} />
+                        <SharedIconBox name={actionIconByGoal[item.primaryAction]} />
                         <View direction="column" gap={1}>
                           <Text weight="semibold">{item.title}</Text>
                           <Text variant="caption-1" color="neutral-faded">
@@ -87,7 +96,7 @@ export function HelpFinderClient() {
         </View>
         <div className="plainPanel">
           <View direction="column" gap={4} padding={6}>
-            <IconBox icon={Shield} />
+            <SharedIconBox name="symbols/health_data_security" />
             <Text as="h2" variant="featured-5" weight="semibold">
               Datenschutzgrenze
             </Text>

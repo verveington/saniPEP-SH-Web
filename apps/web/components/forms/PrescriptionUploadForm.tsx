@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FileUpload, Text, View } from "reshaped";
 import { validateUploadInput } from "@frontend/lib/formValidation";
@@ -12,7 +12,12 @@ import {
   uploadServerSecurityBoundary,
 } from "@frontend/lib/privacySecurity";
 import type { ConsentScope, UploadInput } from "@frontend/lib/types";
+<<<<<<< HEAD
 import { ButtonText, FieldError, FormStep, IconBox, inputA11y } from "../common";
+=======
+import { SharedIconBox } from "../../../shared/icons/SharedIcon";
+import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../common";
+>>>>>>> origin/main
 import { SecuritySidePanel } from "../SecuritySidePanel";
 
 const defaultUploadLabel = "Noch keine Datei ausgewählt";
@@ -110,13 +115,13 @@ export function PrescriptionUploadForm() {
                 </View>
               </FormStep>
               <div className="privacyNote">
-                <Shield aria-hidden />
+                <SharedIconBox name="symbols/health_data_security" />
                 <Text variant="body-2">
                   Serverpflicht: {uploadServerSecurityBoundary.requiredServerChecks.join(", ")}.
                 </Text>
               </div>
               <Button color="primary" onClick={submit} disabled={!validation.valid}>
-                <ButtonText icon={Shield}>Upload-Anfrage erzeugen</ButtonText>
+                <ButtonText icon={Upload}>Upload-Anfrage erzeugen</ButtonText>
               </Button>
               {uploadPaused && (
                 <div className="safeRow" role="status" aria-live="polite">

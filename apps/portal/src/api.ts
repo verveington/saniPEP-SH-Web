@@ -30,6 +30,7 @@ export type PortalRequestKind =
 
 export type PortalRequestDto = {
   id: string;
+  customerProfileId: string;
   kind: PortalRequestKind;
   kindLabel: string;
   status: "draft" | "submitted" | "staff_review" | "approved" | "rejected" | "completed";
@@ -37,12 +38,17 @@ export type PortalRequestDto = {
   sensitivity: "contact" | "health" | "omnia_reference";
   staffReviewRequired: true;
   omniaWriteAllowed: false;
+<<<<<<< HEAD
   employeeStatus: "new" | "queued" | "in_review" | "waiting_for_customer" | "approved" | "rejected" | "completed" | "cancelled";
+=======
+  employeeStatus: "queued" | "in_review" | "approved" | "rejected" | "completed";
+>>>>>>> origin/main
   employeeStatusLabel: string;
   staffStatus: "new" | "in_review" | "waiting_for_customer" | "completed" | "cancelled";
   staffStatusLabel: string;
   submittedAt: string;
   createdAt: string;
+  updatedAt: string;
   uploadObject?: {
     id: string;
     extension: string;
@@ -103,6 +109,34 @@ export type PortalDashboardResponse = {
   boundaries: string[];
 };
 
+export type StaffRequestsResponse = {
+  profile: {
+    staffUserId: string;
+    safeDisplayName: string;
+    role: "staff" | "admin";
+    portalMode: "development-mvp";
+  };
+  filters: {
+    status?: PortalRequestDto["status"];
+    kind?: PortalRequestKind;
+  };
+  summary: {
+    totalRequests: number;
+    filteredRequests: number;
+    submittedRequests: number;
+    staffReviewRequests: number;
+    approvedRequests: number;
+    rejectedRequests: number;
+    completedRequests: number;
+    omniaWrites: 0;
+    auditEvents: number;
+  };
+  requests: PortalRequestDto[];
+  auditEvents: PortalAuditEventDto[];
+  latestActivities: PortalAuditEventDto[];
+  boundaries: string[];
+};
+
 export type CreatePortalRequestInput =
   | {
       kind: "prescription_upload";
@@ -139,7 +173,7 @@ export type CreatePortalRequestResponse = {
   dashboard: PortalDashboardResponse;
 };
 
-const portalBackendBaseUrl = import.meta.env.VITE_PORTAL_BACKEND_URL ?? "http://localhost:4100";
+const portalBackendBaseUrl = import.meta.env.VITE_PORTAL_BACKEND_URL ?? "";
 
 export class PortalApiError extends Error {
   constructor(
@@ -175,6 +209,14 @@ export const portalApi = {
 
   async dashboard() {
     return request<PortalDashboardResponse>("/api/portal/dashboard");
+  },
+
+  async staffRequests(filters: { status?: PortalRequestDto["status"]; kind?: PortalRequestKind } = {}) {
+    const params = new URLSearchParams();
+    if (filters.status) params.set("status", filters.status);
+    if (filters.kind) params.set("kind", filters.kind);
+    const query = params.size > 0 ? `?${params.toString()}` : "";
+    return request<StaffRequestsResponse>(`/api/staff/requests${query}`);
   },
 
   async createRequest(input: CreatePortalRequestInput, csrfToken: string) {

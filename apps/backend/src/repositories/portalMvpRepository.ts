@@ -133,6 +133,7 @@ export type PortalMvpRepository = {
   saveSession(record: PortalSessionRecord): Promise<void>;
   findSessionByTokenHash(tokenHash: string): Promise<PortalSessionRecord | null>;
   deleteSession(tokenHash: string): Promise<void>;
+  listAllRequests(): Promise<StoredPortalRequest[]>;
   listRequestsForCustomer(customerProfileId: string): Promise<StoredPortalRequest[]>;
   listRequestsForStaff(input?: { status?: StaffRequestStatus; limit?: number }): Promise<StoredPortalRequest[]>;
   getRequestById(id: string): Promise<StoredPortalRequest | null>;
@@ -194,6 +195,11 @@ export function createFilePortalMvpRepository(
       await withStore((data) => {
         data.sessions = data.sessions.filter((record) => record.session.tokenHash !== tokenHash);
       });
+    },
+
+    async listAllRequests() {
+      const data = await readStore(filePath);
+      return data.requests;
     },
 
     async listRequestsForCustomer(customerProfileId) {

@@ -2,6 +2,8 @@
   "extends": "../frontend/tsconfig.json",
   "include": [
     "src",
+    "../shared/icons/**/*.ts",
+    "../shared/icons/**/*.tsx",
     "../shared/security/accessControl.ts",
     "../frontend/src/vite-env.d.ts",
     "../frontend/src/lib/designTokens.ts"

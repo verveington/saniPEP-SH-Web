@@ -54,6 +54,8 @@ export const validateUploadInput = (input: UploadInput): ValidationResult => {
   const errors: Record<string, string> = {};
 
   if (!hasText(input.context)) errors.context = "Bitte den Versorgungskontext auswählen.";
+  if (!hasText(input.contactName, 2)) errors.contactName = "Bitte einen Namen für die Rückmeldung angeben.";
+  requireEmailOrPhone(input.contactEmail, input.contactPhone, errors);
   if (!hasText(input.fileName) || input.fileName === defaultUploadLabel) {
     errors.fileName = "Bitte eine Rezeptdatei auswählen.";
   } else {

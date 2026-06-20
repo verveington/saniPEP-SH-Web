@@ -51,7 +51,7 @@ export function LocationContact({ navigate, standalone = false }: { navigate: Na
               <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
             </RouteLink>
             <RouteLink className="actionLink" route="/rezept-upload" navigate={navigate}>
-              <ButtonText icon={Upload}>Rezept hochladen</ButtonText>
+              <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
             </RouteLink>
           </View>
         </View>
@@ -69,7 +69,7 @@ export function LocationContact({ navigate, standalone = false }: { navigate: Na
             <div className="privacyNote">
               <SharedIconBox name="symbols/health_data_security" />
               <Text variant="body-2">
-                Gesundheitsdaten bitte bevorzugt über Upload oder das getrennte Portal senden, nicht frei per E-Mail oder WhatsApp.
+                Gesundheitsdaten bitte bevorzugt über geschützte Wege nach Rücksprache senden, nicht frei per E-Mail oder WhatsApp. Dieser MVP überträgt keine Dateien.
               </Text>
             </div>
           </View>

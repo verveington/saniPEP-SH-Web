@@ -66,7 +66,7 @@ export async function LocationContact({ standalone = false }: { standalone?: boo
               <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
             </Link>
             <Link className="actionLink" href="/rezept-upload">
-              <ButtonText icon={Upload}>Rezept hochladen</ButtonText>
+              <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
             </Link>
           </View>
         </View>
@@ -84,7 +84,7 @@ export async function LocationContact({ standalone = false }: { standalone?: boo
             <div className="privacyNote">
               <SharedIconBox name="symbols/health_data_security" />
               <Text variant="body-2">
-                Gesundheitsdaten bitte bevorzugt über Upload oder das getrennte Portal senden, nicht frei per E-Mail oder WhatsApp.
+                Gesundheitsdaten bitte bevorzugt über geschützte Wege nach Rücksprache senden, nicht frei per E-Mail oder WhatsApp. Dieser MVP überträgt keine Dateien.
               </Text>
             </div>
           </View>

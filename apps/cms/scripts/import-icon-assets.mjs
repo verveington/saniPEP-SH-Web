@@ -9,9 +9,11 @@ const { createStrapi } = require('@strapi/strapi');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const cmsRoot = path.resolve(__dirname, '..');
+const sharedIconRoot = path.resolve(cmsRoot, '..', 'shared', 'icons');
 const iconRoot = path.join(cmsRoot, 'public', 'uploads', 'icons');
-const outlinePngRoot = path.join(iconRoot, 'png', 'outline');
-const metadataPath = path.join(iconRoot, 'meta-data.json');
+const outlinePngRoot = path.join(sharedIconRoot, 'png', 'outline');
+const runtimeOutlinePngRoot = path.join(iconRoot, 'png', 'outline');
+const metadataPath = path.join(sharedIconRoot, 'meta-data.json');
 const publicUrlPrefix = '/uploads/icons/png/outline';
 
 const include2x = process.argv.includes('--include-2x');
@@ -128,6 +130,7 @@ function buildIconEntries() {
       category: getCategory(key),
       purpose: getPurpose(key),
       filePath,
+      runtimeFilePath: path.join(runtimeOutlinePngRoot, relativeFile),
       fileName: path.basename(filePath),
       url: `${publicUrlPrefix}/${relativeFile}`,
       sizeBytes: stats.size,
@@ -143,7 +146,14 @@ async function ensureIconsFolder(strapi) {
   return strapi.plugin('upload').service('folder').create({ name: 'Icons' });
 }
 
+function ensureRuntimeIconFile(entry) {
+  fs.mkdirSync(path.dirname(entry.runtimeFilePath), { recursive: true });
+  fs.copyFileSync(entry.filePath, entry.runtimeFilePath);
+}
+
 async function upsertMediaFile(strapi, entry, folder) {
+  ensureRuntimeIconFile(entry);
+
   const fileQuery = strapi.db.query('plugin::upload.file');
   const data = {
     name: entry.fileName,
@@ -219,8 +229,9 @@ async function main() {
     console.log(
       JSON.stringify(
         {
-          source: outlinePngRoot,
-          total: entries.length,
+            source: outlinePngRoot,
+            runtimeTarget: runtimeOutlinePngRoot,
+            total: entries.length,
           include2x,
           examples: entries.slice(0, 10).map(({ key, url }) => ({ key, url })),
         },
@@ -235,6 +246,7 @@ async function main() {
   const strapi = await createStrapi({ appDir: cmsRoot, distDir: cmsRoot }).load();
   const summary = {
     source: outlinePngRoot,
+    runtimeTarget: runtimeOutlinePngRoot,
     include2x,
     scanned: entries.length,
     media: { created: 0, updated: 0 },

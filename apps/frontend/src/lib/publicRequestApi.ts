@@ -41,6 +41,17 @@ export type PublicRequestPayload =
       contactName: string;
       contactEmail: string;
       contactPhone: string;
+    }
+  | {
+      type: "document";
+      context: string;
+      fileExtension: string;
+      mimeType: string;
+      sizeBytes: number;
+      consentAccepted: boolean;
+      contactName: string;
+      contactEmail: string;
+      contactPhone: string;
     };
 
 export class PublicRequestApiError extends Error {

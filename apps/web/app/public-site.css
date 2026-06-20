@@ -419,6 +419,15 @@ body {
   box-shadow: 0 16px 36px rgba(54, 69, 147, 0.22);
 }
 
+.qualityBadge .iconBox {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+}
+
+.qualityBadge img,
+.qualityBadge .sharedIcon,
 .qualityBadge svg {
   width: 18px;
   height: 18px;

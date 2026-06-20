@@ -38,12 +38,40 @@ function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion })
   const [receipt, setReceipt] = useState<PublicRequestReceipt | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [touched, setTouched] = useState<Record<keyof ContactInquiryInput, boolean>>({
+    topic: false,
+    serviceContext: false,
+    message: false,
+    contactName: false,
+    contactEmail: false,
+    contactPhone: false,
+    preferredContactChannel: false,
+    containsHealthData: false,
+  });
   const validation = useMemo(() => validateContactInquiryInput(input), [input]);
   const errors = validation.fieldErrors;
+  const visibleErrors = Object.fromEntries(
+    Object.entries(errors).filter(([field]) => submitted || touched[field as keyof ContactInquiryInput]),
+  );
   const update = (key: keyof ContactInquiryInput, value: string | boolean) => setInput((current) => ({ ...current, [key]: value }));
+  const markTouched = (key: keyof ContactInquiryInput) => setTouched((current) => ({ ...current, [key]: true }));
   const submit = async () => {
+    setSubmitted(true);
     setSubmitError("");
-    if (!validation.valid) return;
+    if (!validation.valid) {
+      setTouched({
+        topic: true,
+        serviceContext: true,
+        message: true,
+        contactName: true,
+        contactEmail: true,
+        contactPhone: true,
+        preferredContactChannel: true,
+        containsHealthData: true,
+      });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const requestReceipt = await submitPublicRequest({
@@ -80,7 +108,7 @@ function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion })
           <div className="formGrid">
             <label>
               <Text variant="body-2" weight="medium">Thema</Text>
-              <select className="nativeSelect" value={input.topic} onChange={(event) => update("topic", event.target.value)} {...inputA11y("topic", errors)}>
+              <select className="nativeSelect" value={input.topic} onBlur={() => markTouched("topic")} onChange={(event) => update("topic", event.target.value)} {...inputA11y("topic", visibleErrors)}>
                 <option value="">Bitte auswählen</option>
                 <option>Allgemeine Anfrage</option>
                 <option>Rückfrage zu Rezept</option>
@@ -88,18 +116,18 @@ function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion })
                 <option>Lieferung oder Status</option>
                 <option>Rückrufwunsch</option>
               </select>
-              <FieldError id="topic-error" error={errors.topic} />
+              <FieldError id="topic-error" error={visibleErrors.topic} />
             </label>
             <label>
               <Text variant="body-2" weight="medium">Fachbereich</Text>
-              <select className="nativeSelect" value={input.serviceContext} onChange={(event) => update("serviceContext", event.target.value)} {...inputA11y("serviceContext", errors)}>
+              <select className="nativeSelect" value={input.serviceContext} onBlur={() => markTouched("serviceContext")} onChange={(event) => update("serviceContext", event.target.value)} {...inputA11y("serviceContext", visibleErrors)}>
                 <option value="">Bitte auswählen</option>
                 <option>Kompression</option>
                 <option>Brustprothetik</option>
                 <option>Inkontinenz & Pflege</option>
                 <option>Bandagen/Orthesen/Reha/Stoma</option>
               </select>
-              <FieldError id="serviceContext-error" error={errors.serviceContext} />
+              <FieldError id="serviceContext-error" error={visibleErrors.serviceContext} />
             </label>
           </div>
         </FormStep>
@@ -107,27 +135,27 @@ function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion })
           <div className="formGrid">
             <FormControl>
               <FormControl.Label>Name</FormControl.Label>
-              <TextField name="contactInquiryName" value={input.contactName} onChange={({ value }) => update("contactName", value)} inputAttributes={inputA11y("contactName", errors)} />
-              <FieldError id="contactName-error" error={errors.contactName} />
+              <TextField name="contactInquiryName" value={input.contactName} onChange={({ value }) => update("contactName", value)} inputAttributes={{ onBlur: () => markTouched("contactName"), ...inputA11y("contactName", visibleErrors) }} />
+              <FieldError id="contactName-error" error={visibleErrors.contactName} />
             </FormControl>
             <FormControl>
               <FormControl.Label>E-Mail</FormControl.Label>
-              <TextField name="contactInquiryEmail" value={input.contactEmail} onChange={({ value }) => update("contactEmail", value)} inputAttributes={{ type: "email", ...inputA11y("contactEmail", errors) }} />
-              <FieldError id="contactEmail-error" error={errors.contactEmail} />
+              <TextField name="contactInquiryEmail" value={input.contactEmail} onChange={({ value }) => update("contactEmail", value)} inputAttributes={{ type: "email", onBlur: () => markTouched("contactEmail"), ...inputA11y("contactEmail", visibleErrors) }} />
+              <FieldError id="contactEmail-error" error={visibleErrors.contactEmail} />
             </FormControl>
             <FormControl>
               <FormControl.Label>Telefon</FormControl.Label>
-              <TextField name="contactInquiryPhone" value={input.contactPhone} onChange={({ value }) => update("contactPhone", value)} inputAttributes={inputA11y("contactPhone", errors)} />
-              <FieldError id="contactPhone-error" error={errors.contactPhone} />
+              <TextField name="contactInquiryPhone" value={input.contactPhone} onChange={({ value }) => update("contactPhone", value)} inputAttributes={{ onBlur: () => markTouched("contactPhone"), ...inputA11y("contactPhone", visibleErrors) }} />
+              <FieldError id="contactPhone-error" error={visibleErrors.contactPhone} />
             </FormControl>
             <label>
               <Text variant="body-2" weight="medium">Antwortweg</Text>
-              <select className="nativeSelect" value={input.preferredContactChannel} onChange={(event) => update("preferredContactChannel", event.target.value)} {...inputA11y("preferredContactChannel", errors)}>
+              <select className="nativeSelect" value={input.preferredContactChannel} onBlur={() => markTouched("preferredContactChannel")} onChange={(event) => update("preferredContactChannel", event.target.value)} {...inputA11y("preferredContactChannel", visibleErrors)}>
                 <option value="email">E-Mail</option>
                 <option value="phone">Telefon</option>
                 <option value="whatsapp">WhatsApp</option>
               </select>
-              <FieldError id="preferredContactChannel-error" error={errors.preferredContactChannel} />
+              <FieldError id="preferredContactChannel-error" error={visibleErrors.preferredContactChannel} />
             </label>
           </div>
         </FormStep>
@@ -135,12 +163,12 @@ function ContactInquiryForm({ onConversion }: { onConversion: TrackConversion })
           <div className="formGrid">
             <FormControl>
               <FormControl.Label>Nachricht</FormControl.Label>
-              <TextArea name="contactInquiryMessage" value={input.message} onChange={({ value }) => update("message", value)} placeholder="Worum geht es?" resize="auto" inputAttributes={inputA11y("message", errors)} />
-              <FieldError id="message-error" error={errors.message} />
+              <TextArea name="contactInquiryMessage" value={input.message} onChange={({ value }) => update("message", value)} placeholder="Worum geht es?" resize="auto" inputAttributes={{ onBlur: () => markTouched("message"), ...inputA11y("message", visibleErrors) }} />
+              <FieldError id="message-error" error={visibleErrors.message} />
             </FormControl>
             <label>
               <Text variant="body-2" weight="medium">Enthält Gesundheitsdaten?</Text>
-              <select className="nativeSelect" value={input.containsHealthData ? "ja" : "nein"} onChange={(event) => update("containsHealthData", event.target.value === "ja")}>
+              <select className="nativeSelect" value={input.containsHealthData ? "ja" : "nein"} onBlur={() => markTouched("containsHealthData")} onChange={(event) => update("containsHealthData", event.target.value === "ja")}>
                 <option value="nein">nein / allgemeine Anfrage</option>
                 <option value="ja">ja, bitte geschützt prüfen</option>
               </select>

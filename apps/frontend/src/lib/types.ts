@@ -287,6 +287,9 @@ export type UploadInput = {
   fileType?: string;
   fileSizeBytes?: number;
   context: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
   patientNote?: string;
   consentScopes?: ConsentScope[];
 };

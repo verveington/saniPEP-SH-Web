@@ -7,14 +7,14 @@ import type {
 export const portalActionPolicies: Record<PortalActionIntent, ActionPolicyDecision> = {
   "upload-prescription": {
     intent: "upload-prescription",
-    label: "Rezept hochladen",
+    label: "Rezept vorab einreichen",
     allowed: true,
     executionMode: "request",
     staffReviewRequired: true,
     omniaWriteAllowed: false,
     auditRequired: true,
     dataSensitivity: "health",
-    reason: "Upload wird als sensible Anfrage registriert und erst nach Mitarbeiterprüfung übernommen.",
+    reason: "Dateiübertragung bleibt im MVP blockiert; die Anfrage wird erst nach Mitarbeiterprüfung übernommen.",
   },
   "request-appointment": {
     intent: "request-appointment",

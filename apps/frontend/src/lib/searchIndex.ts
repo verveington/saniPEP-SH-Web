@@ -47,7 +47,7 @@ export const patientSearchIndex: SearchEntry[] = [
     category: "product",
     term: "Kompressionsstrümpfe nach Maß",
     title: "Flachstrick- und Maßkompression",
-    summary: "Maßnahme, Rezeptupload und Kontrolltermin werden als Fachprozess geführt.",
+    summary: "Maßnahme, Rezept-Vorabprüfung und Kontrolltermin werden als Fachprozess geführt.",
     recommendedRoute: "/lymphoedem-lipoedem-narbenkompression",
     primaryAction: "upload",
     relatedTerms: ["Flachstrick-Kompression", "Narbenkompression", "Lymphödem", "Rezept erhalten"],
@@ -72,7 +72,7 @@ export const patientSearchIndex: SearchEntry[] = [
     summary: "Bedarf konfigurieren, Rezeptlage klären und wiederkehrende Versorgung als Request starten.",
     recommendedRoute: "/inkontinenz-pflegehilfsmittel",
     primaryAction: "configure",
-    relatedTerms: ["monatliche Versorgung", "Dauerversorgung", "Rezeptupload", "Bestellanfrage"],
+    relatedTerms: ["monatliche Versorgung", "Dauerversorgung", "Rezept-Vorabprüfung", "Bestellanfrage"],
     priority: 2,
   },
   {
@@ -80,10 +80,10 @@ export const patientSearchIndex: SearchEntry[] = [
     category: "situation",
     term: "Rezept erhalten",
     title: "Ich habe ein Rezept",
-    summary: "Rezept sicher hochladen und den passenden Mitarbeiter-Request erzeugen.",
+    summary: "Rezept lokal vorprüfen und den passenden Mitarbeiter-Request vorbereiten.",
     recommendedRoute: "/rezept-upload",
     primaryAction: "upload",
-    relatedTerms: ["Verordnung", "Rezeptupload", "neue Versorgung", "Status prüfen"],
+    relatedTerms: ["Verordnung", "Rezept-Vorabprüfung", "neue Versorgung", "Status prüfen"],
     priority: 3,
   },
   {
@@ -155,7 +155,7 @@ export const categoryLabel: Record<SearchCategory, string> = {
 
 export const primaryActionLabel: Record<SearchIntentResult["primaryAction"], string> = {
   appointment: "Termin anfragen",
-  upload: "Rezept hochladen",
+  upload: "Rezept vorab einreichen",
   configure: "Konfigurator starten",
   portal: "Portal öffnen",
   inquiry: "Anfrage schreiben",

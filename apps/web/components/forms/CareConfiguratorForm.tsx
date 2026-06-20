@@ -23,13 +23,39 @@ export function CareConfiguratorForm() {
   const [receipt, setReceipt] = useState<PublicRequestReceipt | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [touched, setTouched] = useState<Record<keyof CareConfigurationInput, boolean>>({
+    need: false,
+    rhythm: false,
+    hasPrescription: false,
+    note: false,
+    contactName: false,
+    contactEmail: false,
+    contactPhone: false,
+  });
   const validation = useMemo(() => validateCareConfigurationInput(input), [input]);
   const errors = validation.fieldErrors;
+  const visibleErrors = Object.fromEntries(
+    Object.entries(errors).filter(([field]) => submitted || touched[field as keyof CareConfigurationInput]),
+  );
   const update = (key: keyof CareConfigurationInput, value: string | boolean) => setInput((current) => ({ ...current, [key]: value }));
+  const markTouched = (key: keyof CareConfigurationInput) => setTouched((current) => ({ ...current, [key]: true }));
 
   const submit = async () => {
+    setSubmitted(true);
     setSubmitError("");
-    if (!validation.valid) return;
+    if (!validation.valid) {
+      setTouched({
+        need: true,
+        rhythm: true,
+        hasPrescription: true,
+        note: true,
+        contactName: true,
+        contactEmail: true,
+        contactPhone: true,
+      });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const requestReceipt = await submitPublicRequest({
@@ -67,27 +93,27 @@ export function CareConfiguratorForm() {
                 <div className="formGrid">
                   <label>
                     <Text variant="body-2" weight="medium">Bedarf</Text>
-                    <select className="nativeSelect" value={input.need} onChange={(event) => update("need", event.target.value)} {...inputA11y("need", errors)}>
+                    <select className="nativeSelect" value={input.need} onBlur={() => markTouched("need")} onChange={(event) => update("need", event.target.value)} {...inputA11y("need", visibleErrors)}>
                       <option value="">Bitte auswählen</option>
                       <option>Inkontinenzversorgung</option>
                       <option>Pflegehilfsmittel Pauschale</option>
                       <option>Kombinierte Anfrage</option>
                     </select>
-                    <FieldError id="need-error" error={errors.need} />
+                    <FieldError id="need-error" error={visibleErrors.need} />
                   </label>
                   <label>
                     <Text variant="body-2" weight="medium">Gewünschter Rhythmus</Text>
-                    <select className="nativeSelect" value={input.rhythm} onChange={(event) => update("rhythm", event.target.value)} {...inputA11y("rhythm", errors)}>
+                    <select className="nativeSelect" value={input.rhythm} onBlur={() => markTouched("rhythm")} onChange={(event) => update("rhythm", event.target.value)} {...inputA11y("rhythm", visibleErrors)}>
                       <option value="">Bitte auswählen</option>
                       <option>monatlich</option>
                       <option>alle 2 Monate</option>
                       <option>nur einmalig</option>
                     </select>
-                    <FieldError id="rhythm-error" error={errors.rhythm} />
+                    <FieldError id="rhythm-error" error={visibleErrors.rhythm} />
                   </label>
                   <label>
                     <Text variant="body-2" weight="medium">Rezept vorhanden?</Text>
-                    <select className="nativeSelect" value={input.hasPrescription ? "ja" : "nein"} onChange={(event) => update("hasPrescription", event.target.value === "ja")}>
+                    <select className="nativeSelect" value={input.hasPrescription ? "ja" : "nein"} onBlur={() => markTouched("hasPrescription")} onChange={(event) => update("hasPrescription", event.target.value === "ja")}>
                       <option value="nein">nein, ich reiche nach</option>
                       <option value="ja">ja</option>
                     </select>
@@ -103,27 +129,27 @@ export function CareConfiguratorForm() {
                     onChange={({ value }) => update("note", value)}
                     placeholder="z. B. bisherige Versorgung, Lieferwunsch, Rückrufzeit"
                     resize="auto"
-                    inputAttributes={inputA11y("note", errors)}
+                    inputAttributes={{ onBlur: () => markTouched("note"), ...inputA11y("note", visibleErrors) }}
                   />
-                  <FieldError id="note-error" error={errors.note} />
+                  <FieldError id="note-error" error={visibleErrors.note} />
                 </FormControl>
               </FormStep>
               <FormStep number={3} title="Kontakt für Rückmeldung" copy="Mindestens E-Mail oder Telefon ist erforderlich.">
                 <div className="formGrid">
                   <FormControl>
                     <FormControl.Label>Name</FormControl.Label>
-                    <TextField name="careContactName" value={input.contactName} onChange={({ value }) => update("contactName", value)} inputAttributes={inputA11y("contactName", errors)} />
-                    <FieldError id="contactName-error" error={errors.contactName} />
+                    <TextField name="careContactName" value={input.contactName} onChange={({ value }) => update("contactName", value)} inputAttributes={{ onBlur: () => markTouched("contactName"), ...inputA11y("contactName", visibleErrors) }} />
+                    <FieldError id="contactName-error" error={visibleErrors.contactName} />
                   </FormControl>
                   <FormControl>
                     <FormControl.Label>E-Mail</FormControl.Label>
-                    <TextField name="careContactEmail" value={input.contactEmail} onChange={({ value }) => update("contactEmail", value)} inputAttributes={{ type: "email", ...inputA11y("contactEmail", errors) }} />
-                    <FieldError id="contactEmail-error" error={errors.contactEmail} />
+                    <TextField name="careContactEmail" value={input.contactEmail} onChange={({ value }) => update("contactEmail", value)} inputAttributes={{ type: "email", onBlur: () => markTouched("contactEmail"), ...inputA11y("contactEmail", visibleErrors) }} />
+                    <FieldError id="contactEmail-error" error={visibleErrors.contactEmail} />
                   </FormControl>
                   <FormControl>
                     <FormControl.Label>Telefon</FormControl.Label>
-                    <TextField name="careContactPhone" value={input.contactPhone} onChange={({ value }) => update("contactPhone", value)} inputAttributes={inputA11y("contactPhone", errors)} />
-                    <FieldError id="contactPhone-error" error={errors.contactPhone} />
+                    <TextField name="careContactPhone" value={input.contactPhone} onChange={({ value }) => update("contactPhone", value)} inputAttributes={{ onBlur: () => markTouched("contactPhone"), ...inputA11y("contactPhone", visibleErrors) }} />
+                    <FieldError id="contactPhone-error" error={visibleErrors.contactPhone} />
                   </FormControl>
                 </div>
               </FormStep>

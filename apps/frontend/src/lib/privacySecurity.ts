@@ -71,7 +71,7 @@ export const prescriptionUploadPolicy: UploadPolicy = {
   localPersistence: "none",
   retentionHint: "Aufbewahrung und Löschung nach gesetzlicher Pflicht und internem Löschkonzept.",
   publicCopy:
-    "Der Browser speichert keine Gesundheitsdaten dauerhaft. Der Upload wird verschlüsselt übertragen und durch Mitarbeiter geprüft.",
+    "Der Browser speichert keine Gesundheitsdaten dauerhaft. Im aktuellen MVP wird keine Datei übertragen; produktive Uploads bleiben bis Quarantäne, MIME-Prüfung, AV-Scan und Retention gesperrt.",
 };
 
 const acceptedUploadMimeTypes = new Set([

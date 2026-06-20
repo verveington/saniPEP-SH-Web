@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar, Sparkles, Upload, User } from "lucide-react";
+import { Calendar, Upload, User } from "lucide-react";
 import { Text, View } from "reshaped";
 import { serviceAreas } from "@frontend/app/publicContent";
 import { portalLoginHref } from "../lib/routes/publicRoutes";
@@ -24,7 +24,7 @@ const symptomEntrypoints = [
   },
   {
     title: "Rezept vorhanden",
-    copy: "Unterlagen datensparsam hochladen.",
+    copy: "Rezeptdaten vorab einreichen.",
     route: "/rezept-upload",
     icon: "symbols/rx",
   },
@@ -65,7 +65,7 @@ export async function LandingPage() {
                 <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
               </Link>
               <Link className="actionLink actionLinkLarge" href="/rezept-upload">
-                <ButtonText icon={Upload}>Rezept hochladen</ButtonText>
+                <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
               </Link>
               <a className="portalLoginAnchor portalLoginAnchorLarge" href={portalLoginHref}>
                 <ButtonText icon={User}>Kundenportal Login</ButtonText>
@@ -159,7 +159,7 @@ function HeroProductStage() {
         <span className="stockingLeg stockingLegFront" />
       </div>
       <div className="qualityBadge">
-        <Sparkles aria-hidden />
+        <SharedIconBox name="symbols/yes" />
         <span>Premium Fit</span>
       </div>
     </div>

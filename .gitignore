@@ -9,6 +9,7 @@ build/
 .env.production
 .DS_Store
 .tmp/
+# Runtime uploads are ignored. CMS icon media is regenerated from apps/shared/icons via cms:icons:import.
 uploads/
 !apps/backend/src/uploads/
 !apps/backend/src/uploads/**

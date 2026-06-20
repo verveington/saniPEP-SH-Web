@@ -1,4 +1,12 @@
 export type RuntimeMode = "development" | "test" | "staging" | "production";
+export type PortalRepositoryDriver = "file" | "postgres";
+
+export type BackendDevelopmentUser = {
+  role: "customer" | "staff" | "admin";
+  email: string;
+  password: string;
+  safeDisplayName: string;
+};
 
 export type BackendEnv = {
   nodeEnv: RuntimeMode;
@@ -56,8 +64,10 @@ export type BackendEnv = {
   logLevel: "debug" | "info" | "warn" | "error";
   errorTrackingDsn?: string;
   otelExporterOtlpEndpoint?: string;
+  portalRepositoryDriver: PortalRepositoryDriver;
   portalStorePath: string;
   portalDevStorePath: string;
+  developmentUsers: BackendDevelopmentUser[];
   developmentWarnings: string[];
 };
 
@@ -90,8 +100,6 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
   requireInProduction("UPLOAD_QUARANTINE_BUCKET", source.UPLOAD_QUARANTINE_BUCKET);
   requireInProduction("UPLOAD_CLEAN_BUCKET", source.UPLOAD_CLEAN_BUCKET);
   requireInProduction("UPLOAD_KMS_KEY_ID", source.UPLOAD_KMS_KEY_ID);
-  requireInProduction("PORTAL_STORE_PATH", source.PORTAL_STORE_PATH);
-
   const avScannerMode = readEnum(
     source.AV_SCANNER_MODE,
     "AV_SCANNER_MODE",
@@ -101,6 +109,23 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
   if (production && avScannerMode === "stub-disabled") {
     errors.push("AV_SCANNER_MODE=stub-disabled is not allowed in production.");
   }
+
+  const portalRepositoryDriver = readEnum(
+    source.PORTAL_REPOSITORY_DRIVER,
+    "PORTAL_REPOSITORY_DRIVER",
+    ["file", "postgres"] as const,
+    production ? "postgres" : "file",
+  );
+  if (production && portalRepositoryDriver === "file") {
+    errors.push("PORTAL_REPOSITORY_DRIVER=file is not allowed in production.");
+  }
+  if (portalRepositoryDriver === "postgres" && !source.PORTAL_DATABASE_URL) {
+    errors.push("PORTAL_DATABASE_URL is required when PORTAL_REPOSITORY_DRIVER=postgres.");
+  }
+  if (!production && portalRepositoryDriver === "file") {
+    developmentWarnings.push("PORTAL_REPOSITORY_DRIVER=file is development-only and blocked in production.");
+  }
+  const developmentUsers = readDevelopmentUsers(source, production, errors, developmentWarnings);
 
   const trustedOrigins = readCsv(source.TRUSTED_ORIGINS);
   if (production && trustedOrigins.length === 0) {
@@ -176,8 +201,10 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     logLevel: readEnum(source.LOG_LEVEL, "LOG_LEVEL", ["debug", "info", "warn", "error"] as const, "info"),
     errorTrackingDsn: source.ERROR_TRACKING_DSN || undefined,
     otelExporterOtlpEndpoint: source.OTEL_EXPORTER_OTLP_ENDPOINT || undefined,
+    portalRepositoryDriver,
     portalStorePath: source.PORTAL_STORE_PATH ?? source.PORTAL_DEV_STORE_PATH ?? "/tmp/sanipep-portal-mvp-store.json",
     portalDevStorePath: source.PORTAL_STORE_PATH ?? source.PORTAL_DEV_STORE_PATH ?? "/tmp/sanipep-portal-mvp-store.json",
+    developmentUsers,
     developmentWarnings,
   };
 
@@ -226,4 +253,54 @@ function readEnum<const Options extends readonly string[]>(
   if (value === undefined || value === "") return fallback;
   if ((options as readonly string[]).includes(value)) return value as Options[number];
   throw new Error(`${name} must be one of: ${options.join(", ")}.`);
+}
+
+function readDevelopmentUsers(
+  source: NodeJS.ProcessEnv,
+  production: boolean,
+  errors: string[],
+  warnings: string[],
+): BackendDevelopmentUser[] {
+  const specs = [
+    { role: "customer", prefix: "PORTAL_DEV_CUSTOMER", fallbackName: "Lokales Kundenkonto" },
+    { role: "staff", prefix: "PORTAL_DEV_STAFF", fallbackName: "Lokaler Staff-Zugang" },
+    { role: "admin", prefix: "PORTAL_DEV_ADMIN", fallbackName: "Lokaler Admin-Zugang" },
+  ] as const;
+  const users: BackendDevelopmentUser[] = [];
+
+  for (const spec of specs) {
+    const emailName = `${spec.prefix}_EMAIL`;
+    const passwordName = `${spec.prefix}_PASSWORD`;
+    const displayNameName = `${spec.prefix}_DISPLAY_NAME`;
+    const email = source[emailName];
+    const password = source[passwordName];
+
+    if (production && (email || password || source[displayNameName])) {
+      errors.push(`${spec.prefix}_* is development-only and must not be set in production.`);
+      continue;
+    }
+
+    if (!email && !password) continue;
+    if (!email || !password) {
+      errors.push(`${emailName} and ${passwordName} must be set together.`);
+      continue;
+    }
+    if (password.length < 16) {
+      errors.push(`${passwordName} must be at least 16 characters.`);
+      continue;
+    }
+
+    users.push({
+      role: spec.role,
+      email,
+      password,
+      safeDisplayName: source[displayNameName] || spec.fallbackName,
+    });
+  }
+
+  if (!production && users.length > 0) {
+    warnings.push("Development portal users are seeded from PORTAL_DEV_* environment variables.");
+  }
+
+  return users;
 }

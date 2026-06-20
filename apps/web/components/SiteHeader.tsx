@@ -63,7 +63,7 @@ export function SiteHeader() {
 
         <div className="headerActions">
           <Link className="actionLink headerSecondaryAction" href="/rezept-upload">
-            <ButtonText icon={Upload}>Rezept</ButtonText>
+            <ButtonText icon={Upload}>Rezept vorab</ButtonText>
           </Link>
           <Link className="actionLink actionLinkPrimary" href="/termin-anfragen">
             <ButtonText icon={Calendar}>Termin</ButtonText>
@@ -99,7 +99,7 @@ export function SiteHeader() {
         </nav>
         <div className="drawerActions">
           <Link className="actionLink" href="/rezept-upload" onClick={closeDrawer}>
-            <ButtonText icon={Upload}>Rezept hochladen</ButtonText>
+            <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
           </Link>
           <a className="portalLoginAnchor" href={portalLoginHref} onClick={closeDrawer}>
             <ButtonText icon={User}>Kundenportal Login</ButtonText>

@@ -1,11 +1,13 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import type { IncomingHttpHeaders, IncomingMessage, ServerResponse } from "node:http";
 import { createAuditEvent } from "./audit/auditEvent.js";
 import type { AuditEvent } from "./audit/models.js";
 import type { Session } from "./auth/models.js";
 import { createSession, hashToken, isSessionActive } from "./auth/sessions.js";
 import type { BackendEnv } from "./config/env.js";
+import { createPostgresPool, createPostgresQueryLayer, verifyPostgresConnection } from "./db/postgres.js";
 import type { PortalRequestKind, PortalRequestSensitivity, PortalRequestStatus } from "./portalRequests/models.js";
+import { createPostgresPortalMvpRepository } from "./repositories/postgresPortalMvpRepository.js";
 import {
   createFilePortalMvpRepository,
   normalizeStaffRequestStatus,
@@ -28,6 +30,14 @@ import type { AuthenticatedActor, UserRole } from "./users/models.js";
 export type BackendRequestHandlerDependencies = {
   rateLimiter?: RateLimiter;
   repository?: PortalMvpRepository;
+  readinessChecks?: BackendReadinessChecks;
+};
+
+export type BackendReadinessChecks = {
+  database?: () => Promise<boolean>;
+  redis?: () => Promise<boolean>;
+  antivirus?: () => Promise<boolean>;
+  objectStorage?: () => Promise<boolean>;
 };
 
 type AuthenticatedSession = {
@@ -136,15 +146,20 @@ const staffMvpBoundary = {
   mode: "staff-request-mvp",
   productionReady: false,
   authBoundary: "development-password-session-only",
-  persistenceBoundary: "file-backed-mvp-repository",
+  persistenceBoundary: "repository-driver-mvp-postgres-or-file-dev-only",
   roleBoundary: "staff-admin-role-check-prepared-no-production-iam",
 } as const;
 
 export function createBackendRequestHandler(env: BackendEnv, dependencies: BackendRequestHandlerDependencies = {}) {
   const rateLimiter = dependencies.rateLimiter ?? createAllowAllRateLimiter();
-  const repository = dependencies.repository ?? createFilePortalMvpRepository(env.portalStorePath, {
-    seedDevelopmentUsers: env.nodeEnv !== "production",
-  });
+  const defaultPostgresPool = !dependencies.repository && env.portalRepositoryDriver === "postgres"
+    ? createPostgresPool(env)
+    : undefined;
+  const repository = dependencies.repository ?? createDefaultPortalMvpRepository(env, defaultPostgresPool);
+  const readinessChecks: BackendReadinessChecks = {
+    ...dependencies.readinessChecks,
+    database: dependencies.readinessChecks?.database ?? (defaultPostgresPool ? () => verifyPostgresConnection(defaultPostgresPool) : undefined),
+  };
 
   return async function handleRequest(request: IncomingMessage, response: ServerResponse) {
     setCorsHeaders(request, response, env);
@@ -196,23 +211,25 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
       }
 
       if (request.method === "GET" && url.pathname === "/readyz") {
-        const ready = Boolean(env.databaseUrl && env.redisUrl && env.avScannerMode !== "stub-disabled");
+        const readiness = await buildReadinessResponse(env, readinessChecks);
+        const ready = Object.values(readiness.checks).every((check) => check.ok);
         writeJson(response, ready ? 200 : 503, {
           status: ready ? "ready" : "not_ready",
-          checks: {
-            databaseConfigured: Boolean(env.databaseUrl),
-            redisConfigured: Boolean(env.redisUrl),
-            avScannerConfigured: env.avScannerMode !== "stub-disabled",
-            quarantineBucketConfigured: Boolean(env.uploadQuarantineBucket),
-            cleanBucketConfigured: Boolean(env.uploadCleanBucket),
-            repository: "file",
-          },
+          checks: readiness.checks,
         });
         return;
       }
 
       if (request.method === "POST" && url.pathname === "/api/auth/login") {
-        await handleLogin(request, response, env, repository);
+        await handleLogin(request, response, env, repository, rateLimiter);
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/staff/auth/login") {
+        await handleLogin(request, response, env, repository, rateLimiter, {
+          allowedRoles: ["staff", "admin"],
+          surface: "staff-admin",
+        });
         return;
       }
 
@@ -228,6 +245,17 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
           return;
         }
         writeJson(response, 200, buildSessionResponse(auth));
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/staff/session") {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, {
+          ...buildSessionResponse(auth),
+          mvpBoundary: staffMvpBoundary,
+        });
         return;
       }
 
@@ -319,9 +347,138 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
   };
 }
 
+function createDefaultPortalMvpRepository(
+  env: BackendEnv,
+  postgresPool: ReturnType<typeof createPostgresPool> | undefined,
+) {
+  if (env.portalRepositoryDriver === "postgres") {
+    const pool = postgresPool ?? createPostgresPool(env);
+    return createPostgresPortalMvpRepository(createPostgresQueryLayer(pool));
+  }
+
+  if (env.nodeEnv === "production") {
+    throw new Error("File-backed Portal MVP repository is not allowed in production.");
+  }
+
+  return createFilePortalMvpRepository(env.portalStorePath, {
+    developmentUsers: developmentUsersForRepository(env),
+  });
+}
+
+function developmentUsersForRepository(env: BackendEnv): PortalUserRecord[] {
+  return env.developmentUsers.map((user) => ({
+    userId: `usr_dev_${user.role}`,
+    email: user.email,
+    role: user.role,
+    status: "active",
+    passwordHashSha256: hashPasswordWithPepper(user.password, env.passwordPepper),
+    customerProfileId: user.role === "customer" ? "cst_dev_portal" : undefined,
+    staffUserId: user.role === "staff" || user.role === "admin" ? `${user.role}_dev` : undefined,
+    safeDisplayName: user.safeDisplayName,
+  }));
+}
+
+type ReadinessCheckState = {
+  configured: boolean;
+  ok: boolean;
+  status: "ok" | "not_configured" | "disabled" | "failed" | "check_not_implemented";
+  required: boolean;
+  detail?: string;
+};
+
+async function buildReadinessResponse(env: BackendEnv, checks: BackendReadinessChecks) {
+  return {
+    checks: {
+      database: await dependencyCheck({
+        configured: Boolean(env.databaseUrl),
+        required: true,
+        check: checks.database,
+        notConfiguredDetail: "PORTAL_DATABASE_URL is not set.",
+      }),
+      redis: await dependencyCheck({
+        configured: Boolean(env.redisUrl),
+        required: true,
+        check: checks.redis,
+        notConfiguredDetail: "REDIS_URL is not set.",
+      }),
+      antivirus: await dependencyCheck({
+        configured: env.avScannerMode !== "stub-disabled",
+        required: true,
+        check: checks.antivirus,
+        disabledDetail: "AV_SCANNER_MODE=stub-disabled keeps uploads blocked.",
+        notConfiguredDetail: "AV scanner is not configured.",
+      }),
+      objectStorage: await dependencyCheck({
+        configured: Boolean(env.uploadQuarantineBucket && env.uploadCleanBucket && env.uploadKmsKeyId),
+        required: true,
+        check: checks.objectStorage,
+        notConfiguredDetail: "UPLOAD_QUARANTINE_BUCKET, UPLOAD_CLEAN_BUCKET and UPLOAD_KMS_KEY_ID must be set.",
+      }),
+      repository: {
+        configured: true,
+        ok: env.portalRepositoryDriver !== "file" || env.nodeEnv !== "production",
+        status: env.portalRepositoryDriver !== "file" || env.nodeEnv !== "production" ? "ok" : "failed",
+        required: true,
+        detail: `PORTAL_REPOSITORY_DRIVER=${env.portalRepositoryDriver}`,
+      } satisfies ReadinessCheckState,
+    },
+  };
+}
+
+async function dependencyCheck(input: {
+  configured: boolean;
+  required: boolean;
+  check?: () => Promise<boolean>;
+  notConfiguredDetail: string;
+  disabledDetail?: string;
+}): Promise<ReadinessCheckState> {
+  if (!input.configured) {
+    return {
+      configured: false,
+      ok: false,
+      status: input.disabledDetail ? "disabled" : "not_configured",
+      required: input.required,
+      detail: input.disabledDetail ?? input.notConfiguredDetail,
+    };
+  }
+
+  if (!input.check) {
+    return {
+      configured: true,
+      ok: false,
+      status: "check_not_implemented",
+      required: input.required,
+      detail: "Dependency is configured, but no runtime check is attached yet.",
+    };
+  }
+
+  try {
+    const ok = await input.check();
+    return {
+      configured: true,
+      ok,
+      status: ok ? "ok" : "failed",
+      required: input.required,
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      ok: false,
+      status: "failed",
+      required: input.required,
+      detail: error instanceof Error ? error.message : "Dependency check failed.",
+    };
+  }
+}
+
 type StaffRequestFilters = {
   status?: PortalRequestStatus;
   kind?: PortalRequestKind;
+};
+
+type LoginOptions = {
+  allowedRoles?: readonly UserRole[];
+  surface?: "portal" | "staff-admin";
 };
 
 async function handleLogin(
@@ -329,12 +486,38 @@ async function handleLogin(
   response: ServerResponse,
   env: BackendEnv,
   repository: PortalMvpRepository,
+  rateLimiter: RateLimiter,
+  options: LoginOptions = {},
 ) {
   const body = assertObject(await readJsonBody<unknown>(request));
   const email = readRequiredString(body.email, "email").toLowerCase();
   const password = readRequiredString(body.password, "password");
+  const loginRateLimit = await rateLimiter.check({
+    scope: "login",
+    subject: `${options.surface ?? "portal"}:${email}`,
+    ip: readClientIp(request),
+    windowSeconds: env.rateLimitLoginWindowSeconds,
+    limitCount: env.rateLimitLoginMaxAttempts,
+  });
+  response.setHeader("x-ratelimit-login-limit", String(loginRateLimit.limitCount));
+  response.setHeader("x-ratelimit-login-remaining", String(Math.max(loginRateLimit.limitCount - loginRateLimit.observedCount, 0)));
+  if (loginRateLimit.decision === "deny") {
+    await appendAudit(repository, env, {
+      actorRole: "system",
+      action: "portal-login-rate-limited",
+      outcome: "blocked",
+      objectType: "portal_session",
+      metadata: {
+        surface: options.surface ?? "portal",
+        emailHash: createHash("sha256").update(email).digest("hex"),
+      },
+    });
+    writeJson(response, 429, { error: "login_rate_limit_exceeded" });
+    return;
+  }
+
   const user = await repository.findUserByEmail(email);
-  const passwordOk = user?.status === "active" && verifyDevelopmentPassword(user, password, env.passwordPepper);
+  const passwordOk = user?.status === "active" && verifyPassword(user, password, env.passwordPepper);
 
   if (!user || !passwordOk) {
     await appendAudit(repository, env, {
@@ -350,6 +533,22 @@ async function handleLogin(
       error: "invalid_credentials",
       message: "E-Mail oder Passwort passen nicht zum Portal-MVP.",
     });
+    return;
+  }
+
+  if (options.allowedRoles && !options.allowedRoles.includes(user.role)) {
+    await appendAudit(repository, env, {
+      actorUserId: user.userId,
+      actorRole: user.role,
+      action: "portal-login-role-rejected",
+      outcome: "rejected",
+      objectType: "portal_session",
+      metadata: {
+        surface: options.surface ?? "portal",
+        role: user.role,
+      },
+    });
+    writeJson(response, 403, { error: "role_not_allowed" });
     return;
   }
 
@@ -373,6 +572,7 @@ async function handleLogin(
     metadata: {
       sessionId: session.id,
       role: user.role,
+      surface: options.surface ?? "portal",
       assurance: "password-session",
     },
   });
@@ -713,7 +913,7 @@ async function createPublicRequest(
   env: BackendEnv,
   repository: PortalMvpRepository,
 ) {
-  const parsed = parsePublicRequest(rawBody);
+  const parsed = parsePublicRequest(rawBody, env);
   const now = new Date().toISOString();
   const request: StoredPortalRequest = {
     id: randomUUID(),
@@ -772,9 +972,9 @@ async function createPublicRequest(
   return request;
 }
 
-function parsePublicRequest(rawBody: unknown): ParsedPublicRequest {
+function parsePublicRequest(rawBody: unknown, env: BackendEnv): ParsedPublicRequest {
   const body = assertObject(rawBody);
-  const type = readEnumValue(body.type, ["appointment", "contact", "care"] as const, "type");
+  const type = readEnumValue(body.type, ["appointment", "contact", "care", "document"] as const, "type");
 
   if (type === "appointment") {
     const contact = readPublicContact(body);
@@ -849,6 +1049,51 @@ function parsePublicRequest(rawBody: unknown): ParsedPublicRequest {
         sensitivity,
         preferredChannel,
         containsHealthData,
+      },
+    };
+  }
+
+  if (type === "document") {
+    const contact = readPublicContact(body);
+    const context = readBoundedString(body.context, "context", 2, 80);
+    const fileExtension = readRequiredString(body.fileExtension, "fileExtension").toLowerCase().replace(/^\./, "");
+    const mimeType = readRequiredString(body.mimeType, "mimeType");
+    const sizeBytes = readPositiveInteger(body.sizeBytes, "sizeBytes");
+    const consentAccepted = readRequiredBoolean(body.consentAccepted, "consentAccepted");
+
+    if (!consentAccepted) throw new SafeHttpError(400, "consent_required");
+    if (!allowedUploadExtensions.has(fileExtension) || !env.uploadAllowedMimeTypes.includes(mimeType)) {
+      throw new SafeHttpError(400, "unsupported_upload_metadata");
+    }
+    if (sizeBytes > env.uploadMaxBytes) throw new SafeHttpError(400, "upload_too_large");
+
+    return {
+      kind: "prescription_upload",
+      sensitivity: "health",
+      safeSummary: `Rezept-/Dokumentenanfrage: ${context}, ${fileExtension.toUpperCase()}, ${formatBytes(sizeBytes)}.`,
+      details: {
+        source: "public_website",
+        requestType: "document",
+        contact,
+        document: {
+          context,
+          fileExtension,
+          mimeType,
+          sizeBytes,
+          consentAccepted: true,
+          uploadMode: "metadata-only-no-file-transfer",
+        },
+        boundary: publicRequestBoundary(),
+      },
+      auditMetadata: {
+        requestType: "document",
+        kind: "prescription_upload",
+        sensitivity: "health",
+        fileExtension,
+        mimeType,
+        sizeBytes,
+        metadataOnly: true,
+        fileUploadIncluded: false,
       },
     };
   }
@@ -948,6 +1193,8 @@ async function updateRequestStatus(
         nextStatus,
         previousStaffStatus: normalizeStaffRequestStatus(existing.employeeStatus),
         nextStaffStatus: normalizeStaffRequestStatus(updated.employeeStatus),
+        actorStaffUserId: auth.actor.staffUserId,
+        actorRole: auth.actor.role,
         staffReviewRequired: updated.staffReviewRequired,
         omniaWriteAllowed: updated.omniaWriteAllowed,
       },
@@ -1208,10 +1455,21 @@ function toAuditDto(event: AuditEvent) {
   };
 }
 
-function verifyDevelopmentPassword(user: PortalUserRecord, password: string, pepper: string) {
-  const expected = createHash("sha256").update(`${pepper}:${user.developmentPassword}`).digest("hex");
-  const actual = createHash("sha256").update(`${pepper}:${password}`).digest("hex");
-  return expected === actual;
+function verifyPassword(user: PortalUserRecord, password: string, pepper: string) {
+  if (!user.passwordHashSha256) return false;
+  const actual = hashPasswordWithPepper(password, pepper);
+  return safeHashEqual(user.passwordHashSha256, actual);
+}
+
+function hashPasswordWithPepper(password: string, pepper: string) {
+  return createHash("sha256").update(`${pepper}:${password}`).digest("hex");
+}
+
+function safeHashEqual(expected: string, actual: string) {
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const actualBuffer = Buffer.from(actual, "hex");
+  if (expectedBuffer.length !== actualBuffer.length) return false;
+  return timingSafeEqual(expectedBuffer, actualBuffer);
 }
 
 function setCorsHeaders(request: IncomingMessage, response: ServerResponse, env: BackendEnv) {

@@ -1,22 +1,33 @@
 'use strict';
 
-module.exports = ({ env }) => ({
-  auth: {
-    secret: env('ADMIN_JWT_SECRET'),
-  },
-  apiToken: {
-    salt: env('API_TOKEN_SALT'),
-  },
-  transfer: {
-    token: {
-      salt: env('TRANSFER_TOKEN_SALT'),
+module.exports = ({ env }) => {
+  const production = env('NODE_ENV') === 'production';
+  const requiredSecret = (name) => {
+    const value = env(name);
+    if (production && (!value || value.length < 16)) {
+      throw new Error(`${name} must be set in production.`);
+    }
+    return value;
+  };
+
+  return {
+    auth: {
+      secret: requiredSecret('ADMIN_JWT_SECRET'),
     },
-  },
-  secrets: {
-    encryptionKey: env('ENCRYPTION_KEY'),
-  },
-  flags: {
-    nps: false,
-    promoteEE: false,
-  },
-});
+    apiToken: {
+      salt: requiredSecret('API_TOKEN_SALT'),
+    },
+    transfer: {
+      token: {
+        salt: requiredSecret('TRANSFER_TOKEN_SALT'),
+      },
+    },
+    secrets: {
+      encryptionKey: requiredSecret('ENCRYPTION_KEY'),
+    },
+    flags: {
+      nps: false,
+      promoteEE: false,
+    },
+  };
+};

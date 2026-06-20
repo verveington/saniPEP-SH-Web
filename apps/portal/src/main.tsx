@@ -269,15 +269,10 @@ function PortalShell({
 }
 
 function LoginPanel({ onLogin }: { onLogin: (input: { email: string; password: string }) => Promise<void> }) {
-  const [email, setEmail] = useState("staff@example.test");
-  const [password, setPassword] = useState("staff-passwort");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const presets = [
-    { label: "Staff", email: "staff@example.test", password: "staff-passwort" },
-    { label: "Admin", email: "admin@example.test", password: "admin-passwort" },
-    { label: "Kunde", email: "demo@example.test", password: "demo-passwort" },
-  ];
 
   const submit = async () => {
     setSubmitting(true);
@@ -300,23 +295,8 @@ function LoginPanel({ onLogin }: { onLogin: (input: { email: string; password: s
               Backend Login
             </Text>
             <Text variant="body-2" color="neutral-faded">
-              Demo-Zugänge laufen gegen das Backend. Staff/Admin öffnen die Request-Workbench, Kunde öffnet das Portal-Dashboard.
+              Lokale Zugänge kommen aus PORTAL_DEV_* Env-Werten. Staff/Admin öffnen die Request-Workbench, Kunde öffnet das Portal-Dashboard.
             </Text>
-          </View>
-          <View direction="row" gap={2} wrap>
-            {presets.map((preset) => (
-              <Button
-                key={preset.email}
-                variant="outline"
-                color="neutral"
-                onClick={() => {
-                  setEmail(preset.email);
-                  setPassword(preset.password);
-                }}
-              >
-                {preset.label}
-              </Button>
-            ))}
           </View>
           <FormControl>
             <FormControl.Label>E-Mail</FormControl.Label>
@@ -336,7 +316,7 @@ function LoginPanel({ onLogin }: { onLogin: (input: { email: string; password: s
               inputAttributes={{ type: "password", autoComplete: "current-password" }}
             />
           </FormControl>
-          <Button color="primary" onClick={submit} disabled={submitting}>
+          <Button color="primary" onClick={submit} disabled={submitting || !email.trim() || !password}>
             <span className="buttonLabel">
               <Lock aria-hidden />
               {submitting ? "Login läuft" : "Einloggen"}

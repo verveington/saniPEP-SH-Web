@@ -19,7 +19,7 @@ export async function LegalPage({ kind, title }: { kind: "imprint" | "privacy" |
     ],
     privacy: [
       "Platzhalter: Diese Seite ist noch nicht juristisch final freigegeben.",
-      "Die öffentliche Website verarbeitet Kontakt-, Termin- und Upload-Anfragen datensparsam. Analytics zählt nur grobe Ziele.",
+      "Die öffentliche Website verarbeitet Kontakt-, Termin- und Vorab-Anfragen datensparsam. Analytics zählt nur grobe Ziele.",
       "Der finale Datenschutztext muss vor Produktivgang mit Datenschutzberatung geprüft und vervollständigt werden.",
     ],
     consent: [

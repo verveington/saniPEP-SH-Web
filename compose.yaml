@@ -1,5 +1,30 @@
 name: sanipep-sh
 
+x-backend-environment: &backend-environment
+  NODE_ENV: production
+  PORT: 4100
+  PORTAL_BACKEND_BASE_URL: "${PORTAL_BACKEND_BASE_URL:?Set PORTAL_BACKEND_BASE_URL}"
+  TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:?Set TRUSTED_ORIGINS}"
+  PORTAL_DATABASE_URL: "${PORTAL_DATABASE_URL:?Set PORTAL_DATABASE_URL}"
+  PORTAL_DATABASE_SSL: "${PORTAL_DATABASE_SSL:-false}"
+  POSTGRES_POOL_MAX: "${POSTGRES_POOL_MAX:-10}"
+  PORTAL_REPOSITORY_DRIVER: postgres
+  REDIS_URL: "${REDIS_URL:?Set REDIS_URL}"
+  REDIS_TLS: "${REDIS_TLS:-true}"
+  REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:-sanipep:portal}"
+  PORTAL_SESSION_COOKIE_NAME: "${PORTAL_SESSION_COOKIE_NAME:-__Host-sanipep_portal_session}"
+  PORTAL_SESSION_SECRET: "${PORTAL_SESSION_SECRET:?Set PORTAL_SESSION_SECRET}"
+  CSRF_SECRET: "${CSRF_SECRET:?Set CSRF_SECRET}"
+  PORTAL_OTP_HASH_SECRET: "${PORTAL_OTP_HASH_SECRET:?Set PORTAL_OTP_HASH_SECRET}"
+  PORTAL_PASSWORD_PEPPER: "${PORTAL_PASSWORD_PEPPER:?Set PORTAL_PASSWORD_PEPPER}"
+  AUDIT_LOG_HASH_SECRET: "${AUDIT_LOG_HASH_SECRET:?Set AUDIT_LOG_HASH_SECRET}"
+  UPLOAD_QUARANTINE_BUCKET: "${UPLOAD_QUARANTINE_BUCKET:?Set UPLOAD_QUARANTINE_BUCKET}"
+  UPLOAD_CLEAN_BUCKET: "${UPLOAD_CLEAN_BUCKET:?Set UPLOAD_CLEAN_BUCKET}"
+  UPLOAD_KMS_KEY_ID: "${UPLOAD_KMS_KEY_ID:?Set UPLOAD_KMS_KEY_ID}"
+  AV_SCANNER_MODE: "${AV_SCANNER_MODE:?Set AV_SCANNER_MODE}"
+  AV_SCANNER_ENDPOINT: "${AV_SCANNER_ENDPOINT:-}"
+  OMNIA_WRITE_MODE: "${OMNIA_WRITE_MODE:-read_only}"
+
 services:
   web:
     build:
@@ -33,37 +58,14 @@ services:
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-4100}:4100"
-    environment:
-      NODE_ENV: production
-      PORT: 4100
-      PORTAL_BACKEND_BASE_URL: "${PORTAL_BACKEND_BASE_URL:?Set PORTAL_BACKEND_BASE_URL}"
-      TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:?Set TRUSTED_ORIGINS}"
-      PORTAL_DATABASE_URL: "${PORTAL_DATABASE_URL:?Set PORTAL_DATABASE_URL}"
-      PORTAL_DATABASE_SSL: "${PORTAL_DATABASE_SSL:-true}"
-      POSTGRES_POOL_MAX: "${POSTGRES_POOL_MAX:-10}"
-      REDIS_URL: "${REDIS_URL:?Set REDIS_URL}"
-      REDIS_TLS: "${REDIS_TLS:-true}"
-      REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:-sanipep:portal}"
-      PORTAL_SESSION_COOKIE_NAME: "${PORTAL_SESSION_COOKIE_NAME:-__Host-sanipep_portal_session}"
-      PORTAL_SESSION_SECRET: "${PORTAL_SESSION_SECRET:?Set PORTAL_SESSION_SECRET}"
-      CSRF_SECRET: "${CSRF_SECRET:?Set CSRF_SECRET}"
-      PORTAL_OTP_HASH_SECRET: "${PORTAL_OTP_HASH_SECRET:?Set PORTAL_OTP_HASH_SECRET}"
-      PORTAL_PASSWORD_PEPPER: "${PORTAL_PASSWORD_PEPPER:?Set PORTAL_PASSWORD_PEPPER}"
-      AUDIT_LOG_HASH_SECRET: "${AUDIT_LOG_HASH_SECRET:?Set AUDIT_LOG_HASH_SECRET}"
-      UPLOAD_QUARANTINE_BUCKET: "${UPLOAD_QUARANTINE_BUCKET:?Set UPLOAD_QUARANTINE_BUCKET}"
-      UPLOAD_CLEAN_BUCKET: "${UPLOAD_CLEAN_BUCKET:?Set UPLOAD_CLEAN_BUCKET}"
-      UPLOAD_KMS_KEY_ID: "${UPLOAD_KMS_KEY_ID:?Set UPLOAD_KMS_KEY_ID}"
-      AV_SCANNER_MODE: "${AV_SCANNER_MODE:?Set AV_SCANNER_MODE}"
-      AV_SCANNER_ENDPOINT: "${AV_SCANNER_ENDPOINT:-}"
-      OMNIA_WRITE_MODE: "${OMNIA_WRITE_MODE:-read_only}"
-      PORTAL_STORE_PATH: /data/sanipep-public-request-store.json
+    environment: *backend-environment
     depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - backend_request_store:/data
     healthcheck:
       test:
         [
@@ -74,6 +76,74 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  backend-migrate:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: "no"
+    command: ["node", "apps/backend/dist/db/migrations.js"]
+    environment: *backend-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  cms:
+    profiles: ["cms"]
+    build:
+      context: .
+      dockerfile: apps/cms/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${CMS_PORT:-1337}:1337"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 1337
+      STRAPI_TELEMETRY_DISABLED: "true"
+      APP_KEYS: "${CMS_APP_KEYS:?Set CMS_APP_KEYS}"
+      ADMIN_JWT_SECRET: "${CMS_ADMIN_JWT_SECRET:?Set CMS_ADMIN_JWT_SECRET}"
+      API_TOKEN_SALT: "${CMS_API_TOKEN_SALT:?Set CMS_API_TOKEN_SALT}"
+      TRANSFER_TOKEN_SALT: "${CMS_TRANSFER_TOKEN_SALT:?Set CMS_TRANSFER_TOKEN_SALT}"
+      JWT_SECRET: "${CMS_JWT_SECRET:?Set CMS_JWT_SECRET}"
+      ENCRYPTION_KEY: "${CMS_ENCRYPTION_KEY:?Set CMS_ENCRYPTION_KEY}"
+      DATABASE_CLIENT: postgres
+      DATABASE_URL: "postgres://${CMS_POSTGRES_USER:?Set CMS_POSTGRES_USER}:${CMS_POSTGRES_PASSWORD:?Set CMS_POSTGRES_PASSWORD}@cms-postgres:5432/${CMS_POSTGRES_DB:?Set CMS_POSTGRES_DB}"
+      DATABASE_SSL: "false"
+      CMS_CORS_ORIGINS: "${CMS_CORS_ORIGINS:?Set CMS_CORS_ORIGINS}"
+      PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:?Set NEXT_PUBLIC_SITE_URL}"
+      UPLOAD_SIZE_LIMIT: "${CMS_UPLOAD_SIZE_LIMIT:-10485760}"
+    depends_on:
+      cms-postgres:
+        condition: service_healthy
+    volumes:
+      - cms_uploads:/app/apps/cms/public/uploads
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:1337/admin').then((response) => process.exit(response.status < 500 ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  cms-postgres:
+    profiles: ["cms"]
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: "${CMS_POSTGRES_USER:?Set CMS_POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${CMS_POSTGRES_PASSWORD:?Set CMS_POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${CMS_POSTGRES_DB:?Set CMS_POSTGRES_DB}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - cms_postgres_data:/var/lib/postgresql/data
 
   postgres:
     image: postgres:16
@@ -89,7 +159,6 @@ services:
       retries: 20
     volumes:
       - backend_postgres_data:/var/lib/postgresql/data
-      - ./apps/backend/migrations:/docker-entrypoint-initdb.d:ro
 
   redis:
     image: redis:7-alpine
@@ -104,6 +173,7 @@ services:
       - backend_redis_data:/data
 
 volumes:
-  backend_request_store:
   backend_postgres_data:
   backend_redis_data:
+  cms_postgres_data:
+  cms_uploads:

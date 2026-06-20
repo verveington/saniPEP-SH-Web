@@ -1,6 +1,6 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">saniPEP Sanitaetshaus Social Preview</title>
-  <desc id="desc">Geometrische saniPEP Markenflaeche in Indigo, Lavendel, Rose und Creme.</desc>
+  <title id="title">saniPEP Sanitätshaus Social Preview</title>
+  <desc id="desc">Geometrische saniPEP Markenfläche in Indigo, Lavendel, Rose und Creme.</desc>
   <rect width="1200" height="630" fill="#EAF6FB"/>
   <rect y="378" width="1200" height="252" fill="#F8F6FB"/>
   <g opacity="0.96">
@@ -19,9 +19,9 @@
     <path d="M815 182C902 174 989 220 1070 254C1118 274 1166 292 1214 303V439C1136 426 1060 409 982 393C910 378 862 416 814 466C776 506 732 540 681 564C647 580 614 587 581 580C571 578 563 570 564 560C566 548 578 541 591 537C672 510 724 456 760 386C789 330 790 272 815 182Z" fill="url(#legHighlight)" opacity="0.72"/>
   </g>
   <text x="70" y="112" fill="#364593" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="800" letter-spacing="0">saniPEP</text>
-  <text x="74" y="164" fill="#B35985" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" letter-spacing="4">SANITAETSHAUS</text>
+  <text x="74" y="164" fill="#B35985" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" letter-spacing="4">SANITÄTSHAUS</text>
   <text x="70" y="284" fill="#364593" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" letter-spacing="0">Versorgung ohne Kompromisse</text>
-  <text x="73" y="338" fill="#6F3D66" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Digital vorbereiten. Persoenlich begleitet werden.</text>
+  <text x="73" y="338" fill="#6F3D66" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700">Digital vorbereiten. Persönlich begleitet werden.</text>
   <rect x="70" y="416" width="320" height="74" rx="37" fill="#364593"/>
   <text x="114" y="464" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800">Termin online anfragen</text>
   <defs>

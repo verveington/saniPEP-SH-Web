@@ -49,7 +49,7 @@ function SiteHeader({
         </nav>
         <div className="headerActions">
           <RouteLink className="actionLink" route="/rezept-upload" navigate={navigate}>
-            <ButtonText icon={Upload}>Rezept</ButtonText>
+            <ButtonText icon={Upload}>Rezept vorab</ButtonText>
           </RouteLink>
           <RouteLink className="actionLink actionLinkPrimary" route="/termin-anfragen" navigate={navigate}>
             <ButtonText icon={Calendar}>Termin</ButtonText>

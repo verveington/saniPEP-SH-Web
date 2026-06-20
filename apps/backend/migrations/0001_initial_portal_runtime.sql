@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE portal_users (
+CREATE TABLE IF NOT EXISTS portal_users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL,
   role text NOT NULL CHECK (role IN ('customer', 'staff', 'admin')),
@@ -14,10 +14,10 @@ CREATE TABLE portal_users (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX portal_users_email_unique ON portal_users (lower(email));
-CREATE INDEX portal_users_role_status_idx ON portal_users (role, status);
+CREATE UNIQUE INDEX IF NOT EXISTS portal_users_email_unique ON portal_users (lower(email));
+CREATE INDEX IF NOT EXISTS portal_users_role_status_idx ON portal_users (role, status);
 
-CREATE TABLE customer_profiles (
+CREATE TABLE IF NOT EXISTS customer_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE REFERENCES portal_users(id) ON DELETE RESTRICT,
   omnia_customer_ref text NOT NULL UNIQUE,
@@ -27,9 +27,9 @@ CREATE TABLE customer_profiles (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX customer_profiles_omnia_ref_idx ON customer_profiles (omnia_customer_ref);
+CREATE INDEX IF NOT EXISTS customer_profiles_omnia_ref_idx ON customer_profiles (omnia_customer_ref);
 
-CREATE TABLE staff_users (
+CREATE TABLE IF NOT EXISTS staff_users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE REFERENCES portal_users(id) ON DELETE RESTRICT,
   display_name text NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE staff_users (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE portal_sessions (
+CREATE TABLE IF NOT EXISTS portal_sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES portal_users(id) ON DELETE CASCADE,
   token_hash text NOT NULL UNIQUE,
@@ -52,9 +52,9 @@ CREATE TABLE portal_sessions (
   revoked_at timestamptz
 );
 
-CREATE INDEX portal_sessions_user_active_idx ON portal_sessions (user_id, revoked_at, absolute_expires_at);
+CREATE INDEX IF NOT EXISTS portal_sessions_user_active_idx ON portal_sessions (user_id, revoked_at, absolute_expires_at);
 
-CREATE TABLE one_time_password_invites (
+CREATE TABLE IF NOT EXISTS one_time_password_invites (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_profile_id uuid NOT NULL REFERENCES customer_profiles(id) ON DELETE CASCADE,
   issued_by_staff_user_id uuid REFERENCES staff_users(id) ON DELETE SET NULL,
@@ -67,9 +67,9 @@ CREATE TABLE one_time_password_invites (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX otp_invites_customer_active_idx ON one_time_password_invites (customer_profile_id, consumed_at, expires_at);
+CREATE INDEX IF NOT EXISTS otp_invites_customer_active_idx ON one_time_password_invites (customer_profile_id, consumed_at, expires_at);
 
-CREATE TABLE portal_requests (
+CREATE TABLE IF NOT EXISTS portal_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_profile_id uuid NOT NULL REFERENCES customer_profiles(id) ON DELETE RESTRICT,
   created_by_user_id uuid NOT NULL REFERENCES portal_users(id) ON DELETE RESTRICT,
@@ -102,10 +102,10 @@ CREATE TABLE portal_requests (
   CONSTRAINT portal_requests_no_customer_omnia_write CHECK (omnia_write_allowed IS FALSE)
 );
 
-CREATE INDEX portal_requests_customer_status_idx ON portal_requests (customer_profile_id, status, created_at DESC);
-CREATE INDEX portal_requests_kind_status_idx ON portal_requests (kind, status);
+CREATE INDEX IF NOT EXISTS portal_requests_customer_status_idx ON portal_requests (customer_profile_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS portal_requests_kind_status_idx ON portal_requests (kind, status);
 
-CREATE TABLE upload_objects (
+CREATE TABLE IF NOT EXISTS upload_objects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   portal_request_id uuid REFERENCES portal_requests(id) ON DELETE SET NULL,
   customer_profile_id uuid NOT NULL REFERENCES customer_profiles(id) ON DELETE RESTRICT,
@@ -145,11 +145,11 @@ CREATE TABLE upload_objects (
   deleted_at timestamptz
 );
 
-CREATE INDEX upload_objects_request_idx ON upload_objects (portal_request_id);
-CREATE INDEX upload_objects_customer_state_idx ON upload_objects (customer_profile_id, storage_state, created_at DESC);
-CREATE INDEX upload_objects_scan_status_idx ON upload_objects (scan_status, created_at DESC);
+CREATE INDEX IF NOT EXISTS upload_objects_request_idx ON upload_objects (portal_request_id);
+CREATE INDEX IF NOT EXISTS upload_objects_customer_state_idx ON upload_objects (customer_profile_id, storage_state, created_at DESC);
+CREATE INDEX IF NOT EXISTS upload_objects_scan_status_idx ON upload_objects (scan_status, created_at DESC);
 
-CREATE TABLE audit_events (
+CREATE TABLE IF NOT EXISTS audit_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   occurred_at timestamptz NOT NULL DEFAULT now(),
   actor_user_id uuid REFERENCES portal_users(id) ON DELETE SET NULL,
@@ -164,11 +164,11 @@ CREATE TABLE audit_events (
   event_hash text
 );
 
-CREATE INDEX audit_events_occurred_idx ON audit_events (occurred_at DESC);
-CREATE INDEX audit_events_actor_idx ON audit_events (actor_user_id, occurred_at DESC);
-CREATE INDEX audit_events_request_idx ON audit_events (request_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_occurred_idx ON audit_events (occurred_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_actor_idx ON audit_events (actor_user_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS audit_events_request_idx ON audit_events (request_id, occurred_at DESC);
 
-CREATE TABLE rate_limit_events (
+CREATE TABLE IF NOT EXISTS rate_limit_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   occurred_at timestamptz NOT NULL DEFAULT now(),
   scope text NOT NULL CHECK (scope IN (
@@ -187,5 +187,5 @@ CREATE TABLE rate_limit_events (
   observed_count integer NOT NULL
 );
 
-CREATE INDEX rate_limit_events_scope_subject_idx ON rate_limit_events (scope, subject_hash, occurred_at DESC);
-CREATE INDEX rate_limit_events_ip_idx ON rate_limit_events (ip_hash, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS rate_limit_events_scope_subject_idx ON rate_limit_events (scope, subject_hash, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS rate_limit_events_ip_idx ON rate_limit_events (ip_hash, occurred_at DESC);

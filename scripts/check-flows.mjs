@@ -31,6 +31,7 @@ const publicUiSource = [
   ...readSourceFiles("apps/frontend/src/pages"),
 ].join("\n");
 const portalUiSource = readSourceFiles("apps/portal/src").join("\n");
+const adminUiSource = readSourceFiles("apps/admin/src").join("\n");
 const workflow = read("apps/frontend/src/lib/requestWorkflow.ts");
 const search = read("apps/frontend/src/lib/searchIndex.ts");
 const privacy = read("apps/frontend/src/lib/privacySecurity.ts");
@@ -41,11 +42,15 @@ const backendApp = read("apps/backend/src/app.ts");
 const portalRepository = read("apps/backend/src/repositories/portalMvpRepository.ts");
 const portalApi = read("apps/portal/src/api.ts");
 const portalViteConfig = read("apps/portal/vite.config.ts");
+const adminViteConfig = read("apps/admin/vite.config.ts");
 const portalMigration = read("apps/backend/migrations/0002_portal_mvp_request_details.sql");
 const portalDemo = read("scripts/demo-portal-mvp.mjs");
+const packageJson = read("package.json");
+const postgresPublicRequestCheck = read("scripts/check-public-requests-postgres.mjs");
 const sourceBundle = [
   publicUiSource,
   portalUiSource,
+  adminUiSource,
   backendApp,
   portalRepository,
   workflow,
@@ -57,7 +62,7 @@ const sourceBundle = [
 
 const requiredConversionLabels = [
   "Termin anfragen",
-  "Rezept hochladen",
+  "Rezept vorab einreichen",
   "Anfrage senden",
   "Bestellanfrage vorbereiten",
   "Kundenportal Login",
@@ -97,7 +102,7 @@ assert(publicUiSource.includes("validateCareConfigurationInput"), "Care configur
 assert(publicUiSource.includes("validateUploadInput"), "Upload submit must use existing validation");
 assert(publicUiSource.includes("aria-invalid"), "Form fields must expose aria-invalid");
 assert(publicUiSource.includes("aria-describedby"), "Form fields must expose aria-describedby");
-assert(publicUiSource.includes("disabled={!validation.valid}"), "Submit buttons must be disabled until valid");
+assert(publicUiSource.includes("disabled={!validation.valid"), "Submit buttons must be disabled until valid");
 assert(publicUiSource.includes("onConversion"), "Request forms must emit safe conversion events");
 assert(!/<table[\s>]/i.test(publicUiSource), "Tables are not allowed for the current mobile-first portal scope");
 assert(!publicUiSource.includes("authAdapter"), "Public app must not import mock auth");
@@ -136,6 +141,8 @@ assert(privacy.includes("run-antivirus-scan-before-staff-review"), "AV scan must
 assert(publicUiSource.includes("useState<ConsentScope[]>([])"), "Upload consent scopes must start empty");
 assert(publicUiSource.includes("accept: uploadAcceptAttribute"), "FileUpload must receive accept policy");
 assert(publicUiSource.includes("\"data-max-file-size\": String(maxUploadFileSizeBytes)"), "FileUpload must receive max file size metadata");
+assert(publicUiSource.includes("type: \"document\""), "Prescription/document flow must submit a metadata-only public request");
+assert(publicUiSource.includes("Metadaten-Anfrage senden"), "Prescription/document flow must not label the action as a productive upload");
 assert(auth.includes("oneTimePasswordDelivery"), "Portal activation must document one-time password delivery");
 assert(conversion.includes("conversionPrivacyBoundary"), "Conversion tracking must define a privacy boundary");
 assert(conversion.includes("Keine Namen"), "Conversion tracking must explicitly exclude personal data");
@@ -174,12 +181,16 @@ assert(!portalApi.includes("fileName"), "Portal API must not send upload file na
 assert(!backendApp.includes("fileName"), "Backend must not accept or store upload file names");
 
 assert(backendApp.includes("\"/api/auth/login\""), "Backend must expose auth login endpoint");
+assert(backendApp.includes("\"/api/staff/auth/login\""), "Backend must expose a staff-only login endpoint");
 assert(backendApp.includes("\"/api/auth/session\""), "Backend must expose session endpoint");
+assert(backendApp.includes("\"/api/staff/session\""), "Backend must expose a staff-only session endpoint");
 assert(backendApp.includes("\"/api/portal/dashboard\""), "Backend must expose portal dashboard endpoint");
 assert(backendApp.includes("\"/api/portal/requests\""), "Backend must expose portal request creation endpoint");
 assert(backendApp.includes("\"/api/staff/requests\""), "Backend must expose staff/admin request list endpoint");
 assert(backendApp.includes("statusRoute") && backendApp.includes("PATCH"), "Backend must expose server-side staff status endpoint");
 assert(backendApp.includes("metadata-only-no-file-content"), "Backend upload MVP must store metadata only");
+assert(backendApp.includes("\"document\""), "Backend public request API must accept document metadata requests");
+assert(backendApp.includes("metadata-only-no-file-transfer"), "Backend public document requests must remain metadata-only");
 assert(backendApp.includes("productionUpload: false"), "Backend must mark upload requests as non-production");
 assert(backendApp.includes("omniaWriteAllowed: false"), "Backend portal requests must block Omnia writes");
 assert(backendApp.includes("portal-request-created"), "Backend must audit created portal requests");
@@ -188,15 +199,34 @@ assert(backendApp.includes("portal-request-changed"), "Backend must audit change
 assert(backendApp.includes("portal-request-approved"), "Backend must audit approved portal requests");
 assert(backendApp.includes("portal-request-rejected"), "Backend must audit rejected portal requests");
 assert(backendApp.includes("requireRole"), "Backend must enforce server-side role checks");
+assert(backendApp.includes("portal-login-rate-limited"), "Backend must prepare route-specific login rate-limit auditing");
+assert(backendApp.includes("actorStaffUserId"), "Staff status audit metadata must carry staff actor context");
 assert(!backendApp.includes("OMNIA_API_BASE_URL"), "Portal MVP request path must not call Omnia");
 assert(!backendApp.includes("createPortalMvpState"), "Backend MVP must not use in-memory portal state");
 
 assert(portalRepository.includes("createFilePortalMvpRepository"), "Portal MVP must use repository-layer persistence");
 assert(portalRepository.includes("readFile") && portalRepository.includes("writeFile"), "Local development repository must persist data to disk");
 assert(portalRepository.includes("listAllRequests"), "Repository must support staff/admin request lists");
-assert(portalRepository.includes("staff@example.test") && portalRepository.includes("admin@example.test"), "Repository seed must model staff and admin roles");
+assert(portalRepository.includes("passwordHashSha256"), "Repository seed users must store password hashes, not demo passwords");
 assert(portalMigration.includes("portal_request_details"), "Portal MVP request detail migration is missing");
 assert(portalMigration.includes("safe-metadata-only"), "Portal MVP migration must constrain request details to safe metadata");
+
+assert(adminUiSource.includes("staffAdminApi.login"), "Staff admin UI must login through the staff auth API");
+assert(adminUiSource.includes("staffAdminApi.listRequests"), "Staff admin UI must load request lists from the backend");
+assert(adminUiSource.includes("staffAdminApi.requestDetail"), "Staff admin UI must load request details from the backend");
+assert(adminUiSource.includes("staffAdminApi.updateStatus"), "Staff admin UI must update status through the backend");
+assert(adminUiSource.includes("credentials: \"include\""), "Staff admin API must use cookie credentials");
+assert(adminUiSource.includes("csrfToken"), "Staff admin UI must keep CSRF token in memory");
+assert(adminUiSource.includes("Request-Liste"), "Staff admin UI must render the request list");
+assert(adminUiSource.includes("Request-Details"), "Staff admin UI must render request details");
+assert(adminViteConfig.includes("\"/api\"") && adminViteConfig.includes("127.0.0.1:4100"), "Admin dev server must proxy same-origin /api calls to the backend");
+assert(packageJson.includes("check:public-requests:postgres"), "Postgres public-request check script must be exposed through package.json");
+assert(postgresPublicRequestCheck.includes("assertBackendSchema"), "Postgres public-request check must assert backend schema before API tests");
+assert(postgresPublicRequestCheck.includes("schema_migrations"), "Postgres public-request check must validate migration history");
+assert(postgresPublicRequestCheck.includes("checksumSha256"), "Postgres public-request check must validate migration checksums");
+assert(postgresPublicRequestCheck.includes("uploadObjectsCreated"), "Postgres public-request check must report no upload objects");
+assert(postgresPublicRequestCheck.includes("Max-Age=0"), "Postgres public-request check must verify logout cookie expiry");
+assert(postgresPublicRequestCheck.includes("invalid-csrf-token"), "Postgres public-request check must verify CSRF rejection");
 
 assert(portalDemo.includes("/api/auth/login"), "Portal MVP demo must exercise backend login");
 assert(portalDemo.includes("prescription_upload"), "Portal MVP demo must create prescription upload request");
@@ -204,8 +234,8 @@ assert(portalDemo.includes("appointment_request"), "Portal MVP demo must create 
 assert(portalDemo.includes("reorder_request"), "Portal MVP demo must create reorder request");
 assert(portalDemo.includes("subscription_change_request"), "Portal MVP demo must create subscription-change request");
 assert(portalDemo.includes("health_contact_request"), "Portal MVP demo must create contact request");
-assert(portalDemo.includes("staff@example.test"), "Portal MVP demo must exercise staff role status changes");
-assert(portalDemo.includes("/api/staff/requests?status=submitted"), "Portal MVP demo must exercise staff request filters");
+assert(portalDemo.includes("PORTAL_DEV_STAFF_EMAIL"), "Portal MVP demo must require env-provided staff credentials");
+assert(portalDemo.includes("/api/staff/requests?status=new"), "Portal MVP demo must exercise staff request filters");
 assert(portalDemo.includes("Customer dashboard did not show the staff-updated completed status"), "Portal MVP demo must verify the customer sees staff status changes");
 assert(portalDemo.includes("portal-request-approved"), "Portal MVP demo must assert approved audit action");
 assert(portalDemo.includes("portal-request-rejected"), "Portal MVP demo must assert rejected audit action");

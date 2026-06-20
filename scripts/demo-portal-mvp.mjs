@@ -9,6 +9,17 @@ const assert = (condition, message) => {
   if (!condition) fail(message);
 };
 
+function requiredEnv(name) {
+  const value = process.env[name];
+  if (!value) fail(`${name} must be set for the local Portal MVP demo.`);
+  return value;
+}
+
+const customerEmail = requiredEnv("PORTAL_DEV_CUSTOMER_EMAIL");
+const customerPassword = requiredEnv("PORTAL_DEV_CUSTOMER_PASSWORD");
+const staffEmail = requiredEnv("PORTAL_DEV_STAFF_EMAIL");
+const staffPassword = requiredEnv("PORTAL_DEV_STAFF_PASSWORD");
+
 const createClient = () => {
   let cookieHeader = "";
 
@@ -51,8 +62,8 @@ const staff = createClient();
 const customerLogin = await customer.request("/api/auth/login", {
   method: "POST",
   body: JSON.stringify({
-    email: "demo@example.test",
-    password: "demo-passwort",
+    email: customerEmail,
+    password: customerPassword,
   }),
 });
 
@@ -101,21 +112,20 @@ for (const input of requestInputs) {
   }));
 }
 
-const staffLogin = await staff.request("/api/auth/login", {
+const staffLogin = await staff.request("/api/staff/auth/login", {
   method: "POST",
   body: JSON.stringify({
-    email: "staff@example.test",
-    password: "staff-passwort",
+    email: staffEmail,
+    password: staffPassword,
   }),
 });
 
 assert(staffLogin.session.role === "staff", "Staff login did not return staff role");
 
 const approvedRequestId = created[0].request.id;
-const staffSubmittedList = await staff.request("/api/staff/requests?status=submitted&kind=prescription_upload");
-assert(staffSubmittedList.profile.role === "staff", "Staff request list did not return staff profile");
-assert(staffSubmittedList.requests.some((item) => item.id === approvedRequestId), "Staff list did not include the customer prescription request");
-assert(staffSubmittedList.summary.omniaWrites === 0, "Staff request list must not report Omnia writes");
+const staffSubmittedList = await staff.request("/api/staff/requests?status=new");
+assert(staffSubmittedList.mvpBoundary.mode === "staff-request-mvp", "Staff request list did not return the MVP boundary");
+assert(staffSubmittedList.requests.some((item) => item.id === approvedRequestId && item.kind === "prescription_upload"), "Staff list did not include the customer prescription request");
 
 await staff.request(`/api/staff/requests/${approvedRequestId}/status`, {
   method: "PATCH",
@@ -142,7 +152,8 @@ await staff.request(`/api/staff/requests/${rejectedRequestId}/status`, {
 
 const staffCompletedList = await staff.request("/api/staff/requests?status=completed");
 assert(staffCompletedList.requests.some((item) => item.id === approvedRequestId), "Staff completed filter did not include the completed request");
-assert(staffCompletedList.auditEvents.some((event) => event.requestId === approvedRequestId && event.action === "portal-request-approved"), "Staff audit trail did not include approval event");
+const staffCompletedDetail = await staff.request(`/api/staff/requests/${approvedRequestId}`);
+assert(staffCompletedDetail.request.auditEvents.some((event) => event.requestId === approvedRequestId && event.action === "portal-request-approved"), "Staff audit trail did not include approval event");
 
 const dashboard = await customer.request("/api/portal/dashboard");
 const kinds = new Set(dashboard.requests.map((item) => item.kind));
@@ -181,7 +192,7 @@ console.log(JSON.stringify({
   customerSession: customerLogin.session.id,
   staffSession: staffLogin.session.id,
   createdRequestIds: created.map((item) => item.request.id),
-  staffFilteredRequests: staffSubmittedList.summary.filteredRequests,
+  staffFilteredRequests: staffSubmittedList.requests.length,
   storedRequests: dashboard.summary.storedRequests,
   openRequests: dashboard.summary.openRequests,
   completedRequests: dashboard.summary.completedRequests,

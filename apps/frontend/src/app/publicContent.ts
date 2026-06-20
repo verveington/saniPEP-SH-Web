@@ -41,7 +41,7 @@ export const serviceAreas: ServiceArea[] = [
   {
     id: "ortho-reha-stoma",
     title: "Bandagen, Orthesen, Reha & Stoma",
-    summary: "Schnell auffindbare Versorgungsbereiche mit Rezeptupload, Rückfragekanal und klarer Weiterleitung.",
+    summary: "Schnell auffindbare Versorgungsbereiche mit Rezept-Vorabprüfung, Rückfragekanal und klarer Weiterleitung.",
     route: "/bandagen-orthesen-reha-stoma",
     priority: "secondary",
     intent: "Rezept und Beratung",

@@ -3,17 +3,31 @@
 const path = require('path');
 
 module.exports = ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'sqlite');
+  const production = env('NODE_ENV') === 'production';
+  const client = env('DATABASE_CLIENT', production ? 'postgres' : 'sqlite');
+
+  if (production && client === 'sqlite') {
+    throw new Error('DATABASE_CLIENT=sqlite is development-only. Use postgres in production.');
+  }
+
+  const connectionString = env('DATABASE_URL');
+  const requiredInProduction = (name, fallback) => {
+    const value = env(name, production ? undefined : fallback);
+    if (production && !connectionString && !value) {
+      throw new Error(`${name} is required in production.`);
+    }
+    return value;
+  };
 
   const connections = {
     postgres: {
       connection: {
-        connectionString: env('DATABASE_URL'),
-        host: env('DATABASE_HOST', 'localhost'),
+        connectionString,
+        host: requiredInProduction('DATABASE_HOST', 'localhost'),
         port: env.int('DATABASE_PORT', 5432),
-        database: env('DATABASE_NAME', 'sanipep_cms'),
-        user: env('DATABASE_USERNAME', 'strapi'),
-        password: env('DATABASE_PASSWORD', 'strapi'),
+        database: requiredInProduction('DATABASE_NAME', 'sanipep_cms'),
+        user: requiredInProduction('DATABASE_USERNAME', 'strapi'),
+        password: requiredInProduction('DATABASE_PASSWORD', 'strapi'),
         ssl: env.bool('DATABASE_SSL', false) && {
           rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', true),
         },

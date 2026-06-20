@@ -15,7 +15,7 @@ export type PortalUserRecord = {
   email: string;
   role: UserRole;
   status: "active" | "disabled";
-  developmentPassword: string;
+  passwordHashSha256: string;
   customerProfileId?: string;
   staffUserId?: string;
   safeDisplayName: string;
@@ -55,7 +55,7 @@ export type StaffRequestStatus = "new" | "in_review" | "waiting_for_customer" | 
 
 export type StoredPublicRequestDetails = {
   source: "public_website";
-  requestType: "appointment" | "contact" | "care";
+  requestType: "appointment" | "contact" | "care" | "document";
   contact: {
     name: string;
     email?: string;
@@ -80,6 +80,14 @@ export type StoredPublicRequestDetails = {
     rhythm: string;
     hasPrescription: boolean;
     note: string;
+  };
+  document?: {
+    context: string;
+    fileExtension: string;
+    mimeType: string;
+    sizeBytes: number;
+    consentAccepted: true;
+    uploadMode: "metadata-only-no-file-transfer";
   };
   boundary: {
     fileUploadIncluded: false;
@@ -145,19 +153,19 @@ export type PortalMvpRepository = {
 };
 
 export type FilePortalMvpRepositoryOptions = {
-  seedDevelopmentUsers?: boolean;
+  developmentUsers?: PortalUserRecord[];
 };
 
 export function createFilePortalMvpRepository(
   filePath: string,
   options: FilePortalMvpRepositoryOptions = {},
 ): PortalMvpRepository {
-  const seedDevelopmentUsers = options.seedDevelopmentUsers ?? false;
+  const developmentUsers = options.developmentUsers ?? [];
   let writeQueue = Promise.resolve();
 
   const withStore = async <T>(mutator: (data: PortalMvpStoreData) => T | Promise<T>) => {
     const operation = writeQueue.then(async () => {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       const result = await mutator(data);
       await writeStore(filePath, data);
       return result;
@@ -168,12 +176,12 @@ export function createFilePortalMvpRepository(
 
   return {
     async findUserByEmail(email) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       return data.users.find((user) => user.email.toLowerCase() === email.toLowerCase()) ?? null;
     },
 
     async findUserById(userId) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       return data.users.find((user) => user.userId === userId) ?? null;
     },
 
@@ -187,7 +195,7 @@ export function createFilePortalMvpRepository(
     },
 
     async findSessionByTokenHash(tokenHash) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       return data.sessions.find((record) => record.session.tokenHash === tokenHash) ?? null;
     },
 
@@ -198,17 +206,17 @@ export function createFilePortalMvpRepository(
     },
 
     async listAllRequests() {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       return data.requests;
     },
 
     async listRequestsForCustomer(customerProfileId) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       return data.requests.filter((request) => request.customerProfileId === customerProfileId);
     },
 
     async listRequestsForStaff(input = {}) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       const requests = input.status
         ? data.requests.filter((request) => normalizeStaffRequestStatus(request.employeeStatus) === input.status)
         : data.requests;
@@ -218,7 +226,7 @@ export function createFilePortalMvpRepository(
     },
 
     async getRequestById(id) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       return data.requests.find((request) => request.id === id) ?? null;
     },
 
@@ -252,7 +260,7 @@ export function createFilePortalMvpRepository(
     },
 
     async listAuditEventsFor(input) {
-      const data = await readStore(filePath, seedDevelopmentUsers);
+      const data = await readStore(filePath, developmentUsers);
       const requestIds = new Set(input.requestIds);
       return data.auditEvents
         .filter((event) => event.actorUserId === input.actorUserId || (event.requestId && requestIds.has(event.requestId)))
@@ -269,20 +277,20 @@ export function normalizeStaffRequestStatus(status: StoredPortalRequest["employe
   return status;
 }
 
-async function readStore(filePath: string, seedDevelopmentUsers: boolean): Promise<PortalMvpStoreData> {
+async function readStore(filePath: string, developmentUsers: PortalUserRecord[]): Promise<PortalMvpStoreData> {
   try {
     const raw = await readFile(filePath, "utf8");
     const parsed = JSON.parse(raw) as Partial<PortalMvpStoreData>;
-    if (parsed.schemaVersion !== 1) return initialStore(seedDevelopmentUsers);
+    if (parsed.schemaVersion !== 1) return initialStore(developmentUsers);
     return {
       schemaVersion: 1,
-      users: parsed.users ?? initialUsers(seedDevelopmentUsers),
+      users: mergeDevelopmentUsers(parsed.users ?? [], developmentUsers),
       sessions: parsed.sessions ?? [],
       requests: parsed.requests ?? [],
       auditEvents: parsed.auditEvents ?? [],
     };
   } catch (error) {
-    if (isMissingFile(error)) return initialStore(seedDevelopmentUsers);
+    if (isMissingFile(error)) return initialStore(developmentUsers);
     throw error;
   }
 }
@@ -294,48 +302,31 @@ async function writeStore(filePath: string, data: PortalMvpStoreData) {
   await rename(tempPath, filePath);
 }
 
-function initialStore(seedDevelopmentUsers: boolean): PortalMvpStoreData {
+function initialStore(developmentUsers: PortalUserRecord[]): PortalMvpStoreData {
   return {
     schemaVersion: 1,
-    users: initialUsers(seedDevelopmentUsers),
+    users: initialUsers(developmentUsers),
     sessions: [],
     requests: [],
     auditEvents: [],
   };
 }
 
-function initialUsers(seedDevelopmentUsers: boolean): PortalUserRecord[] {
-  if (!seedDevelopmentUsers) return [];
+function initialUsers(developmentUsers: PortalUserRecord[]): PortalUserRecord[] {
+  return [...developmentUsers];
+}
 
-  return [
-    {
-      userId: "usr_demo_customer",
-      email: "demo@example.test",
-      role: "customer",
-      status: "active",
-      developmentPassword: "demo-passwort",
-      customerProfileId: "cst_demo_portal",
-      safeDisplayName: "Demo-Kundenkonto",
-    },
-    {
-      userId: "usr_demo_staff",
-      email: "staff@example.test",
-      role: "staff",
-      status: "active",
-      developmentPassword: "staff-passwort",
-      staffUserId: "staff_demo",
-      safeDisplayName: "Demo-Mitarbeiter",
-    },
-    {
-      userId: "usr_demo_admin",
-      email: "admin@example.test",
-      role: "admin",
-      status: "active",
-      developmentPassword: "admin-passwort",
-      staffUserId: "admin_demo",
-      safeDisplayName: "Demo-Admin",
-    },
-  ];
+function mergeDevelopmentUsers(storedUsers: PortalUserRecord[], developmentUsers: PortalUserRecord[]) {
+  if (developmentUsers.length === 0) return storedUsers;
+
+  const merged = new Map<string, PortalUserRecord>();
+  for (const user of storedUsers) {
+    merged.set(user.email.toLowerCase(), user);
+  }
+  for (const user of developmentUsers) {
+    merged.set(user.email.toLowerCase(), user);
+  }
+  return [...merged.values()];
 }
 
 function isMissingFile(error: unknown) {

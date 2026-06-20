@@ -109,7 +109,7 @@ export function AppointmentRequestForm() {
                     <Text variant="body-2" weight="medium">Rezept</Text>
                     <select className="nativeSelect" value={input.hasPrescription ? "ja" : "nein"} onChange={(event) => update("hasPrescription", event.target.value === "ja")}>
                       <option value="nein">noch nicht vorhanden</option>
-                      <option value="ja">vorhanden, Upload empfohlen</option>
+                      <option value="ja">vorhanden, Vorab-Einreichung möglich</option>
                     </select>
                   </label>
                 </div>

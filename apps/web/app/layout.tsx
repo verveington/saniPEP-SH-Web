@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Sanitätshaus in München für Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezeptupload und Terminanfrage.",
+    "Sanitätshaus in München für Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezept-Vorabprüfung und Terminanfrage.",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },

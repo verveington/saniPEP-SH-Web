@@ -1,0 +1,91 @@
+.staffAdminShell {
+  min-height: 100vh;
+}
+
+.staffAdminToolbar,
+.staffAdminGrid,
+.staffAdminDetailGrid,
+.staffAdminStatusGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.staffAdminToolbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.staffAdminGrid {
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.staffAdminDetailGrid,
+.staffAdminStatusGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.staffRequestList {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.staffRequestButton {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--sani-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.staffRequestButton:hover,
+.staffRequestButton:focus-visible,
+.staffRequestButtonActive {
+  border-color: color-mix(in srgb, var(--sani-brand) 44%, transparent);
+  box-shadow: 0 8px 22px rgba(24, 35, 47, 0.08);
+}
+
+.staffAdminDataItem {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--sani-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  overflow-wrap: anywhere;
+}
+
+.staffAdminStatusGrid [data-rs-button],
+.staffAdminStatusGrid button {
+  width: 100%;
+}
+
+.staffAdminAuditList {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 980px) {
+  .staffAdminGrid,
+  .staffAdminToolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .staffRequestButton,
+  .staffAdminDataItem {
+    padding: 11px;
+  }
+}

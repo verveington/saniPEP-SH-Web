@@ -32,15 +32,15 @@ const mediaFolders = [
 const editorialRoles = [
   {
     name: 'Admin',
-    description: 'Technische und fachliche CMS-Administration. Kein Ersatz fuer Portal-/Auth-Admin.',
+    description: 'Technische und fachliche CMS-Administration. Kein Ersatz für Portal-/Auth-Admin.',
   },
   {
     name: 'Redaktion',
-    description: 'Kann oeffentliche Inhalte erstellen und zur Veroeffentlichung vorbereiten.',
+    description: 'Kann öffentliche Inhalte erstellen und zur Veröffentlichung vorbereiten.',
   },
   {
     name: 'Mitarbeiter',
-    description: 'Kann oeffentliche Hilfetexte und Standortinformationen lesen/pruefen, aber keine Gesundheitsdaten verwalten.',
+    description: 'Kann öffentliche Hilfetexte und Standortinformationen lesen/prüfen, aber keine Gesundheitsdaten verwalten.',
   },
 ];
 

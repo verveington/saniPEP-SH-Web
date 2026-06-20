@@ -49,14 +49,14 @@ export default function LandingPage({ navigate, portalLoginHref }: { navigate: N
               </Text>
             </div>
             <Text as="p" variant="featured-5" color="neutral-faded">
-              Persönlich beraten, passgenau versorgt und digital begleitet: von Rezeptupload bis Terminwunsch.
+              Persönlich beraten, passgenau versorgt und digital begleitet: von Rezept-Vorabprüfung bis Terminwunsch.
             </Text>
             <div className="heroActions">
               <RouteLink className="actionLink actionLinkPrimary actionLinkLarge" route="/termin-anfragen" navigate={navigate}>
                 <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
               </RouteLink>
               <RouteLink className="actionLink actionLinkLarge" route="/rezept-upload" navigate={navigate}>
-                <ButtonText icon={Upload}>Rezept hochladen</ButtonText>
+                <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
               </RouteLink>
               <a className="portalLoginAnchor portalLoginAnchorLarge" href={portalLoginHref}>
                 <ButtonText icon={User}>Kundenportal Login</ButtonText>
@@ -64,7 +64,7 @@ export default function LandingPage({ navigate, portalLoginHref }: { navigate: N
             </div>
             <div className="heroCards" aria-label="Schneller Einstieg">
               {[
-                ["Request-based", "Uploads, Wünsche und Anfragen werden geprüft."],
+                ["Request-based", "Vorabprüfungen, Wünsche und Anfragen werden geprüft."],
                 ["Datensparsam", "Analytics zählt nur grobe Ziele, keine Fachdetails."],
                 ["Mitarbeiterprüfung", "Keine automatische Omnia-Änderung aus der Website."],
               ].map(([title, copy]) => (
@@ -83,7 +83,7 @@ export default function LandingPage({ navigate, portalLoginHref }: { navigate: N
       <section className="quickAccess">
         <div className="sectionInner gridAuto">
             {[
-              { title: "Ich habe ein Rezept", copy: "Sicher hochladen und als geprüfte Anfrage starten.", route: "/rezept-upload" as const, icon: "symbols/rx" as const },
+              { title: "Ich habe ein Rezept", copy: "Lokal vorprüfen und als Anfrage vorbereiten.", route: "/rezept-upload" as const, icon: "symbols/rx" as const },
               { title: "Ich brauche einen Termin", copy: "Wunschtermin mit Anliegen und Kontaktweg senden.", route: "/termin-anfragen" as const, icon: "symbols/i_schedule_school_date_time" as const },
               { title: "Ich möchte schreiben", copy: "Schriftliche Anfrage an den passenden Fachbereich.", route: "/kontakt" as const, icon: "symbols/secure_communication" as const },
             ].map((item) => (
@@ -107,7 +107,7 @@ export default function LandingPage({ navigate, portalLoginHref }: { navigate: N
               Versorgungsbereiche
             </Text>
             <Text color="neutral-faded">
-              Die öffentlichen Seiten führen zu Termin, Upload oder Kontakt. Status- und Mitarbeiterbereiche liegen außerhalb dieses Builds.
+              Die öffentlichen Seiten führen zu Termin, Rezept-Vorabprüfung oder Kontakt. Status- und Mitarbeiterbereiche liegen außerhalb dieses Builds.
             </Text>
           </div>
           <div className="gridAuto">

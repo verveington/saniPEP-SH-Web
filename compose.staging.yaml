@@ -1,0 +1,26 @@
+name: sanipep-sh-staging
+
+services:
+  staff-admin:
+    profiles: ["staff-admin"]
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_PORTAL_BACKEND_URL: "${VITE_PORTAL_BACKEND_URL:?Set VITE_PORTAL_BACKEND_URL}"
+    restart: unless-stopped
+    ports:
+      - "${STAFF_ADMIN_PORT:-5184}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

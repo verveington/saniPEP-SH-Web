@@ -6,6 +6,8 @@ build
 .cache
 .tmp
 uploads
+!apps/backend/src/uploads/
+!apps/backend/src/uploads/**
 .strapi
 .strapi-updater.json
 .env

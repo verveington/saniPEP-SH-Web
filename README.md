@@ -218,6 +218,7 @@ npm run build
 npm run build:backend
 npm run build:frontend:vite
 npm run build:portal:mock
+npm run build:admin
 npm run build:admin:mock
 npm run build:design-lab:mock
 ```
@@ -268,6 +269,30 @@ sudo systemctl status sanipep-sh-web.service
 
 Falls `docker` auf dem Host nicht unter `/usr/bin/docker` liegt, muss `ExecStart` in der Service-Datei
 auf den Pfad aus `command -v docker` angepasst werden.
+
+## Staging: Public Requests + Staff Admin MVP
+
+Der Staging-Pfad fuer Public Requests und Staff Admin liegt in
+`docs/staging-public-requests-staff-admin.md`.
+
+Er deployt:
+
+- Public Website
+- Backend mit Postgres-Repository, Redis und `backend-migrate`
+- Staff Admin Workbench aus `apps/admin`
+
+Er deployt nicht:
+
+- Kundenportal aus `apps/portal`
+- produktive Datei-Uploads
+- Upload-Quarantaene-Verarbeitung
+- Omnia-Integration
+
+Config-Check:
+
+```bash
+npm run compose:staging:config
+```
 
 ## Offene Risiken und naechste Schritte
 

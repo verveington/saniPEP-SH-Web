@@ -160,6 +160,7 @@ const sourceEntriesForIconPolicy = [
 const lucideControlGlyphFiles = new Set([
   "apps/web/components/common.tsx",
   "apps/web/components/PublicLayout.tsx",
+  "apps/web/components/SiteHeader.tsx",
   "apps/web/components/LandingPage.tsx",
   "apps/web/components/ServiceCard.tsx",
   "apps/web/components/ServicePage.tsx",

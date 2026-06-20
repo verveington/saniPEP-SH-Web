@@ -5,13 +5,9 @@ import { useMemo, useState } from "react";
 import { Button, FormControl, Text, TextArea, TextField, View } from "reshaped";
 import { validateContactInquiryInput } from "@frontend/lib/formValidation";
 import type { ContactInquiryInput } from "@frontend/lib/types";
-<<<<<<< HEAD
 import { submitPublicRequest, type PublicRequestReceipt } from "@/lib/publicRequests";
-import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../common";
-=======
 import { SharedIconBox } from "../../../shared/icons/SharedIcon";
 import { ButtonText, FieldError, FormStep, RequestReceipt, inputA11y } from "../common";
->>>>>>> origin/main
 import { trackPublicConversion } from "./trackPublicConversion";
 
 export function ContactInquiryForm() {

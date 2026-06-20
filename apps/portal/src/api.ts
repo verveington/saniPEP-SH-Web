@@ -38,11 +38,7 @@ export type PortalRequestDto = {
   sensitivity: "contact" | "health" | "omnia_reference";
   staffReviewRequired: true;
   omniaWriteAllowed: false;
-<<<<<<< HEAD
   employeeStatus: "new" | "queued" | "in_review" | "waiting_for_customer" | "approved" | "rejected" | "completed" | "cancelled";
-=======
-  employeeStatus: "queued" | "in_review" | "approved" | "rejected" | "completed";
->>>>>>> origin/main
   employeeStatusLabel: string;
   staffStatus: "new" | "in_review" | "waiting_for_customer" | "completed" | "cancelled";
   staffStatusLabel: string;

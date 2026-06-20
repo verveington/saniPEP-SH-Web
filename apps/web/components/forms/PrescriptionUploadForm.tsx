@@ -12,12 +12,8 @@ import {
   uploadServerSecurityBoundary,
 } from "@frontend/lib/privacySecurity";
 import type { ConsentScope, UploadInput } from "@frontend/lib/types";
-<<<<<<< HEAD
-import { ButtonText, FieldError, FormStep, IconBox, inputA11y } from "../common";
-=======
 import { SharedIconBox } from "../../../shared/icons/SharedIcon";
-import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../common";
->>>>>>> origin/main
+import { ButtonText, FieldError, FormStep, IconBox, inputA11y } from "../common";
 import { SecuritySidePanel } from "../SecuritySidePanel";
 
 const defaultUploadLabel = "Noch keine Datei ausgewählt";

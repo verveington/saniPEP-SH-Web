@@ -1,48 +1,40 @@
 import Link from "next/link";
-<<<<<<< HEAD
-import { Activity, Calendar, Clock, HeartPulse, MapPin, PackageCheck, Phone, Sparkles, Upload, User } from "lucide-react";
-=======
-import { Calendar, Upload, User } from "lucide-react";
->>>>>>> origin/main
+import { Calendar, Sparkles, Upload, User } from "lucide-react";
 import { Text, View } from "reshaped";
 import { serviceAreas } from "@frontend/app/publicContent";
 import { portalLoginHref } from "../lib/routes/publicRoutes";
-<<<<<<< HEAD
 import { verifiedAddress, verifiedContact } from "../lib/verifiedContact";
-import { ButtonText, IconBox } from "./common";
-=======
 import { ButtonText } from "./common";
->>>>>>> origin/main
 import { LocationContact } from "./LocationContact";
 import { ServiceCard } from "./ServiceCard";
-import { SharedIconBox } from "../../shared/icons/SharedIcon";
+import { SharedIconBox, type SharedIconName } from "../../shared/icons/SharedIcon";
 
 const symptomEntrypoints = [
   {
     title: "Schwere Beine",
     copy: "Kompressionsberatung ruhig vorbereiten.",
     route: "/lymphoedem-lipoedem-narbenkompression",
-    icon: Activity,
+    icon: "body/lymph_nodes",
   },
   {
     title: "Nach Operation",
     copy: "Diskreten Termin für Brustprothetik anfragen.",
     route: "/brustprothetik",
-    icon: HeartPulse,
+    icon: "body/breasts",
   },
   {
     title: "Rezept vorhanden",
     copy: "Unterlagen datensparsam hochladen.",
     route: "/rezept-upload",
-    icon: Upload,
+    icon: "symbols/rx",
   },
   {
     title: "Wiederkehrender Bedarf",
     copy: "Pflegehilfsmittel und Versorgung klären.",
     route: "/inkontinenz-pflegehilfsmittel",
-    icon: PackageCheck,
+    icon: "symbols/nappy_diaper",
   },
-];
+] satisfies Array<{ title: string; copy: string; route: string; icon: SharedIconName }>;
 
 export async function LandingPage() {
   const premium = serviceAreas.filter((area) => area.priority === "primary");
@@ -81,23 +73,20 @@ export async function LandingPage() {
             </div>
             <div className="heroContactRail" aria-label="Kontakt und Servicezeiten">
               {[
-                { icon: MapPin, title: "Standort", copy: verifiedAddress },
-                { icon: Clock, title: "Parteiverkehr", copy: "Mo/Mi/Fr nachmittags, Di/Do vormittags" },
-                { icon: Phone, title: "Erreichbar", copy: `${verifiedContact.phone} · ${verifiedContact.email}` },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div className="heroContactItem" key={item.title}>
-                    <Icon aria-hidden />
-                    <View direction="column" gap={1}>
-                      <Text weight="semibold">{item.title}</Text>
-                      <Text variant="body-2" color="neutral-faded">
-                        {item.copy}
-                      </Text>
-                    </View>
-                  </div>
-                );
-              })}
+                { icon: "symbols/geo_location" as const, title: "Standort", copy: verifiedAddress },
+                { icon: "symbols/i_schedule_school_date_time" as const, title: "Parteiverkehr", copy: "Mo/Mi/Fr nachmittags, Di/Do vormittags" },
+                { icon: "objects/phone" as const, title: "Erreichbar", copy: `${verifiedContact.phone} · ${verifiedContact.email}` },
+              ].map((item) => (
+                <div className="heroContactItem" key={item.title}>
+                  <SharedIconBox name={item.icon} />
+                  <View direction="column" gap={1}>
+                    <Text weight="semibold">{item.title}</Text>
+                    <Text variant="body-2" color="neutral-faded">
+                      {item.copy}
+                    </Text>
+                  </View>
+                </div>
+              ))}
             </div>
           </div>
           <HeroProductStage />
@@ -106,15 +95,7 @@ export async function LandingPage() {
 
       <section className="quickAccess">
         <div className="sectionInner gridAuto">
-<<<<<<< HEAD
           {symptomEntrypoints.map((item) => (
-=======
-          {[
-            { title: "Ich habe ein Rezept", copy: "Sicher hochladen und als geprüfte Anfrage starten.", route: "/rezept-upload", icon: "symbols/rx" as const },
-            { title: "Ich brauche einen Termin", copy: "Wunschtermin mit Anliegen und Kontaktweg senden.", route: "/termin-anfragen", icon: "symbols/i_schedule_school_date_time" as const },
-            { title: "Ich möchte schreiben", copy: "Schriftliche Anfrage an den passenden Fachbereich.", route: "/kontakt", icon: "symbols/secure_communication" as const },
-          ].map((item) => (
->>>>>>> origin/main
             <Link className="accessCard" key={item.title} href={item.route}>
               <SharedIconBox name={item.icon} />
               <View direction="column" gap={1}>

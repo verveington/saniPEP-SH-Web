@@ -2,10 +2,7 @@ import Link from "next/link";
 import { Calendar, Upload } from "lucide-react";
 import { Card, Text, View } from "reshaped";
 import { getContactContent } from "../lib/cms/strapi";
-<<<<<<< HEAD
 import { verifiedAddress, verifiedContact } from "../lib/verifiedContact";
-import { ButtonText, IconBox } from "./common";
-=======
 import { SharedIconBox, type SharedIconName } from "../../shared/icons/SharedIcon";
 import { ButtonText } from "./common";
 
@@ -15,7 +12,6 @@ const contactIconByLabel = {
   WhatsApp: "symbols/forum",
   Adresse: "symbols/geo_location",
 } satisfies Record<string, SharedIconName>;
->>>>>>> origin/main
 
 export async function LocationContact({ standalone = false }: { standalone?: boolean }) {
   const { contactSetting, openingHours } = await getContactContent();

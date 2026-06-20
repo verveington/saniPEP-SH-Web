@@ -1,14 +1,8 @@
 import { Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FileUpload, Text, View } from "reshaped";
-<<<<<<< HEAD
-import { ButtonText, FieldError, FormStep, IconBox, inputA11y } from "../components/common";
-=======
-import { createRequestId } from "../app/requestIds";
-import type { TrackConversion } from "../app/routes";
 import { SharedIconBox } from "../../../shared/icons/SharedIcon";
-import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../components/common";
->>>>>>> origin/main
+import { ButtonText, FieldError, FormStep, IconBox, inputA11y } from "../components/common";
 import { SecuritySidePanel } from "../components/SecuritySidePanel";
 import { validateUploadInput } from "../lib/formValidation";
 import {

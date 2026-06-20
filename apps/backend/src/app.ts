@@ -252,7 +252,6 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
         return;
       }
 
-<<<<<<< HEAD
       if (request.method === "POST" && url.pathname === "/api/public/requests") {
         const body = await readJsonBody<unknown>(request);
         const publicRequest = await createPublicRequest(body, env, repository);
@@ -295,12 +294,6 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
           mvpBoundary: staffMvpBoundary,
           request: toStaffRequestDetailDto(portalRequest, auditEvents),
         });
-=======
-      if (request.method === "GET" && url.pathname === "/api/staff/requests") {
-        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
-        if (!auth) return;
-        writeJson(response, 200, await buildStaffRequestsResponse(auth, repository, readStaffFilters(url.searchParams)));
->>>>>>> origin/main
         return;
       }
 

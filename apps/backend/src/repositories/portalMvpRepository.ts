@@ -198,7 +198,7 @@ export function createFilePortalMvpRepository(
     },
 
     async listAllRequests() {
-      const data = await readStore(filePath);
+      const data = await readStore(filePath, seedDevelopmentUsers);
       return data.requests;
     },
 

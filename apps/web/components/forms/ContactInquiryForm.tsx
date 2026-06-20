@@ -3,9 +3,9 @@
 import { Mail, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FormControl, Text, TextArea, TextField, View } from "reshaped";
-import { createRequestId } from "@frontend/app/requestIds";
 import { validateContactInquiryInput } from "@frontend/lib/formValidation";
 import type { ContactInquiryInput } from "@frontend/lib/types";
+import { submitPublicRequest, type PublicRequestReceipt } from "@/lib/publicRequests";
 import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../common";
 import { trackPublicConversion } from "./trackPublicConversion";
 
@@ -20,14 +20,35 @@ export function ContactInquiryForm() {
     preferredContactChannel: "email",
     containsHealthData: false,
   });
-  const [createdId, setCreatedId] = useState("");
+  const [receipt, setReceipt] = useState<PublicRequestReceipt | null>(null);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const validation = useMemo(() => validateContactInquiryInput(input), [input]);
   const errors = validation.fieldErrors;
   const update = (key: keyof ContactInquiryInput, value: string | boolean) => setInput((current) => ({ ...current, [key]: value }));
-  const submit = () => {
+  const submit = async () => {
+    setSubmitError("");
     if (!validation.valid) return;
-    setCreatedId(createRequestId("MSG"));
-    trackPublicConversion({ stage: "request-submitted", route: "/kontakt" });
+    setIsSubmitting(true);
+    try {
+      const requestReceipt = await submitPublicRequest({
+        type: "contact",
+        topic: input.topic,
+        serviceContext: input.serviceContext,
+        message: input.message,
+        contactName: input.contactName,
+        contactEmail: input.contactEmail,
+        contactPhone: input.contactPhone,
+        preferredContactChannel: input.preferredContactChannel,
+        containsHealthData: input.containsHealthData,
+      });
+      setReceipt(requestReceipt);
+      trackPublicConversion({ stage: "request-submitted", route: "/kontakt" });
+    } catch {
+      setSubmitError("Die Anfrage konnte nicht übertragen werden. Bitte prüfen Sie Ihre Angaben oder nutzen Sie Telefon/E-Mail.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -111,10 +132,11 @@ export function ContactInquiryForm() {
             </label>
           </div>
         </FormStep>
-        <Button color="primary" onClick={submit} disabled={!validation.valid}>
-          <ButtonText icon={Mail}>Anfrage senden</ButtonText>
+        <Button color="primary" onClick={submit} disabled={!validation.valid || isSubmitting}>
+          <ButtonText icon={Mail}>{isSubmitting ? "Wird gesendet" : "Anfrage senden"}</ButtonText>
         </Button>
-        {createdId && <RequestReceipt id={createdId} />}
+        {submitError && <p className="fieldError" role="alert">{submitError}</p>}
+        {receipt && <RequestReceipt id={receipt.id} />}
       </View>
     </div>
   );

@@ -8,12 +8,15 @@ import type { BackendEnv } from "./config/env.js";
 import type { PortalRequestKind, PortalRequestSensitivity, PortalRequestStatus } from "./portalRequests/models.js";
 import {
   createFilePortalMvpRepository,
+  normalizeStaffRequestStatus,
   type PortalMvpRepository,
   type PortalSessionRecord,
   type PortalUserRecord,
+  type StaffRequestStatus,
   type StoredAppointmentWish,
   type StoredContactWish,
   type StoredPortalRequest,
+  type StoredPublicRequestDetails,
   type StoredReorderWish,
   type StoredSubscriptionWish,
 } from "./repositories/portalMvpRepository.js";
@@ -90,11 +93,24 @@ const contactChannelLabels: Record<StoredContactWish["preferredChannel"], string
 };
 
 const employeeStatusLabels: Record<StoredPortalRequest["employeeStatus"], string> = {
+  new: "Neu",
   queued: "Wartet auf Mitarbeiterpruefung",
   in_review: "In Mitarbeiterpruefung",
+  waiting_for_customer: "Rueckfrage an Kunde",
   approved: "Freigegeben",
   rejected: "Abgelehnt",
   completed: "Abgeschlossen",
+  cancelled: "Abgebrochen",
+};
+
+const staffRequestStatuses = ["new", "in_review", "waiting_for_customer", "completed", "cancelled"] as const;
+
+const staffStatusLabels: Record<StaffRequestStatus, string> = {
+  new: "Neu",
+  in_review: "In Pruefung",
+  waiting_for_customer: "Rueckfrage an Kunde",
+  completed: "Abgeschlossen",
+  cancelled: "Abgebrochen",
 };
 
 const allowedUploadExtensions = new Set(["pdf", "jpg", "jpeg", "png", "heic", "heif"]);
@@ -108,9 +124,27 @@ const allowedTransitions: Record<PortalRequestStatus, readonly PortalRequestStat
   completed: [],
 };
 
+const allowedStaffStatusTransitions: Record<StaffRequestStatus, readonly StaffRequestStatus[]> = {
+  new: ["in_review", "waiting_for_customer", "completed", "cancelled"],
+  in_review: ["waiting_for_customer", "completed", "cancelled"],
+  waiting_for_customer: ["in_review", "completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
+
+const staffMvpBoundary = {
+  mode: "staff-request-mvp",
+  productionReady: false,
+  authBoundary: "development-password-session-only",
+  persistenceBoundary: "file-backed-mvp-repository",
+  roleBoundary: "staff-admin-role-check-prepared-no-production-iam",
+} as const;
+
 export function createBackendRequestHandler(env: BackendEnv, dependencies: BackendRequestHandlerDependencies = {}) {
   const rateLimiter = dependencies.rateLimiter ?? createAllowAllRateLimiter();
-  const repository = dependencies.repository ?? createFilePortalMvpRepository(env.portalDevStorePath);
+  const repository = dependencies.repository ?? createFilePortalMvpRepository(env.portalStorePath, {
+    seedDevelopmentUsers: env.nodeEnv !== "production",
+  });
 
   return async function handleRequest(request: IncomingMessage, response: ServerResponse) {
     setCorsHeaders(request, response, env);
@@ -171,7 +205,7 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
             avScannerConfigured: env.avScannerMode !== "stub-disabled",
             quarantineBucketConfigured: Boolean(env.uploadQuarantineBucket),
             cleanBucketConfigured: Boolean(env.uploadCleanBucket),
-            developmentRepository: "file",
+            repository: "file",
           },
         });
         return;
@@ -214,6 +248,51 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
         writeJson(response, 201, {
           request: toRequestDto(portalRequest),
           dashboard: await buildDashboardResponse(auth, repository),
+        });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/public/requests") {
+        const body = await readJsonBody<unknown>(request);
+        const publicRequest = await createPublicRequest(body, env, repository);
+        writeJson(response, 201, {
+          request: toPublicRequestReceiptDto(publicRequest),
+          message: "Ihre Anfrage wurde sicher an saniPEP uebermittelt und wartet auf Mitarbeiterpruefung.",
+        });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/staff/requests") {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        const status = readOptionalStaffRequestStatus(url.searchParams.get("status"));
+        const requests = await repository.listRequestsForStaff({ status, limit: 100 });
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, {
+          mvpBoundary: staffMvpBoundary,
+          statusModel: staffRequestStatuses.map((value) => ({
+            value,
+            label: staffStatusLabels[value],
+          })),
+          requests: requests.map(toStaffRequestListDto),
+        });
+        return;
+      }
+
+      const staffDetailRoute = url.pathname.match(/^\/api\/staff\/requests\/([^/]+)$/);
+      if (request.method === "GET" && staffDetailRoute?.[1]) {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        const portalRequest = await repository.getRequestById(staffDetailRoute[1]);
+        if (!portalRequest) throw new SafeHttpError(404, "portal_request_not_found");
+        const auditEvents = await repository.listAuditEventsFor({
+          requestIds: [portalRequest.id],
+          limit: 30,
+        });
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, {
+          mvpBoundary: staffMvpBoundary,
+          request: toStaffRequestDetailDto(portalRequest, auditEvents),
         });
         return;
       }
@@ -547,6 +626,200 @@ async function createStoredPortalRequest(
   return request;
 }
 
+type ParsedPublicRequest = {
+  kind: PortalRequestKind;
+  sensitivity: PortalRequestSensitivity;
+  safeSummary: string;
+  details: StoredPublicRequestDetails;
+  auditMetadata: Record<string, string | number | boolean | undefined>;
+};
+
+async function createPublicRequest(
+  rawBody: unknown,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+) {
+  const parsed = parsePublicRequest(rawBody);
+  const now = new Date().toISOString();
+  const request: StoredPortalRequest = {
+    id: randomUUID(),
+    customerProfileId: "public_website",
+    createdByUserId: "anonymous_public_website",
+    kind: parsed.kind,
+    status: "submitted",
+    sensitivity: parsed.sensitivity,
+    safeSummary: parsed.safeSummary,
+    staffReviewRequired: true,
+    omniaWriteAllowed: false,
+    employeeStatus: "new",
+    employeeStatusLabel: employeeStatusLabels.new,
+    publicRequest: parsed.details,
+    auditIds: [],
+    submittedAt: now,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const audits = [
+    createPortalAudit(env, {
+      actorRole: "system",
+      action: "public-request-created",
+      outcome: "accepted",
+      objectType: "portal_request",
+      objectId: request.id,
+      requestId: request.id,
+      metadata: {
+        ...parsed.auditMetadata,
+        status: request.status,
+        staffStatus: normalizeStaffRequestStatus(request.employeeStatus),
+        fileUploadIncluded: false,
+        omniaWriteAllowed: false,
+      },
+    }),
+    createPortalAudit(env, {
+      actorRole: "system",
+      action: "public-request-submitted",
+      outcome: "queued",
+      objectType: "portal_request",
+      objectId: request.id,
+      requestId: request.id,
+      metadata: {
+        requestType: parsed.details.requestType,
+        kind: request.kind,
+        sensitivity: request.sensitivity,
+        staffReviewRequired: request.staffReviewRequired,
+      },
+    }),
+  ];
+
+  request.auditIds.push(...audits.map((audit) => audit.id));
+  await repository.appendAuditMany(audits);
+  await repository.saveRequest(request);
+  return request;
+}
+
+function parsePublicRequest(rawBody: unknown): ParsedPublicRequest {
+  const body = assertObject(rawBody);
+  const type = readEnumValue(body.type, ["appointment", "contact", "care"] as const, "type");
+
+  if (type === "appointment") {
+    const contact = readPublicContact(body);
+    const concern = readBoundedString(body.concern, "concern", 2, 80);
+    const preferredDate = readDateString(body.preferredDate, "preferredDate");
+    const preferredWindow = readBoundedString(body.preferredWindow, "preferredWindow", 2, 40);
+    const hasPrescription = readRequiredBoolean(body.hasPrescription, "hasPrescription");
+    const shortQuestionnaire = readBoundedString(body.shortQuestionnaire, "shortQuestionnaire", 10, 700);
+    return {
+      kind: "appointment_request",
+      sensitivity: "contact",
+      safeSummary: `Terminanfrage: ${concern}, ${preferredDate}, ${preferredWindow}.`,
+      details: {
+        source: "public_website",
+        requestType: "appointment",
+        contact,
+        appointment: {
+          concern,
+          preferredDate,
+          preferredWindow,
+          hasPrescription,
+          shortQuestionnaire,
+        },
+        boundary: publicRequestBoundary(),
+      },
+      auditMetadata: {
+        requestType: "appointment",
+        kind: "appointment_request",
+        sensitivity: "contact",
+        hasPrescription,
+      },
+    };
+  }
+
+  if (type === "contact") {
+    const preferredChannel = readEnumValue(
+      body.preferredContactChannel,
+      ["email", "phone", "whatsapp"] as const,
+      "preferredContactChannel",
+    );
+    const containsHealthData = readRequiredBoolean(body.containsHealthData, "containsHealthData");
+    if (containsHealthData && preferredChannel === "whatsapp") {
+      throw new SafeHttpError(400, "health_data_not_allowed_for_whatsapp");
+    }
+    const contact = readPublicContact(body, preferredChannel);
+    const topic = readBoundedString(body.topic, "topic", 2, 80);
+    const serviceContext = readBoundedString(body.serviceContext, "serviceContext", 2, 80);
+    const message = readBoundedString(body.message, "message", 10, 1200);
+    const sensitivity: PortalRequestSensitivity = containsHealthData ? "health" : "contact";
+    return {
+      kind: "health_contact_request",
+      sensitivity,
+      safeSummary: `Kontaktanfrage: ${topic}, ${serviceContext}, Antwortweg ${preferredChannel}.`,
+      details: {
+        source: "public_website",
+        requestType: "contact",
+        contact: {
+          ...contact,
+          preferredChannel,
+        },
+        contactInquiry: {
+          topic,
+          serviceContext,
+          message,
+          containsHealthData,
+        },
+        boundary: publicRequestBoundary(),
+      },
+      auditMetadata: {
+        requestType: "contact",
+        kind: "health_contact_request",
+        sensitivity,
+        preferredChannel,
+        containsHealthData,
+      },
+    };
+  }
+
+  const contact = readPublicContact(body);
+  const need = readBoundedString(body.need, "need", 2, 80);
+  const rhythm = readBoundedString(body.rhythm, "rhythm", 2, 80);
+  const hasPrescription = readRequiredBoolean(body.hasPrescription, "hasPrescription");
+  const note = hasPrescription
+    ? readOptionalBoundedString(body.note, "note", 0, 800) ?? ""
+    : readBoundedString(body.note, "note", 10, 800);
+
+  return {
+    kind: "reorder_request",
+    sensitivity: "health",
+    safeSummary: `Pflege-/Versorgungs-Anfrage: ${need}, ${rhythm}.`,
+    details: {
+      source: "public_website",
+      requestType: "care",
+      contact,
+      care: {
+        need,
+        rhythm,
+        hasPrescription,
+        note,
+      },
+      boundary: publicRequestBoundary(),
+    },
+    auditMetadata: {
+      requestType: "care",
+      kind: "reorder_request",
+      sensitivity: "health",
+      hasPrescription,
+    },
+  };
+}
+
+function publicRequestBoundary(): StoredPublicRequestDetails["boundary"] {
+  return {
+    fileUploadIncluded: false,
+    omniaWriteAllowed: false,
+    staffReviewRequired: true,
+  };
+}
+
 async function updateRequestStatus(
   requestId: string,
   body: Record<string, unknown>,
@@ -554,14 +827,22 @@ async function updateRequestStatus(
   env: BackendEnv,
   repository: PortalMvpRepository,
 ) {
-  const nextStatus = readEnumValue(
-    body.status,
-    ["draft", "submitted", "staff_review", "approved", "rejected", "completed"] as const,
-    "status",
-  );
+  const requestedStatus = readRequiredString(body.status, "status");
   const existing = await repository.getRequestById(requestId);
   if (!existing) throw new SafeHttpError(404, "portal_request_not_found");
-  if (!allowedTransitions[existing.status].includes(nextStatus)) {
+
+  const requestedStaffStatus = isStaffRequestStatus(requestedStatus) ? requestedStatus : undefined;
+  const nextStatus = requestedStaffStatus
+    ? portalStatusForStaffStatus(requestedStaffStatus)
+    : readEnumValue(requestedStatus, ["draft", "submitted", "staff_review", "approved", "rejected", "completed"] as const, "status");
+  const nextEmployeeStatus = requestedStaffStatus ?? employeeStatusForStatus(nextStatus);
+
+  if (requestedStaffStatus) {
+    const currentStaffStatus = normalizeStaffRequestStatus(existing.employeeStatus);
+    if (!allowedStaffStatusTransitions[currentStaffStatus].includes(requestedStaffStatus)) {
+      throw new SafeHttpError(409, "invalid_staff_status_transition");
+    }
+  } else if (!allowedTransitions[existing.status].includes(nextStatus)) {
     throw new SafeHttpError(409, "invalid_status_transition");
   }
 
@@ -569,11 +850,11 @@ async function updateRequestStatus(
   const updated: StoredPortalRequest = {
     ...existing,
     status: nextStatus,
-    employeeStatus: employeeStatusForStatus(nextStatus),
-    employeeStatusLabel: employeeStatusLabels[employeeStatusForStatus(nextStatus)],
+    employeeStatus: nextEmployeeStatus,
+    employeeStatusLabel: employeeStatusLabels[nextEmployeeStatus],
     submittedAt: existing.submittedAt ?? (nextStatus === "submitted" ? now : undefined),
     reviewedByStaffUserId: auth.actor.staffUserId ?? existing.reviewedByStaffUserId,
-    reviewedAt: ["staff_review", "approved", "rejected"].includes(nextStatus) ? now : existing.reviewedAt,
+    reviewedAt: ["staff_review", "approved", "rejected"].includes(nextStatus) || requestedStaffStatus === "waiting_for_customer" ? now : existing.reviewedAt,
     completedAt: nextStatus === "completed" ? now : existing.completedAt,
     updatedAt: now,
   };
@@ -591,6 +872,8 @@ async function updateRequestStatus(
       metadata: {
         previousStatus: existing.status,
         nextStatus,
+        previousStaffStatus: normalizeStaffRequestStatus(existing.employeeStatus),
+        nextStaffStatus: normalizeStaffRequestStatus(updated.employeeStatus),
         staffReviewRequired: updated.staffReviewRequired,
         omniaWriteAllowed: updated.omniaWriteAllowed,
       },
@@ -743,10 +1026,27 @@ function requestAuditMetadata(request: StoredPortalRequest) {
 
 function employeeStatusForStatus(status: PortalRequestStatus): StoredPortalRequest["employeeStatus"] {
   if (status === "staff_review") return "in_review";
-  if (status === "approved") return "approved";
-  if (status === "rejected") return "rejected";
+  if (status === "approved") return "in_review";
+  if (status === "rejected") return "cancelled";
   if (status === "completed") return "completed";
-  return "queued";
+  return "new";
+}
+
+function isStaffRequestStatus(value: string): value is StaffRequestStatus {
+  return (staffRequestStatuses as readonly string[]).includes(value);
+}
+
+function readOptionalStaffRequestStatus(value: string | null): StaffRequestStatus | undefined {
+  if (!value) return undefined;
+  if (!isStaffRequestStatus(value)) throw new SafeHttpError(400, "invalid_status");
+  return value;
+}
+
+function portalStatusForStaffStatus(status: StaffRequestStatus): PortalRequestStatus {
+  if (status === "new") return "submitted";
+  if (status === "completed") return "completed";
+  if (status === "cancelled") return "rejected";
+  return "staff_review";
 }
 
 function toRequestDto(request: StoredPortalRequest) {
@@ -761,6 +1061,8 @@ function toRequestDto(request: StoredPortalRequest) {
     omniaWriteAllowed: request.omniaWriteAllowed,
     employeeStatus: request.employeeStatus,
     employeeStatusLabel: request.employeeStatusLabel,
+    staffStatus: normalizeStaffRequestStatus(request.employeeStatus),
+    staffStatusLabel: staffStatusLabels[normalizeStaffRequestStatus(request.employeeStatus)],
     submittedAt: request.submittedAt,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
@@ -770,6 +1072,51 @@ function toRequestDto(request: StoredPortalRequest) {
     subscriptionWish: request.subscriptionWish,
     contactWish: request.contactWish,
     auditIds: request.auditIds,
+  };
+}
+
+function toPublicRequestReceiptDto(request: StoredPortalRequest) {
+  return {
+    id: request.id,
+    status: normalizeStaffRequestStatus(request.employeeStatus),
+    statusLabel: staffStatusLabels[normalizeStaffRequestStatus(request.employeeStatus)],
+    safeSummary: request.safeSummary,
+    createdAt: request.createdAt,
+    fileUploadIncluded: false,
+    omniaWriteAllowed: false,
+    staffReviewRequired: request.staffReviewRequired,
+  };
+}
+
+function toStaffRequestListDto(request: StoredPortalRequest) {
+  const staffStatus = normalizeStaffRequestStatus(request.employeeStatus);
+  return {
+    id: request.id,
+    source: request.publicRequest?.source ?? "portal",
+    requestType: request.publicRequest?.requestType ?? request.kind,
+    kind: request.kind,
+    kindLabel: requestKindLabels[request.kind],
+    status: request.status,
+    staffStatus,
+    staffStatusLabel: staffStatusLabels[staffStatus],
+    safeSummary: request.safeSummary,
+    sensitivity: request.sensitivity,
+    contactAvailable: Boolean(request.publicRequest?.contact.email || request.publicRequest?.contact.phone),
+    preferredContactChannel: request.publicRequest?.contact.preferredChannel,
+    staffReviewRequired: request.staffReviewRequired,
+    omniaWriteAllowed: request.omniaWriteAllowed,
+    submittedAt: request.submittedAt,
+    createdAt: request.createdAt,
+    updatedAt: request.updatedAt,
+  };
+}
+
+function toStaffRequestDetailDto(request: StoredPortalRequest, auditEvents: AuditEvent[]) {
+  return {
+    ...toStaffRequestListDto(request),
+    publicRequest: request.publicRequest,
+    request: toRequestDto(request),
+    auditEvents: auditEvents.map(toAuditDto),
   };
 }
 
@@ -869,9 +1216,49 @@ function assertObject(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function readPublicContact(
+  body: Record<string, unknown>,
+  preferredChannel?: StoredPublicRequestDetails["contact"]["preferredChannel"],
+): StoredPublicRequestDetails["contact"] {
+  const name = readBoundedString(body.contactName, "contactName", 2, 120);
+  const email = readOptionalBoundedString(body.contactEmail, "contactEmail", 0, 254);
+  const phone = readOptionalBoundedString(body.contactPhone, "contactPhone", 0, 80);
+
+  if (!email && !phone) throw new SafeHttpError(400, "contact_channel_required");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new SafeHttpError(400, "invalid_contactEmail");
+  if (phone && !/^[+0-9][0-9\s/()-]{5,}$/.test(phone)) throw new SafeHttpError(400, "invalid_contactPhone");
+  if (preferredChannel === "email" && !email) throw new SafeHttpError(400, "contact_email_required");
+  if ((preferredChannel === "phone" || preferredChannel === "whatsapp") && !phone) {
+    throw new SafeHttpError(400, "contact_phone_required");
+  }
+
+  return {
+    name,
+    email,
+    phone,
+    preferredChannel,
+  };
+}
+
 function readRequiredString(value: unknown, field: string) {
   if (typeof value !== "string" || value.trim().length === 0) throw new SafeHttpError(400, `invalid_${field}`);
   return value.trim();
+}
+
+function readBoundedString(value: unknown, field: string, minLength: number, maxLength: number) {
+  const normalized = normalizeWhitespace(readRequiredString(value, field));
+  if (normalized.length < minLength || normalized.length > maxLength) throw new SafeHttpError(400, `invalid_${field}`);
+  return normalized;
+}
+
+function readOptionalBoundedString(value: unknown, field: string, minLength: number, maxLength: number) {
+  if (value === undefined || value === null || value === "") return undefined;
+  return readBoundedString(value, field, minLength, maxLength);
+}
+
+function readRequiredBoolean(value: unknown, field: string) {
+  if (typeof value !== "boolean") throw new SafeHttpError(400, `invalid_${field}`);
+  return value;
 }
 
 function readPositiveInteger(value: unknown, field: string) {
@@ -892,6 +1279,15 @@ function readEnumValue<const Values extends readonly string[]>(value: unknown, v
 function readDateString(value: unknown, field: string) {
   const parsed = readRequiredString(value, field);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(parsed)) throw new SafeHttpError(400, `invalid_${field}`);
+  const [year, month, day] = parsed.split("-").map((part) => Number.parseInt(part, 10));
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw new SafeHttpError(400, `invalid_${field}`);
+  }
   return parsed;
 }
 
@@ -921,11 +1317,19 @@ function formatBytes(sizeBytes: number) {
   return `${Math.round(sizeBytes / 1024)} KB`;
 }
 
+function normalizeWhitespace(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
 function writeJson(response: ServerResponse, statusCode: number, body: unknown) {
   response.statusCode = statusCode;
   response.setHeader("content-type", "application/json; charset=utf-8");
   response.setHeader("cache-control", "no-store");
   response.end(JSON.stringify(body));
+}
+
+function setStaffMvpBoundaryHeader(response: ServerResponse) {
+  response.setHeader("x-sanipep-staff-boundary", staffMvpBoundary.mode);
 }
 
 class SafeHttpError extends Error {

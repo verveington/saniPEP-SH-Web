@@ -316,6 +316,9 @@ export type CareConfigurationInput = {
   rhythm: string;
   hasPrescription: boolean;
   note: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
 };
 
 export type CalendarIntegrationTarget = "nextcloud-calendar" | "notion-calendar";

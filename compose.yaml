@@ -11,7 +11,8 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
+      NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:?Set NEXT_PUBLIC_SITE_URL}"
+      NEXT_PUBLIC_PORTAL_BACKEND_URL: "${NEXT_PUBLIC_PORTAL_BACKEND_URL:?Set NEXT_PUBLIC_PORTAL_BACKEND_URL}"
       STRAPI_API_URL: "${STRAPI_API_URL:-}"
       STRAPI_API_TOKEN: "${STRAPI_API_TOKEN:-}"
     healthcheck:
@@ -33,32 +34,36 @@ services:
     ports:
       - "${BACKEND_PORT:-4100}:4100"
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 4100
-      PORTAL_BACKEND_BASE_URL: "${PORTAL_BACKEND_BASE_URL:-http://localhost:4100}"
-      TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}"
-      PORTAL_DATABASE_URL: postgres://sanipep:sanipep-local@postgres:5432/sanipep_portal
-      PORTAL_DATABASE_SSL: "false"
-      POSTGRES_POOL_MAX: 10
-      REDIS_URL: redis://redis:6379
-      REDIS_TLS: "false"
-      REDIS_KEY_PREFIX: sanipep:portal:local
-      PORTAL_SESSION_COOKIE_NAME: sanipep_portal_session
-      PORTAL_SESSION_SECRET: development-only-change-in-secret-store
-      CSRF_SECRET: development-only-change-in-secret-store
-      PORTAL_OTP_HASH_SECRET: development-only-change-in-secret-store
-      PORTAL_PASSWORD_PEPPER: development-only-change-in-secret-store
-      AUDIT_LOG_HASH_SECRET: development-only-change-in-secret-store
-      AV_SCANNER_MODE: stub-disabled
-      OMNIA_WRITE_MODE: read_only
-      PORTAL_DEV_STORE_PATH: /data/sanipep-portal-mvp-store.json
+      PORTAL_BACKEND_BASE_URL: "${PORTAL_BACKEND_BASE_URL:?Set PORTAL_BACKEND_BASE_URL}"
+      TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:?Set TRUSTED_ORIGINS}"
+      PORTAL_DATABASE_URL: "${PORTAL_DATABASE_URL:?Set PORTAL_DATABASE_URL}"
+      PORTAL_DATABASE_SSL: "${PORTAL_DATABASE_SSL:-true}"
+      POSTGRES_POOL_MAX: "${POSTGRES_POOL_MAX:-10}"
+      REDIS_URL: "${REDIS_URL:?Set REDIS_URL}"
+      REDIS_TLS: "${REDIS_TLS:-true}"
+      REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:-sanipep:portal}"
+      PORTAL_SESSION_COOKIE_NAME: "${PORTAL_SESSION_COOKIE_NAME:-__Host-sanipep_portal_session}"
+      PORTAL_SESSION_SECRET: "${PORTAL_SESSION_SECRET:?Set PORTAL_SESSION_SECRET}"
+      CSRF_SECRET: "${CSRF_SECRET:?Set CSRF_SECRET}"
+      PORTAL_OTP_HASH_SECRET: "${PORTAL_OTP_HASH_SECRET:?Set PORTAL_OTP_HASH_SECRET}"
+      PORTAL_PASSWORD_PEPPER: "${PORTAL_PASSWORD_PEPPER:?Set PORTAL_PASSWORD_PEPPER}"
+      AUDIT_LOG_HASH_SECRET: "${AUDIT_LOG_HASH_SECRET:?Set AUDIT_LOG_HASH_SECRET}"
+      UPLOAD_QUARANTINE_BUCKET: "${UPLOAD_QUARANTINE_BUCKET:?Set UPLOAD_QUARANTINE_BUCKET}"
+      UPLOAD_CLEAN_BUCKET: "${UPLOAD_CLEAN_BUCKET:?Set UPLOAD_CLEAN_BUCKET}"
+      UPLOAD_KMS_KEY_ID: "${UPLOAD_KMS_KEY_ID:?Set UPLOAD_KMS_KEY_ID}"
+      AV_SCANNER_MODE: "${AV_SCANNER_MODE:?Set AV_SCANNER_MODE}"
+      AV_SCANNER_ENDPOINT: "${AV_SCANNER_ENDPOINT:-}"
+      OMNIA_WRITE_MODE: "${OMNIA_WRITE_MODE:-read_only}"
+      PORTAL_STORE_PATH: /data/sanipep-public-request-store.json
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - backend_dev_store:/data
+      - backend_request_store:/data
     healthcheck:
       test:
         [
@@ -74,11 +79,11 @@ services:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: sanipep
-      POSTGRES_PASSWORD: sanipep-local
-      POSTGRES_DB: sanipep_portal
+      POSTGRES_USER: "${POSTGRES_USER:?Set POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB:?Set POSTGRES_DB}"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sanipep -d sanipep_portal"]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -99,6 +104,6 @@ services:
       - backend_redis_data:/data
 
 volumes:
-  backend_dev_store:
+  backend_request_store:
   backend_postgres_data:
   backend_redis_data:

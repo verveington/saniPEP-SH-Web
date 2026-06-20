@@ -1,11 +1,11 @@
 import { Calendar } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FormControl, Text, TextArea, TextField, View } from "reshaped";
-import { createRequestId } from "../app/requestIds";
 import type { TrackConversion } from "../app/routes";
 import { ButtonText, FieldError, FormStep, RequestReceipt, inputA11y } from "../components/common";
 import { SecuritySidePanel } from "../components/SecuritySidePanel";
 import { validateAppointmentInput } from "../lib/formValidation";
+import { submitPublicRequest, type PublicRequestReceipt } from "../lib/publicRequestApi";
 import type { AppointmentRequestInput } from "../lib/types";
 
 export default function AppointmentRequestPage({ onConversion }: { onConversion: TrackConversion }) {
@@ -19,7 +19,9 @@ export default function AppointmentRequestPage({ onConversion }: { onConversion:
     contactEmail: "",
     contactPhone: "",
   });
-  const [createdId, setCreatedId] = useState("");
+  const [receipt, setReceipt] = useState<PublicRequestReceipt | null>(null);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [touched, setTouched] = useState<Record<keyof AppointmentRequestInput, boolean>>({
     concern: false,
@@ -38,8 +40,9 @@ export default function AppointmentRequestPage({ onConversion }: { onConversion:
   );
   const update = (key: keyof AppointmentRequestInput, value: string | boolean) => setInput((current) => ({ ...current, [key]: value }));
   const markTouched = (key: keyof AppointmentRequestInput) => setTouched((current) => ({ ...current, [key]: true }));
-  const submit = () => {
+  const submit = async () => {
     setSubmitted(true);
+    setSubmitError("");
     if (!validation.valid) {
       setTouched({
         concern: true,
@@ -53,8 +56,26 @@ export default function AppointmentRequestPage({ onConversion }: { onConversion:
       });
       return;
     }
-    setCreatedId(createRequestId("APT"));
-    onConversion({ stage: "request-submitted", route: "/termin-anfragen" });
+    setIsSubmitting(true);
+    try {
+      const requestReceipt = await submitPublicRequest({
+        type: "appointment",
+        concern: input.concern,
+        preferredDate: input.preferredDate,
+        preferredWindow: input.preferredWindow,
+        hasPrescription: input.hasPrescription,
+        shortQuestionnaire: input.shortQuestionnaire,
+        contactName: input.contactName,
+        contactEmail: input.contactEmail,
+        contactPhone: input.contactPhone,
+      });
+      setReceipt(requestReceipt);
+      onConversion({ stage: "request-submitted", route: "/termin-anfragen" });
+    } catch {
+      setSubmitError("Die Terminanfrage konnte nicht übertragen werden. Bitte prüfen Sie Ihre Angaben oder nutzen Sie Telefon/E-Mail.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -135,10 +156,11 @@ export default function AppointmentRequestPage({ onConversion }: { onConversion:
                   </FormControl>
                 </div>
               </FormStep>
-              <Button color="primary" onClick={submit} disabled={!validation.valid}>
-                <ButtonText icon={Calendar}>Terminanfrage senden</ButtonText>
+              <Button color="primary" onClick={submit} disabled={!validation.valid || isSubmitting}>
+                <ButtonText icon={Calendar}>{isSubmitting ? "Wird gesendet" : "Terminanfrage senden"}</ButtonText>
               </Button>
-              {createdId && <RequestReceipt id={createdId} />}
+              {submitError && <p className="fieldError" role="alert">{submitError}</p>}
+              {receipt && <RequestReceipt id={receipt.id} />}
             </View>
           </div>
         </View>

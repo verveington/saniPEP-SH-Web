@@ -24,15 +24,23 @@ Implemented as buildable TypeScript scaffold:
 - Omnia read-only/prepared-change boundary stub
 - runtime health endpoints: `/healthz`, `/readyz`
 - development Portal-MVP HTTP API for:
+  - `POST /api/public/requests`
   - `POST /api/auth/login`
   - `GET /api/auth/session`
   - `POST /api/auth/logout`
   - `GET /api/portal/dashboard`
   - `POST /api/portal/requests`
-  - `PATCH /api/staff/requests/:id/status`
+- `GET /api/staff/requests`
+- `GET /api/staff/requests/:id`
+- `PATCH /api/staff/requests/:id/status`
 - file-backed development repository for sessions, portal requests and audit events
 - request storage for prescription-upload metadata, appointment wishes, reorder wishes,
   subscription wishes and contact wishes
+- public request storage for appointment, contact and care/supply requests without file content
+
+The staff request endpoints are explicitly marked as `staff-request-mvp` in the response header
+and body. They are not production-ready staff tooling because production IAM, durable audit
+storage and database-backed repositories are not wired yet.
 
 Not implemented:
 
@@ -127,7 +135,7 @@ writes at `0`.
 Local development persistence:
 
 ```bash
-PORTAL_DEV_STORE_PATH=/tmp/sanipep-portal-mvp-store.json npm run start:backend
+PORTAL_STORE_PATH=/tmp/sanipep-portal-mvp-store.json npm run start:backend
 ```
 
 The file repository is the local development alternative until PostgreSQL repositories are wired.
@@ -154,6 +162,7 @@ Required before production:
 - `UPLOAD_KMS_KEY_ID`
 - `AV_SCANNER_MODE` not equal to `stub-disabled`
 - `AUDIT_LOG_HASH_SECRET`
+- `PORTAL_STORE_PATH` while the runtime still uses the file-backed MVP repository
 - Omnia variables only when the adapter leaves `read_only`
 
 ## Backend modules

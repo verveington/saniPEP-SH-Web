@@ -21,6 +21,7 @@
     "check:backend": "tsc -p apps/shared/backend/tsconfig.json && tsc -p apps/backend/tsconfig.json --noEmit",
     "check:backend:runtime": "tsc -p apps/backend/tsconfig.json --noEmit",
     "check:flows": "node scripts/check-flows.mjs",
+    "check:public-requests": "node scripts/check-public-requests.mjs",
     "check:responsive": "node scripts/check-responsive.mjs",
     "cms:seed": "npm --prefix apps/cms run seed",
     "cms:icons:import": "npm --prefix apps/cms run icons:import",

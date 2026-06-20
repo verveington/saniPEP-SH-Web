@@ -3,7 +3,6 @@
 import { Shield, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button, FileUpload, Text, View } from "reshaped";
-import { createRequestId } from "@frontend/app/requestIds";
 import { validateUploadInput } from "@frontend/lib/formValidation";
 import {
   consentCopy,
@@ -13,9 +12,8 @@ import {
   uploadServerSecurityBoundary,
 } from "@frontend/lib/privacySecurity";
 import type { ConsentScope, UploadInput } from "@frontend/lib/types";
-import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } from "../common";
+import { ButtonText, FieldError, FormStep, IconBox, inputA11y } from "../common";
 import { SecuritySidePanel } from "../SecuritySidePanel";
-import { trackPublicConversion } from "./trackPublicConversion";
 
 const defaultUploadLabel = "Noch keine Datei ausgewählt";
 
@@ -23,7 +21,7 @@ export function PrescriptionUploadForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [context, setContext] = useState("");
   const [consentScopes, setConsentScopes] = useState<ConsentScope[]>([]);
-  const [createdId, setCreatedId] = useState("");
+  const [uploadPaused, setUploadPaused] = useState(false);
   const uploadInput: UploadInput = {
     fileName: selectedFile?.name ?? defaultUploadLabel,
     fileType: selectedFile?.type,
@@ -42,8 +40,7 @@ export function PrescriptionUploadForm() {
 
   const submit = () => {
     if (!validation.valid) return;
-    setCreatedId(createRequestId("UP"));
-    trackPublicConversion({ stage: "request-submitted", route: "/rezept-upload" });
+    setUploadPaused(true);
   };
 
   return (
@@ -121,7 +118,14 @@ export function PrescriptionUploadForm() {
               <Button color="primary" onClick={submit} disabled={!validation.valid}>
                 <ButtonText icon={Shield}>Upload-Anfrage erzeugen</ButtonText>
               </Button>
-              {createdId && <RequestReceipt id={createdId} />}
+              {uploadPaused && (
+                <div className="safeRow" role="status" aria-live="polite">
+                  <Text weight="semibold">Upload noch nicht übertragen</Text>
+                  <Text variant="body-2" color="neutral-faded">
+                    Produktiver Datei-Upload bleibt gesperrt, bis Quarantäne, MIME-Prüfung, AV-Scan, Retention und Clean-Bucket umgesetzt sind.
+                  </Text>
+                </div>
+              )}
             </View>
           </div>
         </View>

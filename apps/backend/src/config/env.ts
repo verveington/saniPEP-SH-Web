@@ -56,11 +56,12 @@ export type BackendEnv = {
   logLevel: "debug" | "info" | "warn" | "error";
   errorTrackingDsn?: string;
   otelExporterOtlpEndpoint?: string;
+  portalStorePath: string;
   portalDevStorePath: string;
   developmentWarnings: string[];
 };
 
-const defaultDevelopmentSecret = "development-only-change-in-secret-store";
+const defaultDevelopmentSecret = "local-development-fallback-secret-32-plus-chars";
 
 export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): BackendEnv {
   const nodeEnv = readRuntimeMode(source.NODE_ENV);
@@ -89,6 +90,7 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
   requireInProduction("UPLOAD_QUARANTINE_BUCKET", source.UPLOAD_QUARANTINE_BUCKET);
   requireInProduction("UPLOAD_CLEAN_BUCKET", source.UPLOAD_CLEAN_BUCKET);
   requireInProduction("UPLOAD_KMS_KEY_ID", source.UPLOAD_KMS_KEY_ID);
+  requireInProduction("PORTAL_STORE_PATH", source.PORTAL_STORE_PATH);
 
   const avScannerMode = readEnum(
     source.AV_SCANNER_MODE,
@@ -174,7 +176,8 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     logLevel: readEnum(source.LOG_LEVEL, "LOG_LEVEL", ["debug", "info", "warn", "error"] as const, "info"),
     errorTrackingDsn: source.ERROR_TRACKING_DSN || undefined,
     otelExporterOtlpEndpoint: source.OTEL_EXPORTER_OTLP_ENDPOINT || undefined,
-    portalDevStorePath: source.PORTAL_DEV_STORE_PATH ?? "/tmp/sanipep-portal-mvp-store.json",
+    portalStorePath: source.PORTAL_STORE_PATH ?? source.PORTAL_DEV_STORE_PATH ?? "/tmp/sanipep-portal-mvp-store.json",
+    portalDevStorePath: source.PORTAL_STORE_PATH ?? source.PORTAL_DEV_STORE_PATH ?? "/tmp/sanipep-portal-mvp-store.json",
     developmentWarnings,
   };
 

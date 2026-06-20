@@ -41,6 +41,8 @@ export const validateCareConfigurationInput = (input: CareConfigurationInput): V
 
   if (!hasText(input.need)) errors.need = "Bitte den Bedarf auswählen.";
   if (!hasText(input.rhythm)) errors.rhythm = "Bitte den gewünschten Rhythmus auswählen.";
+  if (!hasText(input.contactName, 2)) errors.contactName = "Bitte einen Namen für die Rückmeldung angeben.";
+  requireEmailOrPhone(input.contactEmail, input.contactPhone, errors);
   if (!input.hasPrescription && !hasText(input.note, 10)) {
     errors.note = "Ohne Rezept bitte kurz beschreiben, was vorbereitet werden soll.";
   }

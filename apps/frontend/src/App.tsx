@@ -71,7 +71,7 @@ function App() {
         {route === "/hilfe-finden" && <HelpFinderPage navigate={navigate} portalLoginHref={portalLoginHref} />}
         {isServicePageRoute(route) && <ServicePage route={route} navigate={navigate} />}
         {route === "/inkontinenz-pflegehilfsmittel" && <ConfiguratorPage onConversion={trackConversion} />}
-        {route === "/rezept-upload" && <PrescriptionUploadPage onConversion={trackConversion} />}
+        {route === "/rezept-upload" && <PrescriptionUploadPage />}
         {route === "/termin-anfragen" && <AppointmentRequestPage onConversion={trackConversion} />}
         {route === "/kontakt" && <ContactPage navigate={navigate} onConversion={trackConversion} />}
         {route === "/impressum" && <LegalPage kind="imprint" title="Impressum" />}

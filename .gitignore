@@ -10,5 +10,7 @@ build/
 .DS_Store
 .tmp/
 uploads/
+!apps/backend/src/uploads/
+!apps/backend/src/uploads/**
 .strapi/
 .strapi-updater.json

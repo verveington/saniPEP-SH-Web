@@ -1,0 +1,15 @@
+{$STAGING_WEB_HOST} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+{$STAGING_STAFF_HOST} {
+	encode zstd gzip
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy staff-admin:8080
+}
+
+{$STAGING_API_HOST} {
+	encode zstd gzip
+	reverse_proxy backend:4100
+}

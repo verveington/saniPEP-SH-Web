@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const backendProxyTarget = process.env.PORTAL_BACKEND_PROXY_TARGET ?? "http://127.0.0.1:4100";
+
 export default defineConfig({
   root: "apps/portal",
   plugins: [react()],
@@ -9,7 +11,7 @@ export default defineConfig({
     port: 5183,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:4100",
+        target: backendProxyTarget,
         changeOrigin: false,
       },
     },

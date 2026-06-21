@@ -1,7 +1,7 @@
 name: sanipep-sh
 
 x-backend-environment: &backend-environment
-  NODE_ENV: production
+  NODE_ENV: "${BACKEND_NODE_ENV:-production}"
   PORT: 4100
   PORTAL_BACKEND_BASE_URL: "${PORTAL_BACKEND_BASE_URL:?Set PORTAL_BACKEND_BASE_URL}"
   TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:?Set TRUSTED_ORIGINS}"

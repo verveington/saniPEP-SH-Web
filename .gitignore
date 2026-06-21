@@ -7,8 +7,10 @@ build/
 .env
 .env.local
 .env.staging
+.env.staging.internal
 .env.production
 .DS_Store
+*.swp
 .tmp/
 # Runtime uploads are ignored. CMS icon media is regenerated from apps/shared/icons via cms:icons:import.
 uploads/

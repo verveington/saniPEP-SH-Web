@@ -223,6 +223,17 @@ npm run build:admin:mock
 npm run build:design-lab:mock
 ```
 
+Wenn Staff Admin oder Portal als Vite-Dev-Server von einem anderen Host/IP-Namen auf ein laufendes
+Backend zugreifen sollen, den Browser-Fetch same-origin lassen und nur den Vite-Proxy umbiegen:
+
+```bash
+unset VITE_PORTAL_BACKEND_URL
+PORTAL_BACKEND_PROXY_TARGET=http://10.0.60.13:4100 npm run dev:admin -- --host 0.0.0.0 --port 5185
+```
+
+`VITE_PORTAL_BACKEND_URL` ist fuer gebaute Deployments gedacht. Im Dev-Server fuehrt es zu
+Cross-Origin-Fetches; der `/api`-Proxy vermeidet CORS-Probleme.
+
 ## Dauerbetrieb mit Docker Compose
 
 Die oeffentliche Next.js-Website, das Portal-Backend, PostgreSQL und Redis koennen dauerhaft
@@ -293,6 +304,11 @@ Config-Check:
 ```bash
 npm run compose:staging:config
 ```
+
+Env-Vorlagen:
+
+- `.env.staging.example`: echtes Staging mit eigenen HTTPS-Domains und Reverse Proxy. Die enthaltenen `.invalid` Werte sind Platzhalter und duerfen nicht produktiv verwendet werden.
+- `.env.staging.internal.example`: LAN/VPN-interner Server-IP-Test ueber `10.0.60.13` und direkte Ports `3000`, `4100`, `5184`. Dieser Modus ist keine Public-Staging-Freigabe.
 
 ## Offene Risiken und naechste Schritte
 

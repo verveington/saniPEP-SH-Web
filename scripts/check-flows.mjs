@@ -161,7 +161,12 @@ assert(portalUiSource.includes("portalApi.login"), "Portal app must login agains
 assert(portalUiSource.includes("credentials: \"include\""), "Portal API must use cookie credentials");
 assert(portalUiSource.includes("csrfToken"), "Portal API must keep CSRF token in memory");
 assert(!portalApi.includes("?? \"http://localhost:4100\""), "Portal API must not default browser fetches to a fixed backend localhost port");
-assert(portalViteConfig.includes("\"/api\"") && portalViteConfig.includes("127.0.0.1:4100"), "Portal dev server must proxy same-origin /api calls to the backend");
+assert(
+  portalViteConfig.includes("\"/api\"") &&
+  portalViteConfig.includes("PORTAL_BACKEND_PROXY_TARGET") &&
+  portalViteConfig.includes("127.0.0.1:4100"),
+  "Portal dev server must proxy same-origin /api calls to the backend",
+);
 assert(portalUiSource.includes("Rezeptupload-Anfrage"), "Portal MVP must expose prescription-upload request creation");
 assert(portalUiSource.includes("Terminwunsch"), "Portal MVP must expose appointment request creation");
 assert(portalUiSource.includes("Bestellanfrage"), "Portal MVP must expose reorder request creation");
@@ -219,7 +224,12 @@ assert(adminUiSource.includes("credentials: \"include\""), "Staff admin API must
 assert(adminUiSource.includes("csrfToken"), "Staff admin UI must keep CSRF token in memory");
 assert(adminUiSource.includes("Request-Liste"), "Staff admin UI must render the request list");
 assert(adminUiSource.includes("Request-Details"), "Staff admin UI must render request details");
-assert(adminViteConfig.includes("\"/api\"") && adminViteConfig.includes("127.0.0.1:4100"), "Admin dev server must proxy same-origin /api calls to the backend");
+assert(
+  adminViteConfig.includes("\"/api\"") &&
+  adminViteConfig.includes("PORTAL_BACKEND_PROXY_TARGET") &&
+  adminViteConfig.includes("127.0.0.1:4100"),
+  "Admin dev server must proxy same-origin /api calls to the backend",
+);
 assert(packageJson.includes("check:public-requests:postgres"), "Postgres public-request check script must be exposed through package.json");
 assert(postgresPublicRequestCheck.includes("assertBackendSchema"), "Postgres public-request check must assert backend schema before API tests");
 assert(postgresPublicRequestCheck.includes("schema_migrations"), "Postgres public-request check must validate migration history");

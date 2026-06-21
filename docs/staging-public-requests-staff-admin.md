@@ -33,6 +33,7 @@ cp .env.staging.example .env.staging
 ```
 
 Replace all placeholder secrets in `.env.staging` from the staging secret store. Do not commit `.env.staging`.
+The `.invalid` hostnames in `.env.staging.example` are placeholders. Replace them with domains owned by the project before using the reverse proxy or sharing a public staging URL.
 
 Required staging boundaries:
 
@@ -44,8 +45,34 @@ Required staging boundaries:
 - `VITE_PORTAL_BACKEND_URL` points to the backend API origin
 - no `PORTAL_DEV_*` variables are set
 - `OMNIA_WRITE_MODE=read_only`
+- `BACKEND_NODE_ENV=production` for real HTTPS staging
 
 The upload bucket and AV variables are present for readiness planning only. The current public document flow remains metadata-only and must continue to produce no upload objects or file names.
+
+### Internal Server-IP Test
+
+For an internal LAN/VPN-only test on server IP `10.0.60.13`, use the separate template:
+
+```bash
+cp .env.staging.internal.example .env.staging.internal
+```
+
+Replace placeholder secrets in `.env.staging.internal` from the internal secret store. Do not commit `.env.staging.internal`.
+
+The internal template uses:
+
+- `NEXT_PUBLIC_SITE_URL=http://10.0.60.13:3000`
+- `NEXT_PUBLIC_PORTAL_BACKEND_URL=http://10.0.60.13:4100`
+- `VITE_PORTAL_BACKEND_URL=http://10.0.60.13:4100`
+- `STAFF_ADMIN_PUBLIC_URL=http://10.0.60.13:5184`
+- `PORTAL_BACKEND_BASE_URL=http://10.0.60.13:4100`
+- `TRUSTED_ORIGINS=http://10.0.60.13:3000,http://10.0.60.13:5184,http://10.0.60.13:5185`
+- `PORTAL_REPOSITORY_DRIVER=postgres`
+- `OMNIA_WRITE_MODE=read_only`
+
+The backend code intentionally blocks `http://` origins and backend base URLs when `NODE_ENV=production`. Therefore the internal template sets `BACKEND_NODE_ENV=development` explicitly for this server-IP smoke test. This is not a public staging mode and must not be used as a production relaxation. A public staging release requires owned domains and HTTPS.
+
+The internal template also uses a non-`__Host-` session cookie name because browser clients do not persist `Secure` `__Host-*` cookies over plain HTTP.
 
 ## Build And Config Check
 
@@ -72,13 +99,40 @@ docker compose --env-file .env.staging \
   -f compose.yaml \
   -f compose.staging.yaml \
   --profile staff-admin \
-  up -d --build postgres redis backend-migrate backend web staff-admin
+  up -d --build postgres redis backend-migrate backend web staff-admin staging-proxy
 ```
 
 `backend-migrate` is a one-shot service. The backend service depends on it completing successfully before startup.
 The Staff Admin service depends on the backend healthcheck.
+The `staging-proxy` service terminates TLS with Caddy and routes the public staging hostnames to the internal Compose services:
 
-Put the public website, backend API and Staff Admin behind the staging reverse proxy with TLS. The Staff Admin API is protected by backend staff sessions and CSRF checks, but the static Staff Admin app should still be restricted to the staging staff audience by the hosting layer.
+- `${STAGING_WEB_HOST}` -> `web:3000`
+- `${STAGING_STAFF_HOST}` -> `staff-admin:8080`
+- `${STAGING_API_HOST}` -> `backend:4100`
+
+The Staff Admin API is protected by backend staff sessions and CSRF checks, but the static Staff Admin app should still be restricted to the staging staff audience by the hosting layer.
+For automatic public TLS, DNS for all three hostnames must point to the staging host and inbound ports 80 and 443 must be reachable by the ACME issuer.
+
+### Start Internal Server-IP Test
+
+Do not start the TLS reverse proxy for the server-IP test. Rebuild Staff Admin so its static bundle points to `http://10.0.60.13:4100`:
+
+```bash
+docker compose --env-file .env.staging.internal \
+  -f compose.yaml \
+  -f compose.staging.yaml \
+  --profile staff-admin \
+  up -d --build postgres redis backend-migrate backend web staff-admin
+```
+
+This starts only the direct-port services:
+
+- public web on `http://10.0.60.13:3000`
+- backend API on `http://10.0.60.13:4100`
+- Staff Admin on `http://10.0.60.13:5184`
+- optional Staff Admin dev server on `http://10.0.60.13:5185`
+
+The internal test remains out of scope for uploads, customer portal, CMS and Omnia writes.
 
 ## Validation Gate
 
@@ -88,8 +142,8 @@ Run the migration and public-request gates against staging before sharing the en
 export PORTAL_REPOSITORY_DRIVER=postgres
 export PORTAL_DATABASE_SSL=false
 export PORTAL_DATABASE_URL='postgres://sanipep_app:***@<reachable-staging-postgres-host>:5432/sanipep_portal'
-export TRUSTED_ORIGINS='https://staging.example-sanitaetshaus.de,https://staff-staging.example-sanitaetshaus.de'
-export VITE_PORTAL_BACKEND_URL='https://api-staging.example-sanitaetshaus.de'
+export TRUSTED_ORIGINS='https://<owned-web-staging-host>,https://<owned-staff-staging-host>'
+export VITE_PORTAL_BACKEND_URL='https://<owned-api-staging-host>'
 
 npm run db:migrate
 npm run db:migrate
@@ -127,6 +181,41 @@ Use the deployed public site and Staff Admin origin:
 7. Filter requests, open details and change one request to `in_review`.
 8. Confirm audit entries show the staff actor.
 9. Log out and confirm the session no longer loads.
+
+## Reverse Proxy Smoke Test
+
+Run these checks from the staging host or a network path that resolves the owned staging DNS names to the proxy:
+
+```bash
+curl -I https://<owned-web-staging-host>
+curl -I https://<owned-staff-staging-host>
+curl -i https://<owned-api-staging-host>/api/staff/session
+```
+
+Expected result:
+
+- public web returns `200`
+- Staff Admin returns `200` and includes `X-Robots-Tag: noindex, nofollow`
+- unauthenticated Staff Session returns `401`
+
+## Internal Server-IP Smoke Test
+
+Run these checks from the LAN/VPN path that can reach `10.0.60.13`:
+
+```bash
+curl -I http://10.0.60.13:3000/
+curl -I http://10.0.60.13:5184/
+curl -i http://10.0.60.13:4100/api/staff/session
+npm run check:public-requests
+npm run check:public-requests:postgres
+```
+
+Expected result:
+
+- public web returns `200`
+- Staff Admin returns `200` and should not show `Failed to fetch` in the browser
+- unauthenticated Staff Session returns `401`
+- public request checks stay green with `uploadObjectsCreated=0`
 
 ## Rollback
 

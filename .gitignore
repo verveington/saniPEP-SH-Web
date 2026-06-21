@@ -6,6 +6,7 @@ build/
 *.tsbuildinfo
 .env
 .env.local
+.env.staging
 .env.production
 .DS_Store
 .tmp/

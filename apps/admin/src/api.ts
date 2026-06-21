@@ -66,11 +66,13 @@ export type StaffRequestListItem = {
 export type StaffAuditEvent = {
   id: string;
   occurredAt: string;
+  actorUserId?: string;
   actorRole: "customer" | "staff" | "admin" | "system";
   action: string;
   outcome: "accepted" | "rejected" | "queued" | "blocked";
   requestId?: string;
   objectType?: string;
+  uploadObjectId?: string;
   metadata: Record<string, string | number | boolean>;
 };
 
@@ -93,6 +95,11 @@ export type StaffRequestDetail = StaffRequestListItem & {
       sizeBytes: number;
       consentAccepted: true;
       uploadMode: "metadata-only-no-file-transfer";
+    };
+    boundary: {
+      fileUploadIncluded: false;
+      omniaWriteAllowed: false;
+      staffReviewRequired: true;
     };
   };
   request: PortalRequestDto;

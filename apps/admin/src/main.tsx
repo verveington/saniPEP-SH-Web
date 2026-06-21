@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CheckCircle, ClipboardList, Lock, LogOut, RefreshCw, Shield } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  ClipboardList,
+  Clock,
+  FileText,
+  Lock,
+  LogOut,
+  RefreshCw,
+  Shield,
+  type LucideIcon,
+} from "lucide-react";
 import { Badge, Button, FormControl, Reshaped, Text, TextField, View } from "reshaped";
 import "reshaped/bundle.css";
 import "reshaped/themes/slate/theme.css";
@@ -36,6 +47,25 @@ const fallbackStatusModel: StaffRequestsResponse["statusModel"] = [
   { value: "completed", label: "Abgeschlossen" },
   { value: "cancelled", label: "Abgebrochen" },
 ];
+
+const requestTypeLabels: Record<string, string> = {
+  appointment: "Termin",
+  contact: "Kontakt",
+  care: "Pflege/Versorgung",
+  document: "Dokument/Rezept",
+  appointment_request: "Termin",
+  health_contact_request: "Kontakt",
+  reorder_request: "Bestellung/Versorgung",
+  prescription_upload: "Dokument/Rezept",
+};
+
+const statusHelpText: Record<StaffStatus, string> = {
+  new: "Neu eingegangen, fachlich sichten und passenden naechsten Schritt waehlen.",
+  in_review: "Wird intern geprueft; Kontakt-, Fach- oder Rezeptlage klaeren.",
+  waiting_for_customer: "Rueckfrage ist offen; auf Antwort oder Rueckruf warten.",
+  completed: "Fachlich erledigt; keine weitere Aktion im MVP vorgesehen.",
+  cancelled: "Abgebrochen; keine weitere Aktion im MVP vorgesehen.",
+};
 
 function StaffAdminApp() {
   const [session, setSession] = useState<StaffSessionResponse | null>(null);
@@ -346,6 +376,8 @@ function StaffWorkbench({
       <div className="gridAuto" aria-label="Staff Request Kennzahlen">
         <Kpi icon={ClipboardList} label="Requests" value={String(workspace?.requests.length ?? 0)} />
         <Kpi icon={CheckCircle} label="Neue" value={String(workspace?.requests.filter((request) => request.staffStatus === "new").length ?? 0)} />
+        <Kpi icon={Clock} label="In Pruefung" value={String(workspace?.requests.filter((request) => request.staffStatus === "in_review").length ?? 0)} />
+        <Kpi icon={AlertTriangle} label="Rueckfragen" value={String(workspace?.requests.filter((request) => request.staffStatus === "waiting_for_customer").length ?? 0)} />
         <Kpi icon={Shield} label="Uploads" value="0" />
       </div>
 
@@ -380,6 +412,7 @@ function StaffWorkbench({
               Rolle {session.session.role} · Session bis {formatDateTime(session.session.idleExpiresAt)}
             </Text>
           </div>
+          {busy && <StateNotice tone="neutral" title="Aktualisierung laeuft" body="Liste, Detailansicht oder Status werden gerade vom Backend geladen." />}
         </View>
       </div>
 
@@ -419,7 +452,7 @@ function RequestList({
           Request-Liste
         </Text>
         {requests.length === 0 ? (
-          <StateNotice tone="neutral" title="Keine Requests" body="Der aktuelle Filter liefert keine Treffer." />
+          <StateNotice tone="neutral" title="Keine Requests" body="Der aktuelle Filter liefert keine Treffer. Filter auf Alle stellen oder spaeter erneut aktualisieren." />
         ) : (
           <div className="staffRequestList">
             {requests.map((request) => (
@@ -432,22 +465,32 @@ function RequestList({
               >
                 <View direction="row" justify="space-between" align="start" gap={3}>
                   <View direction="column" gap={1}>
-                    <Text weight="semibold">{request.kindLabel}</Text>
+                    <Text weight="semibold">{requestTypeLabel(request)}</Text>
                     <Text variant="caption-1" color="neutral-faded">
                       {request.id}
                     </Text>
                   </View>
-                  <Badge color={statusBadgeColor(request.staffStatus)} variant="faded">
-                    {request.staffStatusLabel}
-                  </Badge>
+                  <div className="staffStatusBadgeGroup">
+                    <Badge color={statusBadgeColor(request.staffStatus)} variant="faded">
+                      {request.staffStatusLabel}
+                    </Badge>
+                  </div>
                 </View>
                 <Text variant="body-2" color="neutral-faded">
                   {request.safeSummary}
                 </Text>
+                <Text variant="caption-1" color="neutral-faded">
+                  {nextActionHint(request)}
+                </Text>
                 <View direction="row" gap={2} wrap>
-                  <Badge color="neutral" variant="faded">
-                    {request.requestType}
+                  <Badge color={requestTypeBadgeColor(request)} variant="faded">
+                    {requestTypeLabel(request)}
                   </Badge>
+                  {request.requestType === "document" && (
+                    <Badge color="warning" variant="faded">
+                      Keine Datei
+                    </Badge>
+                  )}
                   <Badge color={request.omniaWriteAllowed ? "warning" : "positive"} variant="faded">
                     Omnia {request.omniaWriteAllowed ? "write" : "read-only"}
                   </Badge>
@@ -484,6 +527,7 @@ function RequestDetail({
 
   const rows = detailRows(request);
   const terminal = request.staffStatus === "completed" || request.staffStatus === "cancelled";
+  const documentRequest = request.publicRequest?.requestType === "document";
 
   return (
     <div className="plainPanel">
@@ -494,7 +538,7 @@ function RequestDetail({
               Request-Details
             </Text>
             <Text variant="body-2" color="neutral-faded">
-              {request.id} · {request.kindLabel}
+              {request.id} · {requestTypeLabel(request)}
             </Text>
           </View>
           <Badge color={statusBadgeColor(request.staffStatus)} variant="faded">
@@ -509,6 +553,21 @@ function RequestDetail({
           </Text>
         </div>
 
+        <StateNotice tone="neutral" title="Naechster fachlicher Schritt" body={nextActionHint(request)} />
+
+        {documentRequest && (
+          <div className="staffDocumentNotice">
+            <FileText aria-hidden />
+            <View direction="column" gap={1}>
+              <Text weight="semibold">Keine Datei uebertragen</Text>
+              <Text variant="body-2" color="neutral-faded">
+                Dieser Dokument-/Rezept-Request enthaelt nur Anfrage- und Metadaten. Es gibt keinen Dateinamen,
+                kein Upload-Objekt und keine produktive Dateiuebertragung.
+              </Text>
+            </View>
+          </div>
+        )}
+
         <div className="staffAdminDetailGrid">
           {rows.map((row) => (
             <DataItem label={row.label} value={row.value} key={`${row.label}:${row.value}`} />
@@ -518,6 +577,9 @@ function RequestDetail({
         <View direction="column" gap={3}>
           <Text as="h3" variant="featured-6" weight="semibold">
             Status setzen
+          </Text>
+          <Text variant="body-2" color="neutral-faded">
+            {terminal ? "Terminaler Status: keine weitere Statusaktion im MVP." : statusHelpText[request.staffStatus]}
           </Text>
           <div className="staffAdminStatusGrid">
             {statusModel.map((status) => (
@@ -563,22 +625,29 @@ function DataItem({ label, value }: { label: string; value: string }) {
 }
 
 function AuditEventCard({ event }: { event: StaffAuditEvent }) {
+  const metadataSummary = auditMetadataSummary(event);
+
   return (
     <div className="safeRow">
       <View direction="row" justify="space-between" gap={3} wrap>
-        <Text weight="semibold">{event.action}</Text>
+        <Text weight="semibold">{auditActionLabel(event.action)}</Text>
         <Badge color={event.outcome === "rejected" || event.outcome === "blocked" ? "warning" : "positive"} variant="faded">
           {event.outcome}
         </Badge>
       </View>
       <Text variant="caption-1" color="neutral-faded">
-        {formatDateTime(event.occurredAt)} · {event.actorRole}
+        {formatDateTime(event.occurredAt)} · {auditActorLabel(event)}
       </Text>
+      {metadataSummary && (
+        <Text variant="body-2" color="neutral-faded">
+          {metadataSummary}
+        </Text>
+      )}
     </div>
   );
 }
 
-function Kpi({ icon: Icon, label, value }: { icon: typeof ClipboardList; label: string; value: string }) {
+function Kpi({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="safeRow">
       <View direction="row" gap={3} align="center">
@@ -611,14 +680,18 @@ function StateNotice({ tone, title, body }: Notice) {
 
 function detailRows(request: StaffRequestDetail) {
   const rows = [
+    { label: "Request-Typ", value: requestTypeLabel(request) },
     { label: "Status", value: request.staffStatusLabel },
     { label: "Quelle", value: request.source },
     { label: "Schutzklasse", value: request.sensitivity },
     { label: "Kontakt vorhanden", value: request.contactAvailable ? "ja" : "nein" },
+    { label: "Mitarbeiterpruefung", value: request.staffReviewRequired ? "ja" : "nein" },
     { label: "Omnia Write", value: request.omniaWriteAllowed ? "ja" : "nein" },
   ];
   const publicRequest = request.publicRequest;
   if (!publicRequest) return rows;
+
+  rows.push({ label: "Dateiupload enthalten", value: publicRequest.boundary.fileUploadIncluded ? "ja" : "nein" });
 
   if (publicRequest.contact) {
     rows.push({ label: "Kontakt", value: publicRequest.contact.name });
@@ -629,7 +702,8 @@ function detailRows(request: StaffRequestDetail) {
   if (publicRequest.document) {
     rows.push({ label: "Dokument", value: `${publicRequest.document.fileExtension.toUpperCase()} · ${formatBytes(publicRequest.document.sizeBytes)}` });
     rows.push({ label: "MIME", value: publicRequest.document.mimeType });
-    rows.push({ label: "Upload-Modus", value: publicRequest.document.uploadMode });
+    rows.push({ label: "Upload-Modus", value: "nur Metadaten, keine Datei" });
+    rows.push({ label: "Dateiname", value: "nicht gespeichert" });
   }
   for (const [prefix, detail] of [
     ["Termin", publicRequest.appointment],
@@ -648,11 +722,70 @@ function statusLabel(status: StaffStatus, workspace: StaffRequestsResponse | nul
   return (workspace?.statusModel ?? fallbackStatusModel).find((item) => item.value === status)?.label ?? status;
 }
 
+function requestTypeLabel(request: Pick<StaffRequestListItem, "requestType" | "kindLabel">) {
+  return requestTypeLabels[request.requestType] ?? request.kindLabel;
+}
+
+function requestTypeBadgeColor(request: Pick<StaffRequestListItem, "requestType">) {
+  if (request.requestType === "document") return "warning";
+  if (request.requestType === "appointment") return "primary";
+  if (request.requestType === "care") return "positive";
+  return "neutral";
+}
+
+function nextActionHint(request: StaffRequestListItem) {
+  if (request.staffStatus === "completed") return "Erledigt: Vorgang nur noch auditieren oder bei Bedarf intern nachfassen.";
+  if (request.staffStatus === "cancelled") return "Abgebrochen: kein weiterer Staff-MVP-Schritt vorgesehen.";
+  if (request.staffStatus === "waiting_for_customer") return "Naechster Schritt: Antwort oder Rueckruf des Kunden abwarten und danach erneut pruefen.";
+  if (request.requestType === "document") return "Naechster Schritt: Rezept-/Dokumentlage fachlich pruefen; keine Datei wurde uebertragen.";
+  if (request.requestType === "appointment") return "Naechster Schritt: Terminwunsch und Kontaktweg pruefen, dann Rueckmeldung vorbereiten.";
+  if (request.requestType === "care") return "Naechster Schritt: Bedarf, Rezeptlage und Versorgungsrhythmus pruefen.";
+  if (request.requestType === "contact") return "Naechster Schritt: Fachbereich und gewuenschten Antwortweg klaeren.";
+  return statusHelpText[request.staffStatus];
+}
+
 function statusBadgeColor(status: StaffStatus) {
   if (status === "completed") return "positive";
   if (status === "cancelled" || status === "waiting_for_customer") return "warning";
   if (status === "in_review") return "primary";
   return "neutral";
+}
+
+function auditActionLabel(action: string) {
+  const labels: Record<string, string> = {
+    "public-request-created": "Public Request erstellt",
+    "public-request-submitted": "Public Request eingereicht",
+    "portal-request-changed": "Staff Status geaendert",
+    "portal-request-approved": "Request freigegeben",
+    "portal-request-rejected": "Request abgelehnt",
+    "portal-login-rate-limited": "Login begrenzt",
+  };
+  return labels[action] ?? action;
+}
+
+function auditActorLabel(event: StaffAuditEvent) {
+  const actorStaffUserId = event.metadata.actorStaffUserId;
+  const actorId = typeof actorStaffUserId === "string" ? actorStaffUserId : event.actorUserId;
+  return actorId ? `${event.actorRole} · ${actorId}` : event.actorRole;
+}
+
+function auditMetadataSummary(event: StaffAuditEvent) {
+  const previousStaffStatus = metadataText(event.metadata.previousStaffStatus);
+  const nextStaffStatus = metadataText(event.metadata.nextStaffStatus);
+  if (previousStaffStatus && nextStaffStatus) {
+    return `Status: ${statusLabel(previousStaffStatus as StaffStatus, null)} -> ${statusLabel(nextStaffStatus as StaffStatus, null)}`;
+  }
+
+  const requestType = metadataText(event.metadata.requestType);
+  const sensitivity = metadataText(event.metadata.sensitivity);
+  if (requestType && sensitivity) return `Typ: ${requestType} · Schutzklasse: ${sensitivity}`;
+  if (requestType) return `Typ: ${requestType}`;
+  return undefined;
+}
+
+function metadataText(value: string | number | boolean | undefined) {
+  if (value === undefined) return undefined;
+  return String(value);
 }
 
 function formatDateTime(value: string | undefined) {
@@ -683,6 +816,9 @@ function apiErrorText(error: unknown) {
     if (error.status === 404) return "Request wurde nicht gefunden.";
     if (error.status === 409) return "Dieser Statuswechsel ist fuer den aktuellen Status nicht erlaubt.";
     return error.message;
+  }
+  if (error instanceof TypeError && /fetch|network|failed/i.test(error.message)) {
+    return "Backend nicht erreichbar. Fuer lokale Tests Vite-Proxy oder VITE_PORTAL_BACKEND_URL pruefen.";
   }
   return error instanceof Error ? error.message : "Unbekannter Fehler.";
 }

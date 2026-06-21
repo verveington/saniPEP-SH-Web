@@ -577,6 +577,8 @@ async function handleLogin(
     },
   });
 
+  const staffSurface = options.surface === "staff-admin";
+  if (staffSurface) setStaffMvpBoundaryHeader(response);
   response.setHeader("set-cookie", serializeSessionCookie(rawSessionToken, env, user.role !== "customer"));
   writeJson(response, 200, {
     ...buildSessionResponse({
@@ -584,6 +586,7 @@ async function handleLogin(
       user,
       sessionRecord,
     }),
+    ...(staffSurface ? { mvpBoundary: staffMvpBoundary } : {}),
     message: "Login erfolgreich. Session-Cookie wurde vom Backend gesetzt.",
   });
 }
@@ -1446,11 +1449,13 @@ function toAuditDto(event: AuditEvent) {
   return {
     id: event.id,
     occurredAt: event.occurredAt,
+    actorUserId: event.actorUserId,
     actorRole: event.actorRole,
     action: event.action,
     outcome: event.outcome,
     requestId: event.requestId,
     objectType: event.objectType,
+    uploadObjectId: event.uploadObjectId,
     metadata: event.metadata,
   };
 }

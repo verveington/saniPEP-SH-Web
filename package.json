@@ -26,6 +26,7 @@
     "check:public-requests": "node scripts/check-public-requests.mjs",
     "check:public-requests:postgres": "npm run build:backend && node scripts/check-public-requests-postgres.mjs",
     "check:responsive": "node scripts/check-responsive.mjs",
+    "check:staff-admin:mvp": "npm run build:backend && node scripts/check-staff-admin-mvp.mjs",
     "cms:seed": "npm --prefix apps/cms run seed",
     "cms:icons:import": "npm --prefix apps/cms run icons:import",
     "migrate:backend": "npm run build:backend && node apps/backend/dist/db/migrations.js",

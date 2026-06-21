@@ -65,7 +65,7 @@ const requiredConversionLabels = [
   "Rezept vorab einreichen",
   "Anfrage senden",
   "Bestellanfrage vorbereiten",
-  "Kundenportal Login",
+  "Portal in Vorbereitung",
 ];
 
 const requiredStepTitles = [

@@ -109,7 +109,7 @@ export const conversionGoalLabel: Record<ConversionGoal, string> = {
   appointment: "Termine",
   upload: "Uploads",
   contact: "Kontakt",
-  portal_login: "Portal-Login",
+  portal_login: "Portal-Hinweis",
 };
 
 export const conversionStageLabel: Record<ConversionStage, string> = {

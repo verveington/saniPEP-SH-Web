@@ -50,7 +50,7 @@ export default function HelpFinderPage({ navigate, portalLoginHref }: { navigate
               Hilfe finden
             </Text>
             <Text color="neutral-faded">
-              Die Suche priorisiert Patientenworte und führt zu öffentlichen Formularen oder zum getrennten Portal-Login.
+              Die Suche priorisiert Patientenworte und führt zu öffentlichen Formularen oder zum Portal-Hinweis.
             </Text>
           </View>
           <FormControl>
@@ -107,7 +107,7 @@ export default function HelpFinderPage({ navigate, portalLoginHref }: { navigate
               Datenschutzgrenze
             </Text>
             <Text color="neutral-faded">
-              Suchbegriffe werden nicht in Analytics übernommen. Conversion-Events zählen nur grobe Ziele wie Termin, Upload, Kontakt oder Portal-Login.
+              Suchbegriffe werden nicht in Analytics übernommen. Conversion-Events zählen nur grobe Ziele wie Termin, Upload, Kontakt oder Portal-Hinweis.
             </Text>
           </View>
         </div>

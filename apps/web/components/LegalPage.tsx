@@ -38,6 +38,12 @@ export async function LegalPage({ kind, title }: { kind: "imprint" | "privacy" |
           <Text as="h1" variant="featured-1" weight="semibold">
             {title}
           </Text>
+          <div className="privacyNote">
+            <Text variant="body-2">
+              Rechtstexte und Einwilligungstexte muessen vor einer oeffentlichen Produktivveroeffentlichung final
+              geprueft und freigegeben werden. Diese Seite ersetzt keine juristische Freigabe.
+            </Text>
+          </div>
           {copy.map((paragraph) => (
             <Text color="neutral-faded" key={paragraph}>
               {paragraph}

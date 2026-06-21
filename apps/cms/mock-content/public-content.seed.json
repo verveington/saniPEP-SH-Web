@@ -373,13 +373,13 @@
     {
       "route": "/portal/login",
       "seo": {
-        "title": "Kundenportal Login | saniPEP",
-        "description": "Portalzugang aktivieren oder einloggen. Das Portal zeigt Status und erzeugt prüfbare Anfragen.",
+        "title": "Kundenportal in Vorbereitung | saniPEP",
+        "description": "Hinweisseite zum noch nicht freigeschalteten saniPEP Kundenportal. Public Requests bleiben der aktuelle digitale Weg; Portal-Self-Service ist No-Go.",
         "canonicalPath": "/portal/login",
         "robots": "noindex,nofollow"
       },
-      "h1": "Kundenportal Login",
-      "h2Structure": ["Portalzugang", "Hilfe"],
+      "h1": "Kundenportal in Vorbereitung",
+      "h2Structure": ["Nicht produktiv aktiviert", "Hilfe"],
       "internalLinks": [
         { "label": "Kontakt", "route": "/kontakt", "purpose": "context" }
       ],

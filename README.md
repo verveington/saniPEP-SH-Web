@@ -112,15 +112,15 @@ Getrennte Development-only Apps:
 - Apple-artige Landingpage mit Hero, Schnellzugriff, Premium-Versorgungsbereichen, Ablauf
   und Standort/Kontakt.
 - Patientenorientierte Suche unter `/hilfe-finden` mit Gewichtung Symptome vor Produkte
-  vor Situationen und direkten CTAs zu Termin, Upload, Konfigurator, Portal oder Anfrage.
+  vor Situationen und direkten CTAs zu Termin, Upload, Konfigurator, Portal-Hinweis oder Anfrage.
 - Terminmodul mit Datum, 1-Stunden-Zeitfenster, Anliegen, kurzem Fragebogen und Hinweis,
   dass Mitarbeiter bestaetigen muessen.
 - Rezeptupload als sensible Request-Abstraktion ohne LocalStorage fuer Gesundheitsdaten.
 - Consent-/Rollen-/Upload-Policy mit Sicherheitsnachweis fuer Rezeptuploads.
 - Schriftliche Kontaktanfrage als eigener Request-Typ fuer qualifizierte Kundenanfragen.
 - Inkontinenz-/Pflege-Konfigurator als automatisierter Anfragefluss statt finaler Bestellung.
-- Oeffentliche Website verlinkt nur den Kundenportal-Login. Portalstatus, Staff-Admin und Design-Lab
-  sind nicht Teil des oeffentlichen Produktivbuilds.
+- Oeffentliche Website zeigt nur einen noindex Portal-Hinweis. Portalstatus, Staff-Admin und Design-Lab
+  sind nicht Teil des oeffentlichen Produktivbuilds; das Kundenportal bleibt bis zur separaten Freigabe No-Go.
 - Portal-MVP in `apps/portal` spricht gegen `apps/backend`: Login, Sessionpruefung,
   Rezeptupload-Anfrage, Terminwunsch, Bestellanfrage, Mitarbeiterstatus und Audit Events.
   Uploads speichern nur Metadaten; es gibt keine echten Gesundheitsdaten und keine Produktiv-Uploads.
@@ -157,7 +157,7 @@ Die Datenschutz- und Upload-Grenze liegt in `apps/frontend/src/lib/privacySecuri
 Rollenfaehigkeiten, Consent-Scopes, verschluesselter Upload-Zielkanal, Virenscanpflicht,
 keine lokale Persistenz und Retention-Hinweis.
 Der Suchindex liegt in `apps/frontend/src/lib/searchIndex.ts` und bildet Patientensprache
-auf priorisierte Wege zu Termin, Rezeptupload, Konfigurator, Portal oder Anfrage ab.
+auf priorisierte Wege zu Termin, Rezeptupload, Konfigurator, Portal-Hinweis oder Anfrage ab.
 Die Next Public App nutzt diese bestehende Validierungs-, Datenschutz-, Search- und Metadata-Logik
 weiter und rendert Public Content serverseitig aus `apps/web`.
 Die Connector-Vertraege liegen in `apps/frontend/src/lib/integrationContracts.ts` und
@@ -309,6 +309,8 @@ Env-Vorlagen:
 
 - `.env.staging.example`: echtes Staging mit eigenen HTTPS-Domains und Reverse Proxy. Die enthaltenen `.invalid` Werte sind Platzhalter und duerfen nicht produktiv verwendet werden.
 - `.env.staging.internal.example`: LAN/VPN-interner Server-IP-Test ueber `10.0.60.13` und direkte Ports `3000`, `4100`, `5184`. Dieser Modus ist keine Public-Staging-Freigabe.
+
+Die frueher verwendeten `*.example-sanitaetshaus.de` Namen sind ebenfalls Platzhalter und gehoeren nicht als reale Staging-Domains in Betrieb. Echte Public-Staging-Freigabe braucht eigene Domains, DNS, TLS und passende `TRUSTED_ORIGINS`. Fuer den aktuellen internen Test wird IP-/LAN-Staging ueber `10.0.60.13` verwendet. Staff Admin muss nach jeder Aenderung von `VITE_PORTAL_BACKEND_URL` neu gebaut werden, weil diese URL in das statische Vite-Bundle eingebettet wird. Uploads bleiben No-Go, das Kundenportal bleibt No-Go und `OMNIA_WRITE_MODE` bleibt `read_only`.
 
 ## Offene Risiken und naechste Schritte
 

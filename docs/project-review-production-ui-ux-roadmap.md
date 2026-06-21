@@ -8,23 +8,23 @@ Review-Modus: unabhängige technische, UX-, Produkt-, Security-/DSGVO- und Ops-E
 
 Das Projekt hat einen belastbaren Staging-MVP-Kern für Public Requests und Staff Admin: Backend-Migrationen, Public-Request-Gates, Staff-Session/CSRF, Postgres-MVP-Repository, No-Upload-Boundaries und interne Staff-Smokes sind grün. Für einen kontrollierten internen MVP-Test ist der Stand brauchbar.
 
-Für echten Produktivbetrieb mit Gesundheitsdaten ist das Gesamtprojekt noch nicht Go. Die größten Blocker sind nicht der Build, sondern Betriebs- und Produktreife: finale Legal-/Datenschutztexte fehlen, echtes IAM/RBAC fehlt, Upload-Architektur ist nicht produktionsfähig, das Kundenportal ist Demo/MVP und nicht livefähig, Audit ist nicht WORM/SIEM, Retention/Löschung/Backup/Incident-Prozesse fehlen, und öffentliches Staging braucht eigene Domains mit HTTPS. Zusätzlich verlinkt die Public Website aktuell auf `/portal/login`, obwohl die Next-Public-Site keine Portal-Login-Route baut; Playwright bestätigte dort `404`.
+Für echten Produktivbetrieb mit Gesundheitsdaten ist das Gesamtprojekt noch nicht Go. Die größten Blocker sind nicht der Build, sondern Betriebs- und Produktreife: finale Legal-/Datenschutztexte fehlen, echtes IAM/RBAC fehlt, Upload-Architektur ist nicht produktionsfähig, das Kundenportal ist Demo/MVP und nicht livefähig, Audit ist nicht WORM/SIEM, Retention/Löschung/Backup/Incident-Prozesse fehlen, und öffentliches Staging braucht eigene Domains mit HTTPS. Der ursprüngliche Portal-CTA-Blocker wurde als Sofort-Fix entschärft: `/portal/login` ist jetzt eine noindex Hinweisseite statt einer 404-/Login-Zusage; das Kundenportal bleibt No-Go.
 
 ## Produktionsstatus
 
 | Bereich | Status | Begründung | Go/No-Go | Nächster konkreter Fix | Aufwand |
 |---|---|---|---|---|---|
-| Public Website | gelb | Next-Build grün, IA/CTAs grundsätzlich vorhanden, aber Legal-Platzhalter, Portal-CTA auf 404 und Content-Tiefe fehlen. | Pilot: Go mit Einschränkungen; Produktion: No-Go | Portal-CTA entfernen/deaktivieren oder gültige noindex-Seite bauen; Legal finalisieren. | M |
+| Public Website | gelb | Next-Build grün, IA/CTAs grundsätzlich vorhanden, Portal-CTA ist jetzt noindex Hinweis statt 404; Legal-Platzhalter und Content-Tiefe fehlen weiter. | Pilot: Go mit Einschränkungen; Produktion: No-Go | Legal finalisieren, Fachcontent vertiefen und SEO/robots/sitemap finalisieren. | M |
 | Public Requests | gelb | Checks grün, serverseitige IDs, Audit, Staff-Review, keine UploadObjects, keine Omnia-Writes. Freitext/Health-Daten brauchen Legal/Ops. | Staging: Go; Produktion: No-Go | Retention, DSFA, Einwilligung, Löschprozess und Staff-Betrieb festlegen. | M |
 | Staff Admin | gelb | Login, Session, CSRF, Liste/Details/Statuswechsel und noindex sind MVP-fähig. Finales IAM/RBAC fehlt. | Intern: Go; Produktion: No-Go | Rollenmodell, Nutzer-Lifecycle, Rechteprüfung und Prozessabnahme ergänzen. | M |
 | Backend | gelb | Migration Runner, Checksums, Advisory Lock, Schema-Gate, Postgres-Repository und Production-Env-Guards sind gut. JSONB bleibt Übergang. | Staging-MVP: Go; Produktion: eingeschränkt | Relationale Kernmodelle, Datenintegritätschecks, Redis/Rate-Limit/Ops absichern. | L |
 | Staging/Deployment | gelb | Compose-Config rendert, Staging-Handoff bekannt grün. Aktuell keine echten Staging-Domains/HTTPS validiert. | Intern/IP: Go; öffentlich: No-Go | Eigene Domains, HTTPS, DNS, Proxy-Smoke und Runbook finalisieren. | M |
 | Uploads | rot | Upload-Service/Policy sind vorbereitet, aber keine produktive Storage-, Quarantäne-, AV-, Clean-Bucket- und Retention-Pipeline aktiv. | No-Go | Upload-Architektur dokumentieren und freigeben, vor Implementierung. | L |
-| Kundenportal | rot | `apps/portal` ist Backend-MVP/Demo mit Dev-Credentials und nicht Teil des Staging-MVP. Public Site verlinkt ins Leere. | No-Go | Portal-MVP-Design mit echter Auth, Self-Service und Betriebsgrenzen. | L |
+| Kundenportal | rot | `apps/portal` ist Backend-MVP/Demo mit Dev-Credentials und nicht Teil des Staging-MVP. Public Site zeigt nur einen noindex Hinweis. | No-Go | Portal-MVP-Design mit echter Auth, Self-Service und Betriebsgrenzen. | L |
 | CMS/Strapi | gelb | Content Types, Build und Prod-Guards existieren. Staging-Einbindung, RBAC, Public Permissions, Preview, Backup nicht abgenommen. | Späterer Staging-Kandidat; nicht aktuelles MVP | CMS-Permissions/Preview/Seed/Backup abnehmen. | M |
 | Omnia-Integration | gelb/rot | Read-mostly Boundary vorbereitet, `OMNIA_WRITE_MODE=read_only`; keine Writes im MVP-Pfad. | Lesen: Design-Go; Schreiben: No-Go | Read-Adapter designen; Writes erst nach Staff-Approval, Audit und Omnia-Freigabe. | L |
 | Security/DSGVO/Ops | rot | Technische Guards sind gut, aber Gesundheitsdatenbetrieb braucht finale Legal-Texte, TOMs, DSFA, AVV, Retention, Backup/Restore, Incident. | Produktion: No-Go | Datenschutz-/Ops-Paket vor öffentlichem Go-Live abschließen. | L |
-| UI/UX | gelb | Website und Staff Admin sind klar und mobil nutzbar. Portal-CTA 404, Hero zu abstrakt, Fachcontent dünn. | Pilot: Go mit Fixes; Produktion: gelb | Portal-CTA korrigieren, echte Medien/Fachseiten, Staff-Testdaten-UX. | M |
+| UI/UX | gelb | Website und Staff Admin sind klar und mobil nutzbar. Portal-CTA ist als Hinweis entschärft, Hero bleibt zu abstrakt, Fachcontent dünn. | Pilot: Go mit Fixes; Produktion: gelb | Echte Medien/Fachseiten, Staff-Testdaten-UX und finale Legal-/SEO-Review. | M |
 | SEO/Content | gelb | Metadata, Canonicals, OG, Structured Data vorhanden. Keine Next-robots/sitemap gefunden; Legal/Service-Texte teils Platzhalter/dünn. | No-Go für SEO-Go-Live | Sitemap/robots, finale Fachinhalte, lokale SEO-Seiten. | M |
 | QA/Testing | gelb | Script-Gates und Builds grün, Playwright-Smoke möglich. Keine vollständige E2E-/a11y-/Lighthouse-Suite. | MVP-Go | E2E-Matrix, a11y, Cross-Browser, realistische Staff-Daten. | M |
 | Monitoring/Backup | rot | Keine belastbare Runtime-Abnahme für Monitoring, Backups, Restore, Alerting, SIEM/WORM. | No-Go | Backup/Restore-Probe, Logging/Monitoring/Incident-Runbook. | M |
@@ -37,7 +37,7 @@ Für echten Produktivbetrieb mit Gesundheitsdaten ist das Gesamtprojekt noch nic
 | Staff Admin interner MVP-Test | Go | Login/Session/CSRF/Proxy-Smoke funktionierten lokal; Nginx noindex/security headers vorhanden. |
 | Internes Staging über IP | Go mit Dokumentation | Für LAN/VPN-Test akzeptabel, wenn klar als HTTP-Development-/Internal-Mode markiert. |
 | Öffentliches Staging über Domain/HTTPS | No-Go bis eigene Domains/HTTPS | `.invalid`/Platzhalter-Domains sind korrekt als Platzhalter, dürfen aber nicht öffentlich genutzt werden. |
-| Public Website Produktion | No-Go | Legal-Platzhalter, Portal-CTA 404, fehlende SEO-/Content-Finalisierung. |
+| Public Website Produktion | No-Go | Legal-Platzhalter, fehlende SEO-/Content-Finalisierung und keine finale Go-Live-Abnahme. |
 | Uploads | No-Go | Keine produktive Dateiübertragung, keine Quarantäne-/AV-/Clean-Pipeline. |
 | Kundenportal | No-Go | Demo/MVP, keine finale Auth/Self-Service-Betriebsarchitektur. |
 | CMS/Strapi Produktion | No-Go | Buildfähig, aber RBAC/Public-Permissions/Preview/Backup/Staging-Abnahme fehlen. |
@@ -63,7 +63,7 @@ MVP/Übergang:
 
 Gefährlich bei versehentlichem Livegang:
 
-- Portal-CTA auf der Public Website führt in Next zu `404`.
+- Portal-CTA auf der Public Website ist als noindex Hinweis entschärft; das Portal bleibt dennoch No-Go.
 - Legal-Seiten zeigen Platzhalter.
 - Upload-UI kann Dateiauswahl suggerieren; aktuell ist sie zwar metadata-only, darf aber nicht als echter Upload verstanden werden.
 - `apps/portal` mit Dev-/Mock-Sprache und Development-Seed-Konzept darf nicht öffentlich laufen.
@@ -79,7 +79,7 @@ Beobachtungen:
 - Mobile Homepage: gut lesbar, Touch-Ziele wirken ausreichend, CTAs stapeln sauber.
 - Rezept-Seite mobil: sehr klare Kommunikation, dass keine Datei übertragen wird; Einwilligung startet nicht vorausgewählt.
 - Staff Admin: ruhig, scannbar, gute KPI-/Filter-Struktur; leere Liste ist verständlich.
-- Problem: „Kundenportal Login“ ist prominent, aber `/portal/login` liefert in der Next-Site `404`.
+- Entschärfter Sofort-Fix: Der frühere „Kundenportal Login“-CTA führt jetzt zu einem noindex Portal-Hinweis statt zu `404` oder einer Login-Zusage.
 - Problem: Hero-Visual ist stark stilisiert; für Sanitätshaus/Patientenvertrauen wären echte Produkt-, Standort- oder Teammedien besser.
 - Problem: Fachseiten sind eher Einstiegs-/CTA-Seiten als belastbare fachliche Ratgeberseiten für ältere Patientinnen/Patienten.
 
@@ -97,7 +97,7 @@ Lücken:
 
 - Keine `robots.ts`/`sitemap.ts` in `apps/web/app` gefunden.
 - Legal-Seiten sind Platzhalter.
-- Portal-CTA führt ins Leere.
+- Portal-Hinweis führt nicht mehr ins Leere, darf aber nicht als verfügbarer Kundenbereich verstanden werden.
 - Inhalte sind für echte Go-Live-Fachautorität zu dünn: Versorgungsschritte, Indikationen, Verordnungslogik, Kosten/Kasse, Diskretion, Nachsorge, FAQ und lokale Suchintentionen fehlen oder sind zu knapp.
 - WhatsApp/Kontakt muss im Datenschutz- und Gesundheitsdatenkontext klarer getrennt werden.
 
@@ -202,7 +202,7 @@ Status:
 - `apps/portal` existiert als Vite-MVP mit Backend-Login, Dashboard, Request-Erstellung, Staff-Workbench und Audit-Anzeige.
 - Dev-/Mock-Build ist grün.
 - Portal ist nicht Teil des aktuellen Staging-MVP.
-- Public Next-App hat keine `/portal/login` Route, obwohl dorthin verlinkt wird.
+- Public Next-App hat fuer `/portal/login` jetzt nur eine noindex Hinweisseite; keine Portal-Funktionen sind aktiviert.
 
 Fehlend für echtes Portal-MVP:
 
@@ -321,7 +321,7 @@ Playwright-Smoke:
 - Rezept Mobile `http://10.0.60.13:3001/rezept-upload`: `200`.
 - Staff Admin `http://10.0.60.13:5185/`: `200`, Login erfolgreich, kein `Failed to fetch`.
 - Staff Session ohne Login: `401`.
-- Portal-Login in Next Public Site: `http://10.0.60.13:3001/portal/login` -> `404`.
+- Portal-Hinweis in Next Public Site: `/portal/login` ist nach Sofort-Fix als noindex Hinweisseite vorgesehen; bestehende alte Screenshots koennen noch den frueheren `404`-Stand zeigen.
 - Console: Next Dev-HMR WebSocket-Warnung über `10.0.60.13`; betrifft Dev-HMR, nicht gerenderte Seite.
 
 Screenshots:
@@ -337,7 +337,7 @@ Screenshots:
 
 | Prio | Bereich | Problem | Auswirkung | Fundstelle | Konkreter Fix | Aufwand |
 |---|---|---|---|---|---|---|
-| P0 | Portal/Public Website | Public Website verlinkt auf `/portal/login`, Next baut diese Route nicht; Playwright sieht `404`. | Patient:innen landen auf Fehlerseite; Portal wirkt live, obwohl No-Go. | `apps/web/lib/routes/publicRoutes.ts`, `apps/web/components/SiteHeader.tsx`, `apps/web/components/LandingPage.tsx`, Screenshot `web-portal-login-route.png` | Portal-CTA bis Freigabe entfernen/deaktivieren oder noindex-Warteseite mit klarer Aussage bauen. | S |
+| P0 | Portal/Public Website | Sofort-Fix umgesetzt: `/portal/login` ist noindex Hinweis statt Login/404. Rest-Risiko bleibt, dass Portal als verfuegbar missverstanden wird, wenn Copy wieder auf Login dreht. | Portal darf nicht als live erscheinen; falsche Erwartungen waeren produktkritisch. | `apps/web/app/portal/login/page.tsx`, `apps/web/components/SiteHeader.tsx`, `apps/web/components/LandingPage.tsx` | Portal-Copy bis Freigabe als Hinweis halten; kein Portal aktivieren ohne eigene Abnahme. | S |
 | P0 | Legal/DSGVO | Impressum, Datenschutz, Einwilligung sind Platzhalter. | Öffentlicher Betrieb mit Gesundheitsdaten rechtlich nicht freigabefähig. | `apps/web/components/LegalPage.tsx`, CMS Legal Content | Finaltexte juristisch/fachlich freigeben und Versionierung dokumentieren. | M |
 | P0 | Uploads | Keine produktive Upload-Architektur aktiv. | Dateiübertragung mit Rezept-/Gesundheitsdaten wäre unsicher. | `apps/backend/src/uploads/*`, `apps/backend/src/uploads/objectStorage.ts` | Architekturfreigabe für Quarantäne, AV, Clean Bucket, KMS, Retention, Audit vor Code. | L |
 | P0 | Staff Admin/Auth | Finales IAM/RBAC fehlt; MVP nutzt password-session Boundary. | Produktiver Mitarbeiterzugriff nicht ausreichend kontrolliert. | `apps/backend/src/app.ts`, `apps/admin/src/main.tsx` | Rollenmodell, On-/Offboarding, MFA/SSO-Entscheidung, Admin-Rechte und Audit-Freigabe. | M |
@@ -356,10 +356,10 @@ Screenshots:
 
 | Sprint | Ziel | Scope | Nicht anfassen | Erfolgskriterien | Risiken |
 |---|---|---|---|---|---|
-| 1 | Staging Smoke + interne Staff-Abnahme | Aktuelle Staging-Smokes, Staff-Testdaten, Runbook, Portal-CTA-Entscheidung | Keine Uploads, kein Portal, keine Omnia-Writes | Staff Admin ohne Fetch-Fehler, Public Requests grün, 404-CTA behoben/dokumentiert | Testdaten fehlen für echte Staff-UX |
+| 1 | Staging Smoke + interne Staff-Abnahme | Aktuelle Staging-Smokes, Staff-Testdaten, Runbook, Portal-Hinweis pruefen | Keine Uploads, kein Portal, keine Omnia-Writes | Staff Admin ohne Fetch-Fehler, Public Requests grün, Portal-Hinweis ohne 404 | Testdaten fehlen für echte Staff-UX |
 | 2 | Echte Staging-Domains/HTTPS oder internes IP-Staging final dokumentieren | DNS/TLS/Caddy/CORS/Trusted Origins, `.env.staging` lokal-only | Keine Platzhalter-Domains produktiv verwenden | Web/Staff/API über eigene HTTPS-Domains oder bewusst internes IP-Runbook | Domain-/Zertifikatsblocker |
 | 3 | Staff Admin Workflow-Härtung | IAM/RBAC-Konzept, Statusrechte, Fehlercodes, Audit-Anzeige, Testdaten | Kein Kundenportal | Rollen-/Prozessabnahme, Statuswechsel mit Audit und CSRF grün | Scope creep Richtung Portal |
-| 4 | Public Website Content/SEO/Legal | Legal final, robots/sitemap, Fachseiten, Portal-CTA, echte Medien | Keine Upload-Implementierung | Search-/Legal-Go, keine 404-CTAs, Content-Review bestanden | Juristische Review-Zyklen |
+| 4 | Public Website Content/SEO/Legal | Legal final, robots/sitemap, Fachseiten, Portal-Hinweis, echte Medien | Keine Upload-Implementierung | Search-/Legal-Go, keine 404-CTAs, Content-Review bestanden | Juristische Review-Zyklen |
 | 5 | Upload-Architektur-Design | Quarantäne, AV, KMS, Clean Bucket, Retention, Zugriff, Audit | Noch kein Upload-Code live | Design-Doc und Datenschutzfreigabe | Sicherheitsanforderungen unterschätzt |
 | 6 | CMS/Strapi Production Readiness | RBAC, Public Permissions, Preview, Seed, Backup/Restore | Keine Patientenuploads im CMS | CMS-Staging-Smoke und Redaktionsrollen abgenommen | Media/Permissions falsch exponiert |
 | 7 | Portal Auth/Customer MVP Design | Aktivierung, Kundenrollen, Self-Service-Scope, Supportprozesse | Keine Omnia-Writes | Portal-MVP-Spezifikation mit Datenschutzgrenzen | Identitäts-/Supportaufwand |
@@ -379,4 +379,3 @@ Screenshots:
 8. Upload-Architektur als Design-Doc mit Quarantäne/AV/KMS/Clean/Retention/Audit ausarbeiten, ohne Uploads zu aktivieren.
 9. CMS-Staging-Track für RBAC, Public Permissions, Preview, Seed und Backup/Restore planen.
 10. Omnia Read-Integration designen; Write-Integration bleibt bis nach Upload/Portal/Ops-Härtung gesperrt.
-

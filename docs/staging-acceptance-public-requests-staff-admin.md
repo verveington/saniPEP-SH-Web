@@ -15,6 +15,8 @@ Der aktuelle Staging-Stand ist fuer den abgegrenzten MVP einsatzbereit.
 
 Diese Abnahme gilt nur fuer den Staging-MVP mit oeffentlichen Anfragen und internem Staff Admin. Sie ist keine Produktionsfreigabe fuer Uploads, Kundenportal, CMS oder Omnia-Schreibzugriffe.
 
+Hinweis zum aktuellen Staging-Weg: Die frueher diskutierten `*.example-sanitaetshaus.de` Domains sind Platzhalter und gehoeren uns nicht. Sie duerfen nicht als echte Public-Staging-Domains verwendet werden. Fuer echte Public-Staging-Freigabe braucht es eigene Domains, DNS und HTTPS/TLS. Der aktuelle Testweg ist internes IP-/LAN-Staging ueber `10.0.60.13`; Staff Admin muss mit der dazu passenden `VITE_PORTAL_BACKEND_URL` neu gebaut werden.
+
 ## Referenzstand
 
 - Repository: `/home/staff-1/saniPEP-SH-Web`
@@ -64,6 +66,7 @@ Aktive Betriebsgrenzen:
 - Portal ist nicht aktiviert.
 - CMS ist nicht Teil des Staging-MVP.
 - `OMNIA_WRITE_MODE` bleibt `read_only`.
+- Die oeffentliche Website zeigt fuer `/portal/login` nur einen noindex Portal-Hinweis; es wird kein Kundenportal aktiviert.
 
 ## Validierung
 

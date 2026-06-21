@@ -37,7 +37,7 @@ function SiteFooter() {
               Einwilligung
             </Link>
             <a className="textButton footerLink" href={portalLoginHref}>
-              Kundenportal Login
+              Portal in Vorbereitung
             </a>
             <Link className="textButton footerLink" href="/kontakt">
               Kontakt

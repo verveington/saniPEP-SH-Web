@@ -102,7 +102,7 @@ export function SiteHeader() {
             <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
           </Link>
           <a className="portalLoginAnchor" href={portalLoginHref} onClick={closeDrawer}>
-            <ButtonText icon={User}>Kundenportal Login</ButtonText>
+            <ButtonText icon={User}>Portal in Vorbereitung</ButtonText>
           </a>
         </div>
       </div>

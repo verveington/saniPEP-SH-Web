@@ -59,7 +59,7 @@ export default function LandingPage({ navigate, portalLoginHref }: { navigate: N
                 <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
               </RouteLink>
               <a className="portalLoginAnchor portalLoginAnchorLarge" href={portalLoginHref}>
-                <ButtonText icon={User}>Kundenportal Login</ButtonText>
+                <ButtonText icon={User}>Portal in Vorbereitung</ButtonText>
               </a>
             </div>
             <div className="heroCards" aria-label="Schneller Einstieg">

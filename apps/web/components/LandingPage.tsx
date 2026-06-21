@@ -68,7 +68,7 @@ export async function LandingPage() {
                 <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
               </Link>
               <a className="portalLoginAnchor portalLoginAnchorLarge" href={portalLoginHref}>
-                <ButtonText icon={User}>Kundenportal Login</ButtonText>
+                <ButtonText icon={User}>Portal in Vorbereitung</ButtonText>
               </a>
             </div>
             <div className="heroContactRail" aria-label="Kontakt und Servicezeiten">

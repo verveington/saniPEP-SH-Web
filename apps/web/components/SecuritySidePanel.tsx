@@ -13,6 +13,7 @@ export function SecuritySidePanel() {
           "Öffentliche Website enthält keinen internen App-Code.",
           "Formulare erzeugen keine Requests ohne gültige Pflichtfelder.",
           "Conversion-Tracking zählt nur grobe Ziele.",
+          "Rechtstexte und Einwilligungstexte muessen vor oeffentlichem Produktivbetrieb final freigegeben werden.",
           uploadServerSecurityBoundary.productionInvariant,
         ].map((item) => (
           <div className="safeRow" key={item}>

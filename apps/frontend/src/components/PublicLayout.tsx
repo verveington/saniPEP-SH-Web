@@ -55,7 +55,7 @@ function SiteHeader({
             <ButtonText icon={Calendar}>Termin</ButtonText>
           </RouteLink>
           <a className="portalLoginAnchor" href={portalLoginHref}>
-            <ButtonText icon={User}>Portal Login</ButtonText>
+            <ButtonText icon={User}>Portal in Vorbereitung</ButtonText>
           </a>
         </div>
       </div>
@@ -85,7 +85,7 @@ function SiteFooter({ navigate, portalLoginHref }: { navigate: Navigate; portalL
               Einwilligung
             </RouteLink>
             <a className="textButton footerLink" href={portalLoginHref}>
-              Kundenportal Login
+              Portal in Vorbereitung
             </a>
             <RouteLink className="textButton footerLink" route="/kontakt" navigate={navigate}>
               Kontakt

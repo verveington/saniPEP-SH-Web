@@ -33,7 +33,7 @@ cp .env.staging.example .env.staging
 ```
 
 Replace all placeholder secrets in `.env.staging` from the staging secret store. Do not commit `.env.staging`.
-The `.invalid` hostnames in `.env.staging.example` are placeholders. Replace them with domains owned by the project before using the reverse proxy or sharing a public staging URL.
+The `.invalid` hostnames in `.env.staging.example` are placeholders. Earlier `*.example-sanitaetshaus.de` values were placeholders too and are not owned staging domains. Replace every placeholder host with domains owned by the project before using the reverse proxy or sharing a public staging URL.
 
 Required staging boundaries:
 
@@ -46,6 +46,8 @@ Required staging boundaries:
 - no `PORTAL_DEV_*` variables are set
 - `OMNIA_WRITE_MODE=read_only`
 - `BACKEND_NODE_ENV=production` for real HTTPS staging
+
+`VITE_PORTAL_BACKEND_URL` is embedded into the static Staff Admin bundle at build time. Rebuild `staff-admin` after changing it; editing an env file alone does not update an already-built bundle.
 
 The upload bucket and AV variables are present for readiness planning only. The current public document flow remains metadata-only and must continue to produce no upload objects or file names.
 
@@ -70,7 +72,7 @@ The internal template uses:
 - `PORTAL_REPOSITORY_DRIVER=postgres`
 - `OMNIA_WRITE_MODE=read_only`
 
-The backend code intentionally blocks `http://` origins and backend base URLs when `NODE_ENV=production`. Therefore the internal template sets `BACKEND_NODE_ENV=development` explicitly for this server-IP smoke test. This is not a public staging mode and must not be used as a production relaxation. A public staging release requires owned domains and HTTPS.
+The backend code intentionally blocks `http://` origins and backend base URLs when `NODE_ENV=production`. Therefore the internal template sets `BACKEND_NODE_ENV=development` explicitly for this server-IP smoke test. This is not a public staging mode and must not be used as a production relaxation. A public staging release requires owned domains, DNS and HTTPS/TLS.
 
 The internal template also uses a non-`__Host-` session cookie name because browser clients do not persist `Secure` `__Host-*` cookies over plain HTTP.
 

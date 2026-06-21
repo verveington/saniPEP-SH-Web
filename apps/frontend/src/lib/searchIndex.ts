@@ -91,7 +91,7 @@ export const patientSearchIndex: SearchEntry[] = [
     category: "situation",
     term: "Ich bin bereits Kunde",
     title: "Status, Rezeptablauf oder Wiederbestellung prüfen",
-    summary: "Im Portal Status ansehen, Rezept erneuern oder eine prüfbare Bestellanfrage stellen.",
+    summary: "Der Portal-Hinweis erklaert, dass Self-Service aktuell nicht freigeschaltet ist. Fuer Anliegen bitte Anfrage oder Kontaktweg nutzen.",
     recommendedRoute: "/portal/login",
     primaryAction: "portal",
     relatedTerms: ["Kundenportal", "Dauerversorgung", "Bestellstatus", "Rezeptablauf"],
@@ -157,7 +157,7 @@ export const primaryActionLabel: Record<SearchIntentResult["primaryAction"], str
   appointment: "Termin anfragen",
   upload: "Rezept vorab einreichen",
   configure: "Konfigurator starten",
-  portal: "Portal öffnen",
+  portal: "Portal-Hinweis lesen",
   inquiry: "Anfrage schreiben",
 };
 

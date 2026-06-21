@@ -81,8 +81,8 @@
     "strapiUid": "api::contact-setting.contact-setting"
   },
   "/portal/login": {
-    "title": "Kundenportal Login | saniPEP",
-    "description": "Portalzugang aktivieren oder mit E-Mail und Passwort einloggen. Das Portal zeigt Status und erzeugt prüfbare Anfragen.",
+    "title": "Kundenportal in Vorbereitung | saniPEP",
+    "description": "Hinweisseite zum noch nicht freigeschalteten saniPEP Kundenportal. Public Requests bleiben der aktuelle digitale Weg; Portal-Self-Service ist No-Go.",
     "canonicalPath": "/portal/login",
     "audience": "portal",
     "primaryConversion": "portal_login",

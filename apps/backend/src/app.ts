@@ -402,16 +402,17 @@ async function buildReadinessResponse(env: BackendEnv, checks: BackendReadinessC
         notConfiguredDetail: "REDIS_URL is not set.",
       }),
       antivirus: await dependencyCheck({
-        configured: env.avScannerMode !== "stub-disabled",
-        required: true,
+        configured: env.uploadsEnabled && env.avScannerMode !== "stub-disabled",
+        required: env.uploadsEnabled,
         check: checks.antivirus,
-        disabledDetail: "AV_SCANNER_MODE=stub-disabled keeps uploads blocked.",
+        disabledDetail: env.uploadsEnabled ? "AV_SCANNER_MODE=stub-disabled keeps uploads blocked." : "UPLOADS_ENABLED=false keeps file transfer blocked for the metadata-only pilot.",
         notConfiguredDetail: "AV scanner is not configured.",
       }),
       objectStorage: await dependencyCheck({
-        configured: Boolean(env.uploadQuarantineBucket && env.uploadCleanBucket && env.uploadKmsKeyId),
-        required: true,
+        configured: env.uploadsEnabled && Boolean(env.uploadQuarantineBucket && env.uploadCleanBucket && env.uploadKmsKeyId),
+        required: env.uploadsEnabled,
         check: checks.objectStorage,
+        disabledDetail: env.uploadsEnabled ? undefined : "UPLOADS_ENABLED=false keeps object storage out of the metadata-only pilot.",
         notConfiguredDetail: "UPLOAD_QUARANTINE_BUCKET, UPLOAD_CLEAN_BUCKET and UPLOAD_KMS_KEY_ID must be set.",
       }),
       repository: {
@@ -433,10 +434,11 @@ async function dependencyCheck(input: {
   disabledDetail?: string;
 }): Promise<ReadinessCheckState> {
   if (!input.configured) {
+    const disabled = Boolean(input.disabledDetail);
     return {
       configured: false,
-      ok: false,
-      status: input.disabledDetail ? "disabled" : "not_configured",
+      ok: disabled && !input.required,
+      status: disabled ? "disabled" : "not_configured",
       required: input.required,
       detail: input.disabledDetail ?? input.notConfiguredDetail,
     };

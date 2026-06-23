@@ -136,12 +136,23 @@ assert(!publicApp.includes("staffReview"), "Public app must not import staff rev
 assert(fs.existsSync(path.join(root, "apps/portal/vite.config.ts")), "Portal must have a separate build config");
 assert(fs.existsSync(path.join(root, "apps/admin/vite.config.ts")), "Admin must have a separate build config");
 assert(fs.existsSync(path.join(root, "apps/design-lab/vite.config.ts")), "Design-Lab must have a separate build config");
+assert(fs.existsSync(path.join(root, "apps/web/app/robots.ts")), "Next public app must expose robots.txt metadata route");
+assert(fs.existsSync(path.join(root, "apps/web/app/sitemap.ts")), "Next public app must expose sitemap.xml metadata route");
 assert(fs.existsSync(path.join(root, "apps/shared/security/accessControl.ts")), "Shared server auth boundary must exist");
 assert(fs.existsSync(path.join(root, "apps/shared/icons/png/outline")), "Shared outline icon database must exist");
 assert(fs.existsSync(path.join(root, "apps/shared/icons/SharedIcon.tsx")), "SharedIcon renderer must exist");
 assert(fs.existsSync(path.join(root, "apps/shared/icons/README.md")), "Icon governance documentation must exist");
 
 const iconRegistrySource = fs.readFileSync(path.join(root, "apps/shared/icons/iconRegistry.ts"), "utf8");
+const robotsSource = fs.readFileSync(path.join(root, "apps/web/app/robots.ts"), "utf8");
+const sitemapSource = fs.readFileSync(path.join(root, "apps/web/app/sitemap.ts"), "utf8");
+
+assert(robotsSource.includes("routeMetadataJson"), "Robots route must derive private paths from route metadata");
+assert(robotsSource.includes("noindex,nofollow"), "Robots route must disallow noindex routes");
+assert(sitemapSource.includes("routeMetadataJson"), "Sitemap route must derive URLs from route metadata");
+assert(sitemapSource.includes("audience === \"public\""), "Sitemap route must include only public routes");
+assert(sitemapSource.includes("robots === \"index,follow\""), "Sitemap route must include only indexable routes");
+
 for (const match of iconRegistrySource.matchAll(/from\s+["'](.+)["']/g)) {
   assert(
     match[1].startsWith("./png/outline/"),

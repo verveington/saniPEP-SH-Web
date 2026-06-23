@@ -305,12 +305,20 @@ Config-Check:
 npm run compose:staging:config
 ```
 
+Pilot-Readiness-Gate:
+
+```bash
+npm run check:pilot:readiness
+```
+
 Env-Vorlagen:
 
 - `.env.staging.example`: echtes Staging mit eigenen HTTPS-Domains und Reverse Proxy. Die enthaltenen `.invalid` Werte sind Platzhalter und duerfen nicht produktiv verwendet werden.
 - `.env.staging.internal.example`: LAN/VPN-interner Server-IP-Test ueber `10.0.60.13` und direkte Ports `3000`, `4100`, `5184`. Dieser Modus ist keine Public-Staging-Freigabe.
 
-Die frueher verwendeten `*.example-sanitaetshaus.de` Namen sind ebenfalls Platzhalter und gehoeren nicht als reale Staging-Domains in Betrieb. Echte Public-Staging-Freigabe braucht eigene Domains, DNS, TLS und passende `TRUSTED_ORIGINS`. Fuer den aktuellen internen Test wird IP-/LAN-Staging ueber `10.0.60.13` verwendet. Staff Admin muss nach jeder Aenderung von `VITE_PORTAL_BACKEND_URL` neu gebaut werden, weil diese URL in das statische Vite-Bundle eingebettet wird. Uploads bleiben No-Go, das Kundenportal bleibt No-Go und `OMNIA_WRITE_MODE` bleibt `read_only`.
+Die frueher verwendeten `*.example-sanitaetshaus.de` Namen sind ebenfalls Platzhalter und gehoeren nicht als reale Staging-Domains in Betrieb. Echte Public-Staging-Freigabe braucht eigene Domains, DNS, TLS und passende `TRUSTED_ORIGINS`. Fuer den aktuellen internen Test wird IP-/LAN-Staging ueber `10.0.60.13` verwendet. Staff Admin muss nach jeder Aenderung von `VITE_PORTAL_BACKEND_URL` neu gebaut werden, weil diese URL in das statische Vite-Bundle eingebettet wird. Uploads bleiben mit `UPLOADS_ENABLED=false` No-Go, das Kundenportal bleibt No-Go und `OMNIA_WRITE_MODE` bleibt `read_only`.
+
+Das kontrollierte Pilot-Runbook liegt in `docs/controlled-pilot-runbook.md`.
 
 ## Offene Risiken und naechste Schritte
 

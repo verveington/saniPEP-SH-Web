@@ -23,6 +23,7 @@
     "check:backend:migrations": "node scripts/check-backend-migrations.mjs",
     "check:backend:runtime": "tsc -p apps/backend/tsconfig.json --noEmit",
     "check:flows": "node scripts/check-flows.mjs",
+    "check:pilot:readiness": "npm run build:backend && node scripts/check-pilot-readiness.mjs",
     "check:public-requests": "node scripts/check-public-requests.mjs",
     "check:public-requests:postgres": "npm run build:backend && node scripts/check-public-requests-postgres.mjs",
     "check:responsive": "node scripts/check-responsive.mjs",
@@ -39,6 +40,7 @@
     "demo:portal-mvp": "node scripts/demo-portal-mvp.mjs",
     "dev:backend:compose": "docker compose -f apps/backend/docker-compose.yml up --build",
     "preview": "next start apps/web",
+    "staff:provision": "npm run build:backend && node scripts/provision-staff-user.mjs",
     "start:backend": "node apps/backend/dist/main.js",
     "preview:frontend:vite": "vite preview --config apps/frontend/vite.config.ts"
   },

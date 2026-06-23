@@ -42,6 +42,7 @@ export type BackendEnv = {
   accountLockoutWindowSeconds: number;
   accountLockoutBaseSeconds: number;
   accountLockoutMaxSeconds: number;
+  uploadsEnabled: boolean;
   uploadMaxBytes: number;
   uploadAllowedMimeTypes: string[];
   uploadQuarantineBucket?: string;
@@ -94,20 +95,28 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     }
     return value ?? defaultDevelopmentSecret;
   };
+  const rejectPlaceholderInProduction = (name: string, value: string | undefined) => {
+    if (production && value && isPlaceholderValue(value)) {
+      errors.push(`${name} must not contain placeholder values in production.`);
+    }
+  };
 
   requireInProduction("PORTAL_DATABASE_URL", source.PORTAL_DATABASE_URL);
   requireInProduction("REDIS_URL", source.REDIS_URL);
-  requireInProduction("UPLOAD_QUARANTINE_BUCKET", source.UPLOAD_QUARANTINE_BUCKET);
-  requireInProduction("UPLOAD_CLEAN_BUCKET", source.UPLOAD_CLEAN_BUCKET);
-  requireInProduction("UPLOAD_KMS_KEY_ID", source.UPLOAD_KMS_KEY_ID);
+  const uploadsEnabled = readBoolean(source.UPLOADS_ENABLED, false);
+  if (production && uploadsEnabled) {
+    requireInProduction("UPLOAD_QUARANTINE_BUCKET", source.UPLOAD_QUARANTINE_BUCKET);
+    requireInProduction("UPLOAD_CLEAN_BUCKET", source.UPLOAD_CLEAN_BUCKET);
+    requireInProduction("UPLOAD_KMS_KEY_ID", source.UPLOAD_KMS_KEY_ID);
+  }
   const avScannerMode = readEnum(
     source.AV_SCANNER_MODE,
     "AV_SCANNER_MODE",
     ["stub-disabled", "clamav", "managed", "vendor"] as const,
     "stub-disabled",
   );
-  if (production && avScannerMode === "stub-disabled") {
-    errors.push("AV_SCANNER_MODE=stub-disabled is not allowed in production.");
+  if (production && uploadsEnabled && avScannerMode === "stub-disabled") {
+    errors.push("AV_SCANNER_MODE=stub-disabled is not allowed in production when UPLOADS_ENABLED=true.");
   }
 
   const portalRepositoryDriver = readEnum(
@@ -128,6 +137,7 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
   const developmentUsers = readDevelopmentUsers(source, production, errors, developmentWarnings);
 
   const trustedOrigins = readCsv(source.TRUSTED_ORIGINS);
+  rejectPlaceholderInProduction("TRUSTED_ORIGINS", source.TRUSTED_ORIGINS);
   if (production && trustedOrigins.length === 0) {
     errors.push("TRUSTED_ORIGINS must be explicit in production.");
   }
@@ -136,6 +146,7 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
   }
 
   const backendBaseUrl = source.PORTAL_BACKEND_BASE_URL ?? "http://localhost:4100";
+  rejectPlaceholderInProduction("PORTAL_BACKEND_BASE_URL", backendBaseUrl);
   if (production && !backendBaseUrl.startsWith("https://")) {
     errors.push("PORTAL_BACKEND_BASE_URL must use https:// in production.");
   }
@@ -179,6 +190,7 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     accountLockoutWindowSeconds: readInt(source.ACCOUNT_LOCKOUT_WINDOW_SECONDS, "ACCOUNT_LOCKOUT_WINDOW_SECONDS", 900, 60, 86400),
     accountLockoutBaseSeconds: readInt(source.ACCOUNT_LOCKOUT_BASE_SECONDS, "ACCOUNT_LOCKOUT_BASE_SECONDS", 900, 60, 86400),
     accountLockoutMaxSeconds: readInt(source.ACCOUNT_LOCKOUT_MAX_SECONDS, "ACCOUNT_LOCKOUT_MAX_SECONDS", 86400, 60, 604800),
+    uploadsEnabled,
     uploadMaxBytes: readInt(source.UPLOAD_MAX_BYTES, "UPLOAD_MAX_BYTES", 20 * 1024 * 1024, 1, 50 * 1024 * 1024),
     uploadAllowedMimeTypes: readCsv(source.UPLOAD_ALLOWED_MIME_TYPES ?? "application/pdf,image/jpeg,image/png,image/heic,image/heif"),
     uploadQuarantineBucket: source.UPLOAD_QUARANTINE_BUCKET,
@@ -208,6 +220,25 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     developmentWarnings,
   };
 
+  rejectPlaceholderInProduction("PORTAL_DATABASE_URL", env.databaseUrl);
+  rejectPlaceholderInProduction("REDIS_URL", env.redisUrl);
+  rejectPlaceholderInProduction("PORTAL_SESSION_SECRET", source.PORTAL_SESSION_SECRET);
+  rejectPlaceholderInProduction("CSRF_SECRET", source.CSRF_SECRET);
+  rejectPlaceholderInProduction("PORTAL_OTP_HASH_SECRET", source.PORTAL_OTP_HASH_SECRET);
+  rejectPlaceholderInProduction("PORTAL_PASSWORD_PEPPER", source.PORTAL_PASSWORD_PEPPER);
+  rejectPlaceholderInProduction("AUDIT_LOG_HASH_SECRET", source.AUDIT_LOG_HASH_SECRET);
+  if (uploadsEnabled) {
+    rejectPlaceholderInProduction("UPLOAD_QUARANTINE_BUCKET", env.uploadQuarantineBucket);
+    rejectPlaceholderInProduction("UPLOAD_CLEAN_BUCKET", env.uploadCleanBucket);
+    rejectPlaceholderInProduction("UPLOAD_KMS_KEY_ID", env.uploadKmsKeyId);
+    rejectPlaceholderInProduction("AV_SCANNER_ENDPOINT", env.avScannerEndpoint);
+  }
+  if (env.omniaWriteMode !== "read_only") {
+    rejectPlaceholderInProduction("OMNIA_API_BASE_URL", env.omniaApiBaseUrl);
+    rejectPlaceholderInProduction("OMNIA_CLIENT_ID", env.omniaClientId);
+    rejectPlaceholderInProduction("OMNIA_CLIENT_SECRET", env.omniaClientSecret);
+  }
+
   if (production && env.omniaWriteMode !== "read_only" && !env.omniaApiBaseUrl) {
     errors.push("OMNIA_API_BASE_URL is required when OMNIA_WRITE_MODE is not read_only.");
   }
@@ -234,6 +265,10 @@ function readCsv(value: string | undefined) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function isPlaceholderValue(value: string) {
+  return /replace-with|\.invalid\b|example-sanitaetshaus|placeholder/i.test(value);
 }
 
 function readInt(value: string | undefined, name: string, fallback: number, min: number, max: number) {

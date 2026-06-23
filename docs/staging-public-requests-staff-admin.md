@@ -45,11 +45,12 @@ Required staging boundaries:
 - `VITE_PORTAL_BACKEND_URL` points to the backend API origin
 - no `PORTAL_DEV_*` variables are set
 - `OMNIA_WRITE_MODE=read_only`
+- `UPLOADS_ENABLED=false`
 - `BACKEND_NODE_ENV=production` for real HTTPS staging
 
 `VITE_PORTAL_BACKEND_URL` is embedded into the static Staff Admin bundle at build time. Rebuild `staff-admin` after changing it; editing an env file alone does not update an already-built bundle.
 
-The upload bucket and AV variables are present for readiness planning only. The current public document flow remains metadata-only and must continue to produce no upload objects or file names.
+Uploads are explicitly disabled for this staging MVP with `UPLOADS_ENABLED=false`. The current public document flow remains metadata-only and must continue to produce no upload objects or file names.
 
 ### Internal Server-IP Test
 
@@ -71,6 +72,7 @@ The internal template uses:
 - `TRUSTED_ORIGINS=http://10.0.60.13:3000,http://10.0.60.13:5184,http://10.0.60.13:5185`
 - `PORTAL_REPOSITORY_DRIVER=postgres`
 - `OMNIA_WRITE_MODE=read_only`
+- `UPLOADS_ENABLED=false`
 
 The backend code intentionally blocks `http://` origins and backend base URLs when `NODE_ENV=production`. Therefore the internal template sets `BACKEND_NODE_ENV=development` explicitly for this server-IP smoke test. This is not a public staging mode and must not be used as a production relaxation. A public staging release requires owned domains, DNS and HTTPS/TLS.
 

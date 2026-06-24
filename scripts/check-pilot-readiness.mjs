@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createBackendRequestHandler } from "../apps/backend/dist/app.js";
 import { loadBackendEnv } from "../apps/backend/dist/config/env.js";
@@ -44,6 +45,7 @@ await assertReadyzForMetadataOnlyPilot(env);
 assertPlaceholderProductionEnvIsRejected();
 assertUploadProductionEnvStaysStrict();
 assertMailEnvStaysStrict();
+assertPublicSiteUrlStaysStrict();
 assertRepoInvariants();
 
 console.log("Controlled pilot readiness check passed");
@@ -132,6 +134,14 @@ function assertMailEnvStaysStrict() {
   assert(withMailEnabled.mailEnabled === true, "MAIL_ENABLED=true must be accepted with complete non-placeholder SMTP env");
 }
 
+function assertPublicSiteUrlStaysStrict() {
+  assertThrowsWebSiteUrl({}, "NEXT_PUBLIC_SITE_URL");
+  assertAcceptsWebSiteUrl({ NEXT_PUBLIC_SITE_URL: "http://10.0.60.13:3000", PUBLIC_DEPLOYMENT: "" });
+  assertThrowsWebSiteUrl({ NEXT_PUBLIC_SITE_URL: "http://localhost:3000", PUBLIC_DEPLOYMENT: "" }, "localhost");
+  assertThrowsWebSiteUrl({ NEXT_PUBLIC_SITE_URL: "http://10.0.60.13:3000", PUBLIC_DEPLOYMENT: "true" }, "public https URL");
+  assertThrowsWebSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://replace-with-owned-web-staging-host.invalid", PUBLIC_DEPLOYMENT: "true" }, "placeholder");
+}
+
 function assertRepoInvariants() {
   const packageJson = read("package.json");
   const stagingExample = read(".env.staging.example");
@@ -146,6 +156,11 @@ function assertRepoInvariants() {
   const publicRequestsCheck = read("scripts/check-public-requests.mjs");
   const staffMvpCheck = read("scripts/check-staff-admin-mvp.mjs");
   const staffUserCheck = read("scripts/check-staff-admin-user-management.mjs");
+  const webSiteUrlCheck = read("scripts/check-web-site-url.mjs");
+  const webSiteUrlSource = read("apps/web/lib/seo/siteUrl.ts");
+  const webMetadataSource = read("apps/web/lib/seo/metadata.ts");
+  const webRobotsSource = read("apps/web/app/robots.ts");
+  const webSitemapSource = read("apps/web/app/sitemap.ts");
 
   const gitIndex = fs.readFileSync(path.join(root, ".git/index"));
   const isTracked = (fileName) => gitIndex.includes(Buffer.from(`${fileName}\0`));
@@ -162,6 +177,8 @@ function assertRepoInvariants() {
   assert(packageJson.includes("check:public-requests"), "package.json must expose check:public-requests");
   assert(packageJson.includes("check:staff-admin:mvp"), "package.json must expose check:staff-admin:mvp");
   assert(packageJson.includes("check:staff-admin:users"), "package.json must expose check:staff-admin:users");
+  assert(packageJson.includes("check:web:site-url"), "package.json must expose check:web:site-url");
+  assert(packageJson.includes("check-web-site-url.mjs --validate-current-env"), "Public web build must run the site URL guard before Next build");
   assert(packageJson.includes("staff:provision"), "package.json must expose staff:provision");
 
   assert(stagingExample.includes("BACKEND_NODE_ENV=production"), "Public staging example must run backend in production mode");
@@ -185,6 +202,12 @@ function assertRepoInvariants() {
   assert(staffUserCheck.includes("staff-user-password-reset"), "Staff user check must audit password resets");
   assert(staffUserCheck.includes("mail_disabled"), "Staff user check must verify disabled mail");
   assert(staffUserCheck.includes("uploadObjectsCreated"), "Staff user check must report uploadObjectsCreated");
+  assert(webSiteUrlCheck.includes("http://10.0.60.13:3000"), "Web site URL check must allow internal IP staging builds");
+  assert(webSiteUrlCheck.includes("--validate-current-env"), "Web site URL check must validate the current web build env");
+  assert(webSiteUrlSource.includes("PUBLIC_DEPLOYMENT") && webSiteUrlSource.includes("NODE_ENV"), "Web site URL guard must cover PUBLIC_DEPLOYMENT and NODE_ENV");
+  assert(webMetadataSource.includes("getSiteUrl()"), "Web metadata must use the guarded site URL");
+  assert(webRobotsSource.includes("getSiteUrl()"), "Web robots must use the guarded site URL");
+  assert(webSitemapSource.includes("getSiteUrl()"), "Web sitemap must use the guarded site URL");
   assert(staffProvisionScript.includes("NODE_ENV=production"), "Staff provision script must require production mode");
   assert(staffProvisionScript.includes("PORTAL_REPOSITORY_DRIVER=postgres"), "Staff provision script must require Postgres repository");
   assert(staffProvisionScript.includes("staff-user-provisioned"), "Staff provision script must write an audit event");
@@ -223,6 +246,40 @@ function assertThrowsEnv(source, expectedMessagePart) {
     return;
   }
   throw new Error(`Expected production env to reject ${expectedMessagePart}`);
+}
+
+function assertThrowsWebSiteUrl(extraEnv, expectedMessagePart) {
+  const checkPath = path.join(root, "scripts/check-web-site-url.mjs");
+  const result = spawnSync(process.execPath, [checkPath, "--validate-current-env"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      PUBLIC_DEPLOYMENT: "true",
+      NEXT_PUBLIC_SITE_URL: "",
+      ...extraEnv,
+    },
+    encoding: "utf8",
+  });
+  if (result.status !== 0 && `${result.stderr}\n${result.stdout}`.includes(expectedMessagePart)) return;
+  throw new Error(`Expected web site URL check to reject ${expectedMessagePart}, got ${result.stderr || result.stdout}`);
+}
+
+function assertAcceptsWebSiteUrl(extraEnv) {
+  const checkPath = path.join(root, "scripts/check-web-site-url.mjs");
+  const result = spawnSync(process.execPath, [checkPath, "--validate-current-env"], {
+    cwd: root,
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      PUBLIC_DEPLOYMENT: "true",
+      NEXT_PUBLIC_SITE_URL: "",
+      ...extraEnv,
+    },
+    encoding: "utf8",
+  });
+  if (result.status === 0) return;
+  throw new Error(`Expected web site URL check to accept internal staging URL, got ${result.stderr || result.stdout}`);
 }
 
 function activeEnvLines(source) {

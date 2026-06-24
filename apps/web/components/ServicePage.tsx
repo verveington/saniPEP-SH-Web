@@ -21,7 +21,7 @@ const servicePageContent: Record<ServicePageRoute, { index: number; title: strin
   "/bandagen-orthesen-reha-stoma": {
     index: 2,
     title: "Bandagen, Orthesen, Reha & Stoma",
-    lead: "Auffindbar und handlungsorientiert, mit schneller Weiterleitung zu Rezept-Vorabprüfung, Termin oder Kontakt.",
+    lead: "Auffindbar und handlungsorientiert, mit schneller Weiterleitung zu Dokument-Hinweis, Termin oder Kontakt.",
   },
 };
 
@@ -55,7 +55,7 @@ export async function ServicePage({ route }: { route: ServicePageRoute }) {
               <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
             </Link>
             <Link className="actionLink" href="/rezept-upload">
-              <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
+              <ButtonText icon={Upload}>Dokument-Hinweis vorbereiten</ButtonText>
             </Link>
           </View>
         </View>

@@ -1,40 +1,41 @@
 import Link from "next/link";
-import { Calendar, Upload, User } from "lucide-react";
-import { Text, View } from "reshaped";
+import { Armchair, ArrowRight, Bandage, Droplets, HeartPulse } from "lucide-react";
+import { Text } from "reshaped";
 import { serviceAreas } from "@frontend/app/publicContent";
-import { portalLoginHref } from "../lib/routes/publicRoutes";
-import { verifiedAddress, verifiedContact } from "../lib/verifiedContact";
-import { ButtonText } from "./common";
+import type { PublicRoute } from "../lib/routes/publicRoutes";
 import { LocationContact } from "./LocationContact";
 import { ServiceCard } from "./ServiceCard";
-import { SharedIconBox, type SharedIconName } from "../../shared/icons/SharedIcon";
 
-const symptomEntrypoints = [
+const topicCards = [
   {
-    title: "Schwere Beine",
-    copy: "Kompressionsberatung ruhig vorbereiten.",
+    title: "Bandagen & Orthesen",
+    copy: "Unterstützung und Stabilität für Gelenke, Muskeln und Wirbelsäule.",
+    route: "/bandagen-orthesen-reha-stoma",
+    tone: "green",
+    Icon: Bandage,
+  },
+  {
+    title: "Kompression & Brustversorgung",
+    copy: "Kompression, Lymphversorgung und Brustprothetik – individuell angepasst.",
     route: "/lymphoedem-lipoedem-narbenkompression",
-    icon: "body/lymph_nodes",
+    tone: "rose",
+    Icon: HeartPulse,
   },
   {
-    title: "Nach Operation",
-    copy: "Diskreten Termin für Brustprothetik anfragen.",
-    route: "/brustprothetik",
-    icon: "body/breasts",
-  },
-  {
-    title: "Rezept vorhanden",
-    copy: "Rezeptdaten vorab einreichen.",
-    route: "/rezept-upload",
-    icon: "symbols/rx",
-  },
-  {
-    title: "Wiederkehrender Bedarf",
-    copy: "Pflegehilfsmittel und Versorgung klären.",
+    title: "Inkontinenz, Stoma & Pflege",
+    copy: "Diskrete Versorgung und zuverlässige Produkte für den Alltag.",
     route: "/inkontinenz-pflegehilfsmittel",
-    icon: "symbols/nappy_diaper",
+    tone: "aqua",
+    Icon: Droplets,
   },
-] satisfies Array<{ title: string; copy: string; route: string; icon: SharedIconName }>;
+  {
+    title: "Mobilität & Alltagshilfen",
+    copy: "Hilfsmittel für mehr Sicherheit und Selbstständigkeit zu Hause.",
+    route: "/hilfe-finden",
+    tone: "sand",
+    Icon: Armchair,
+  },
+] satisfies Array<{ title: string; copy: string; route: PublicRoute; tone: "green" | "rose" | "aqua" | "sand"; Icon: typeof Bandage }>;
 
 export async function LandingPage() {
   const premium = serviceAreas.filter((area) => area.priority === "primary");
@@ -42,70 +43,33 @@ export async function LandingPage() {
 
   return (
     <>
-      <section className="hero boutiqueHero">
-        <div className="heroContent">
-          <div className="heroCopy">
-            <div className="heroTitle">
-              <Text as="h1" variant="headline-2" weight="bold">
-                <span className="heroTitleLine">Kompressions- und</span>
-                {" "}
-                <span className="heroTitleLine">Sanitätshausversorgung</span>
-                {" "}
-                <span className="heroTitleLine">ohne Kompromisse</span>
-              </Text>
-            </div>
-            <Text as="p" variant="featured-5" color="neutral-faded">
-              Digital vorbereiten, persönlich begleitet werden und hochwertige Versorgung mit ruhigem Gefühl starten.
+      <section className="landingStart">
+        <div className="sectionInner landingStartInner">
+          <div className="landingIntro">
+            <Text as="h1" variant="headline-2" weight="bold" wrap="balance">
+              Wir sind für Sie da – für mehr Lebensqualität im Alltag.
             </Text>
-            <Text as="p" color="neutral-faded">
-              saniPEP übersetzt sensible Versorgung in klare digitale Wege: Orientierung nach Beschwerden, sichere Vorbereitung und Rückmeldung vom Team.
+            <Text as="p" variant="featured-5" color="neutral-faded" wrap="balance">
+              Ihr Sanitätshaus für individuelle Beratung, hochwertige Produkte und persönliche Betreuung.
             </Text>
-            <div className="heroActions">
-              <Link className="actionLink actionLinkPrimary actionLinkLarge" href="/termin-anfragen">
-                <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
-              </Link>
-              <Link className="actionLink actionLinkLarge" href="/rezept-upload">
-                <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
-              </Link>
-              <a className="portalLoginAnchor portalLoginAnchorLarge" href={portalLoginHref}>
-                <ButtonText icon={User}>Portal in Vorbereitung</ButtonText>
-              </a>
-            </div>
-            <div className="heroContactRail" aria-label="Kontakt und Servicezeiten">
-              {[
-                { icon: "symbols/geo_location" as const, title: "Standort", copy: verifiedAddress },
-                { icon: "symbols/i_schedule_school_date_time" as const, title: "Parteiverkehr", copy: "Mo/Mi/Fr nachmittags, Di/Do vormittags" },
-                { icon: "objects/phone" as const, title: "Erreichbar", copy: `${verifiedContact.phone} · ${verifiedContact.email}` },
-              ].map((item) => (
-                <div className="heroContactItem" key={item.title}>
-                  <SharedIconBox name={item.icon} />
-                  <View direction="column" gap={1}>
-                    <Text weight="semibold">{item.title}</Text>
-                    <Text variant="body-2" color="neutral-faded">
-                      {item.copy}
-                    </Text>
-                  </View>
-                </div>
-              ))}
-            </div>
+            <p className="landingAccent">Wir nehmen uns Zeit für Sie.</p>
           </div>
-          <HeroProductStage />
-        </div>
-      </section>
 
-      <section className="quickAccess">
-        <div className="sectionInner gridAuto">
-          {symptomEntrypoints.map((item) => (
-            <Link className="accessCard" key={item.title} href={item.route}>
-              <SharedIconBox name={item.icon} />
-              <View direction="column" gap={1}>
-                <Text weight="semibold">{item.title}</Text>
-                <Text variant="body-2" color="neutral-faded">
-                  {item.copy}
-                </Text>
-              </View>
-            </Link>
-          ))}
+          <div className="topicGrid" aria-label="Themenbereiche">
+            {topicCards.map(({ Icon, ...item }) => (
+              <Link className="topicCard" data-tone={item.tone} href={item.route} key={item.title}>
+                <span className="topicIcon" aria-hidden="true">
+                  <Icon />
+                </span>
+                <span className="topicTitle">{item.title}</span>
+                <span className="topicDescription">{item.copy}</span>
+                <span className="topicCta">
+                  Mehr erfahren
+                  <ArrowRight aria-hidden="true" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -129,39 +93,5 @@ export async function LandingPage() {
 
       <LocationContact />
     </>
-  );
-}
-
-function HeroProductStage() {
-  return (
-    <div className="heroProductStage" aria-label="Kompression digital vorbereiten">
-      <div className="shapeTileGrid">
-        <div className="shapeTile shapeTileIndigo">
-          <span className="shapeMotif shapeMotifCircle" />
-        </div>
-        <div className="shapeTile shapeTileLavender">
-          <span className="shapeMotif shapeMotifCircle" />
-        </div>
-        <div className="shapeTile shapeTileRose">
-          <span className="shapeMotif shapeMotifHalf" />
-        </div>
-        <div className="shapeTile shapeTileCream">
-          <span className="shapeTileText">Direkt online vorbereiten</span>
-        </div>
-      </div>
-      <div className="productCard productCardTall">
-        <span className="productCode">01</span>
-        <strong>Kompression</strong>
-        <small>digital vorbereitet</small>
-      </div>
-      <div className="stockingDisplay" aria-hidden>
-        <span className="stockingLeg stockingLegBack" />
-        <span className="stockingLeg stockingLegFront" />
-      </div>
-      <div className="qualityBadge">
-        <SharedIconBox name="symbols/yes" />
-        <span>Premium Fit</span>
-      </div>
-    </div>
   );
 }

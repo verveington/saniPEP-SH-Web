@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   transpilePackages: ["reshaped", "lucide-react"],
   experimental: {
     optimizePackageImports: ["reshaped", "lucide-react"],

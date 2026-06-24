@@ -7,15 +7,16 @@ import "./public-site.css";
 import { designTokenCssText } from "../../shared/design/saniPepDesignTokens";
 import { AppProvider } from "../components/AppProvider";
 import { PublicLayout } from "../components/PublicLayout";
+import { getSiteUrl } from "../lib/seo/siteUrl";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sanipep.de"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "saniPEP Sanitätshaus München | Beratung & Versorgung",
     template: "%s",
   },
   description:
-    "Sanitätshaus in München für Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezept-Vorabprüfung und Terminanfrage.",
+    "Sanitätshaus in München für Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezept-/Dokument-Hinweise und Terminanfrage.",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },

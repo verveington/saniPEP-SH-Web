@@ -1,7 +1,7 @@
 {
   "/": {
     "title": "saniPEP Sanitätshaus München | Beratung & Versorgung",
-    "description": "Sanitätshaus in München für Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezept-Vorabprüfung und Terminanfrage.",
+    "description": "Sanitätshaus in München für Kompression, Brustprothetik, Bandagen, Orthesen, Inkontinenz, Pflegehilfsmittel, Rezept-/Dokument-Hinweise und Terminanfrage.",
     "canonicalPath": "/",
     "audience": "public",
     "primaryConversion": "appointment",
@@ -10,7 +10,7 @@
   },
   "/hilfe-finden": {
     "title": "Hilfe finden | saniPEP Sanitätshaus München",
-    "description": "Patientenorientierte Suche nach Beschwerden, Produkten und Situationen mit direktem Weg zu Termin, Rezept-Vorabprüfung, Portal oder Anfrage.",
+    "description": "Patientenorientierte Suche nach Beschwerden, Produkten und Situationen mit direktem Weg zu Termin, Rezept-/Dokument-Hinweis, Portal oder Anfrage.",
     "canonicalPath": "/hilfe-finden",
     "audience": "public",
     "primaryConversion": "appointment",
@@ -19,7 +19,7 @@
   },
   "/lymphoedem-lipoedem-narbenkompression": {
     "title": "Lymphödem, Lipödem & Narbenkompression in München | saniPEP",
-    "description": "Beratung zu Lymphödem, Lipödem, Narbenkompression und Flachstrick-Kompression in München mit Terminanfrage und Rezept-Vorabprüfung.",
+    "description": "Beratung zu Lymphödem, Lipödem, Narbenkompression und Flachstrick-Kompression in München mit Terminanfrage und Rezept-/Dokument-Hinweis.",
     "canonicalPath": "/lymphoedem-lipoedem-narbenkompression",
     "audience": "public",
     "primaryConversion": "appointment",
@@ -28,7 +28,7 @@
   },
   "/brustprothetik": {
     "title": "Brustprothetik in München | saniPEP Sanitätshaus",
-    "description": "Diskrete Brustprothetik-Beratung in München nach einer Brustoperation oder bei neuer Versorgung mit Terminanfrage und Rezept-Vorabprüfung.",
+    "description": "Diskrete Brustprothetik-Beratung in München nach einer Brustoperation oder bei neuer Versorgung mit Terminanfrage und Rezept-/Dokument-Hinweis.",
     "canonicalPath": "/brustprothetik",
     "audience": "public",
     "primaryConversion": "appointment",
@@ -37,7 +37,7 @@
   },
   "/bandagen-orthesen-reha-stoma": {
     "title": "Bandagen, Orthesen, Reha & Stoma | saniPEP",
-    "description": "Schneller Einstieg für Bandagen, Orthesen, Reha-Hilfsmittel und Stoma-Versorgung in München mit Rezept-Vorabprüfung und Rückmeldung.",
+    "description": "Schneller Einstieg für Bandagen, Orthesen, Reha-Hilfsmittel und Stoma-Versorgung in München mit Rezept-/Dokument-Hinweis und Rückmeldung.",
     "canonicalPath": "/bandagen-orthesen-reha-stoma",
     "audience": "public",
     "primaryConversion": "upload",
@@ -54,8 +54,8 @@
     "strapiUid": "api::form-configuration.form-configuration"
   },
   "/rezept-upload": {
-    "title": "Rezept vorab einreichen | saniPEP München",
-    "description": "Rezeptdaten für saniPEP München lokal vorprüfen und als Anfrage vorbereiten. Im aktuellen MVP wird keine Datei übertragen.",
+    "title": "Rezept-/Dokument-Hinweis vorbereiten | saniPEP München",
+    "description": "Rezept- oder Dokumentmetadaten für saniPEP München lokal vorprüfen und als Anfrage vorbereiten. Im aktuellen MVP wird keine Datei übertragen.",
     "canonicalPath": "/rezept-upload",
     "audience": "public",
     "primaryConversion": "upload",
@@ -64,7 +64,7 @@
   },
   "/termin-anfragen": {
     "title": "Wunschtermin anfragen | saniPEP Sanitätshaus München",
-    "description": "Terminwunsch in München mit Datum, Zeitfenster, Anliegen, Fragebogen und optionaler Rezept-Vorabprüfung. Bestätigung erfolgt durch Mitarbeiter.",
+    "description": "Terminwunsch in München mit Datum, Zeitfenster, Anliegen, Fragebogen und optionalem Rezept-/Dokument-Hinweis. Bestätigung erfolgt durch Mitarbeiter.",
     "canonicalPath": "/termin-anfragen",
     "audience": "public",
     "primaryConversion": "appointment",
@@ -100,7 +100,7 @@
   },
   "/datenschutz": {
     "title": "Datenschutz | saniPEP Sanitätshaus München",
-    "description": "Datenschutzhinweise zur öffentlichen Website, Kontaktanfragen, Terminanfragen, Rezept-Vorabprüfung und zum geplanten Kundenportal.",
+    "description": "Datenschutzhinweise zur öffentlichen Website, Kontaktanfragen, Terminanfragen, Rezept-/Dokument-Hinweisen und zum geplanten Kundenportal.",
     "canonicalPath": "/datenschutz",
     "audience": "public",
     "primaryConversion": "contact",
@@ -109,7 +109,7 @@
   },
   "/einwilligung": {
     "title": "Einwilligung | saniPEP Sanitätshaus München",
-    "description": "Platzhalter für Einwilligungshinweise zu Kontakt-, Termin- und Upload-Prozessen mit Gesundheitsdaten und Mitarbeiterprüfung bei saniPEP.",
+    "description": "Platzhalter für Einwilligungshinweise zu Kontakt-, Termin- und Dokumenthinweis-Prozessen mit Gesundheitsdaten und Mitarbeiterprüfung bei saniPEP.",
     "canonicalPath": "/einwilligung",
     "audience": "public",
     "primaryConversion": "contact",

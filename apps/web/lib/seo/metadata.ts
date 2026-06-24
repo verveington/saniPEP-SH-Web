@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import routeMetadataJson from "@frontend/lib/routeMetadata.json";
 import type { Route, RouteMetadata } from "@frontend/lib/types";
 import { getSeoEntry } from "../cms/strapi";
+import { getSiteUrl } from "./siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sanipep.de";
+const siteUrl = getSiteUrl();
 const socialImage = {
   url: new URL("/brand/sanipep-social-preview.svg", siteUrl),
   width: 1200,

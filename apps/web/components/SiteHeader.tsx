@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, Menu, Upload, User, X } from "lucide-react";
+import { Calendar, Menu, Phone, Upload, User, X } from "lucide-react";
 import { useId, useState } from "react";
 import type { PublicRoute } from "../lib/routes/publicRoutes";
 import { portalLoginHref } from "../lib/routes/publicRoutes";
+import { verifiedContact } from "../lib/verifiedContact";
 import { ButtonText } from "./common";
 
 const primaryNavItems: Array<{ label: string; route: PublicRoute }> = [
@@ -61,9 +62,14 @@ export function SiteHeader() {
           ))}
         </nav>
 
+        <a className="headerPhone" href="tel:+49896780480">
+          <Phone aria-hidden="true" />
+          <span>{verifiedContact.phone}</span>
+        </a>
+
         <div className="headerActions">
           <Link className="actionLink headerSecondaryAction" href="/rezept-upload">
-            <ButtonText icon={Upload}>Rezept vorab</ButtonText>
+            <ButtonText icon={Upload}>Dokument-Hinweis</ButtonText>
           </Link>
           <Link className="actionLink actionLinkPrimary" href="/termin-anfragen">
             <ButtonText icon={Calendar}>Termin</ButtonText>
@@ -98,8 +104,12 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="drawerActions">
+          <a className="headerPhone drawerPhone" href="tel:+49896780480" onClick={closeDrawer}>
+            <Phone aria-hidden="true" />
+            <span>{verifiedContact.phone}</span>
+          </a>
           <Link className="actionLink" href="/rezept-upload" onClick={closeDrawer}>
-            <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
+            <ButtonText icon={Upload}>Dokument-Hinweis vorbereiten</ButtonText>
           </Link>
           <a className="portalLoginAnchor" href={portalLoginHref} onClick={closeDrawer}>
             <ButtonText icon={User}>Portal in Vorbereitung</ButtonText>

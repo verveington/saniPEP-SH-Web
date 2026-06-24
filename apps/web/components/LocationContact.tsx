@@ -66,7 +66,7 @@ export async function LocationContact({ standalone = false }: { standalone?: boo
               <ButtonText icon={Calendar}>Termin anfragen</ButtonText>
             </Link>
             <Link className="actionLink" href="/rezept-upload">
-              <ButtonText icon={Upload}>Rezept vorab einreichen</ButtonText>
+              <ButtonText icon={Upload}>Dokument-Hinweis vorbereiten</ButtonText>
             </Link>
           </View>
         </View>

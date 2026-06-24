@@ -2,8 +2,9 @@ import seedContent from "../../../cms/mock-content/public-content.seed.json";
 import type { Route } from "@frontend/lib/types";
 import { verifiedContact } from "../verifiedContact";
 import { getRouteMetadata } from "./metadata";
+import { getSiteUrl } from "./siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sanipep.de";
+const siteUrl = getSiteUrl();
 
 const localBusiness = {
   "@type": "LocalBusiness",

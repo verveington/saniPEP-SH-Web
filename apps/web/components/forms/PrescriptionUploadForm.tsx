@@ -18,7 +18,7 @@ import { ButtonText, FieldError, FormStep, IconBox, RequestReceipt, inputA11y } 
 import { SecuritySidePanel } from "../SecuritySidePanel";
 import { trackPublicConversion } from "./trackPublicConversion";
 
-const defaultUploadLabel = "Noch keine Datei ausgewählt";
+const defaultUploadLabel = "Noch keine Datei lokal markiert";
 type UploadField = "context" | "fileName" | "consentScopes" | "contactName" | "contactEmail" | "contactPhone";
 
 export function PrescriptionUploadForm() {
@@ -117,10 +117,10 @@ export function PrescriptionUploadForm() {
       <div className="sectionInner gridTwo">
         <View direction="column" gap={5}>
           <Text as="h1" variant="featured-1" weight="semibold">
-            Rezept vorab einreichen
+            Rezept-/Dokument-Hinweis vorbereiten
           </Text>
           <Text color="neutral-faded">
-            Aktuell wird keine Datei an saniPEP übertragen. Die Auswahl bleibt lokal im Browser und dient nur der Vorprüfung von Dateityp, Größe und Einwilligung.
+            Aktuell wird keine Datei an saniPEP übertragen. Die lokale Markierung dient nur dazu, Dateityp, Größe und Einwilligung als Anfrage-Metadaten zu prüfen.
           </Text>
           <div className="formPanel">
             <View direction="column" gap={5} padding={6}>
@@ -138,7 +138,7 @@ export function PrescriptionUploadForm() {
                   <FieldError id="context-error" error={visibleErrors.context} />
                 </label>
               </FormStep>
-              <FormStep number={2} title="Rezept auswählen" copy={`Nur lokale Vorprüfung, keine Dateiübertragung. Zugelassen: ${prescriptionUploadPolicy.acceptedFileTypes.join(", ")} bis ${prescriptionUploadPolicy.maxFileSizeMb} MB.`}>
+              <FormStep number={2} title="Lokale Datei markieren" copy={`Nur lokale Vorprüfung, keine Dateiübertragung. Zugelassen: ${prescriptionUploadPolicy.acceptedFileTypes.join(", ")} bis ${prescriptionUploadPolicy.maxFileSizeMb} MB.`}>
                 <FileUpload
                   name="prescription"
                   onChange={({ value }) => {
@@ -155,9 +155,9 @@ export function PrescriptionUploadForm() {
                     <div className="uploadDrop" style={{ background: highlighted ? "var(--sani-brand-soft)" : "var(--sani-page)" }}>
                       <View direction="column" gap={2} align="center">
                         <IconBox icon={Upload} />
-                        <Text weight="semibold">Datei lokal auswählen</Text>
+                        <Text weight="semibold">Datei bleibt lokal im Browser</Text>
                         <Text variant="body-2" color="neutral-faded">
-                          {selectedFile ? selectedFile.name : "Noch keine Datei lokal ausgewählt"}
+                          {selectedFile ? selectedFile.name : "Noch keine Datei lokal markiert"}
                         </Text>
                       </View>
                     </div>
@@ -203,7 +203,7 @@ export function PrescriptionUploadForm() {
               <div className="privacyNote">
                 <SharedIconBox name="symbols/health_data_security" />
                 <Text variant="body-2">
-                  Upload bleibt blockiert. Übertragen werden nur Anfrage- und Dateimetadaten; vor Produktion erforderlich: {uploadServerSecurityBoundary.requiredServerChecks.join(", ")}.
+                  Dateiübertragung bleibt blockiert. Gesendet werden nur Anfrage- und Dateimetadaten; vor Produktion erforderlich: {uploadServerSecurityBoundary.requiredServerChecks.join(", ")}.
                 </Text>
               </div>
               <Button color="primary" onClick={submit} disabled={!validation.valid || isSubmitting}>
@@ -215,7 +215,7 @@ export function PrescriptionUploadForm() {
                 <div className="safeRow" role="status" aria-live="polite">
                   <Text weight="semibold">Keine Datei übertragen</Text>
                   <Text variant="body-2" color="neutral-faded">
-                    Produktiver Datei-Upload bleibt gesperrt. Die Anfrage enthält nur Metadaten und wartet auf Mitarbeiterprüfung.
+                    Produktive Dateiübertragung bleibt gesperrt. Die Anfrage enthält nur Metadaten und wartet auf Mitarbeiterprüfung.
                   </Text>
                 </div>
               )}

@@ -1,4 +1,5 @@
 export type StaffStatus = "new" | "in_review" | "waiting_for_customer" | "completed" | "cancelled";
+export type StaffRole = "staff" | "admin";
 
 export type StaffSessionResponse = {
   authenticated: true;
@@ -10,13 +11,28 @@ export type StaffSessionResponse = {
     issuedAt: string;
     idleExpiresAt: string;
     absoluteExpiresAt: string;
-    role: "staff" | "admin";
+    role: StaffRole;
   };
   profile: {
     staffUserId?: string;
     safeDisplayName: string;
     email: string;
   };
+};
+
+export type StaffUser = {
+  userId: string;
+  staffUserId?: string;
+  email: string;
+  role: StaffRole;
+  status: "active" | "disabled";
+  safeDisplayName: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+  passwordChangedAt?: string;
+  disabledAt?: string;
 };
 
 export type StaffMvpBoundary = {
@@ -76,6 +92,35 @@ export type StaffAuditEvent = {
   metadata: Record<string, string | number | boolean>;
 };
 
+export type StaffRequestMessage = {
+  id: string;
+  requestId: string;
+  channel: "email";
+  direction: "outbound";
+  status: "sent" | "failed";
+  to: string;
+  fromAddress: string;
+  fromName: string;
+  subject: string;
+  body: string;
+  errorCode?: string;
+  createdAt: string;
+  sentAt?: string;
+  failedAt?: string;
+  actorUserId: string;
+  actorStaffUserId?: string;
+};
+
+export type StaffMailConfig = {
+  enabled: boolean;
+  configured: boolean;
+  fromAddress: string;
+  fromName: string;
+  recipientAvailable: boolean;
+  disabledReason?: "mail_disabled" | "smtp_not_configured" | "recipient_email_missing";
+  defaultSubject: string;
+};
+
 export type StaffRequestDetail = StaffRequestListItem & {
   publicRequest?: {
     requestType: "appointment" | "contact" | "care" | "document";
@@ -103,6 +148,8 @@ export type StaffRequestDetail = StaffRequestListItem & {
     };
   };
   request: PortalRequestDto;
+  communication: StaffRequestMessage[];
+  mail: StaffMailConfig;
   auditEvents: StaffAuditEvent[];
 };
 
@@ -163,6 +210,65 @@ export const staffAdminApi = {
       method: "PATCH",
       csrfToken,
       body: JSON.stringify({ status: input.status }),
+    });
+  },
+
+  async listUsers() {
+    return request<{ users: StaffUser[] }>("/api/staff/users");
+  },
+
+  async createUser(input: { email: string; safeDisplayName: string; role: StaffRole }, csrfToken: string) {
+    return request<{ user: StaffUser; temporaryPassword: string }>("/api/staff/users", {
+      method: "POST",
+      csrfToken,
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updateUser(input: { userId: string; email: string; safeDisplayName: string; role: StaffRole; status: StaffUser["status"] }, csrfToken: string) {
+    return request<{ user: StaffUser }>(`/api/staff/users/${encodeURIComponent(input.userId)}`, {
+      method: "PATCH",
+      csrfToken,
+      body: JSON.stringify({
+        email: input.email,
+        safeDisplayName: input.safeDisplayName,
+        role: input.role,
+        status: input.status,
+      }),
+    });
+  },
+
+  async resetUserPassword(userId: string, csrfToken: string) {
+    return request<{ user: StaffUser; temporaryPassword: string }>(`/api/staff/users/${encodeURIComponent(userId)}/password-reset`, {
+      method: "POST",
+      csrfToken,
+    });
+  },
+
+  async deactivateUser(userId: string, csrfToken: string) {
+    return request<{ user: StaffUser }>(`/api/staff/users/${encodeURIComponent(userId)}/deactivate`, {
+      method: "POST",
+      csrfToken,
+    });
+  },
+
+  async changeOwnPassword(input: { oldPassword: string; newPassword: string }, csrfToken: string) {
+    return request<{ passwordChangedAt: string; sessionsInvalidated: boolean }>("/api/staff/me/password", {
+      method: "POST",
+      csrfToken,
+      body: JSON.stringify(input),
+    });
+  },
+
+  async sendEmailReply(input: { requestId: string; subject: string; body: string }, csrfToken: string) {
+    return request<{ message: StaffRequestMessage; request: StaffRequestDetail }>(`/api/staff/requests/${encodeURIComponent(input.requestId)}/messages/email`, {
+      method: "POST",
+      csrfToken,
+      body: JSON.stringify({
+        subject: input.subject,
+        body: input.body,
+        confirmSend: true,
+      }),
     });
   },
 };

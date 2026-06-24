@@ -193,6 +193,9 @@ assert(backendApp.includes("\"/api/portal/dashboard\""), "Backend must expose po
 assert(backendApp.includes("\"/api/portal/requests\""), "Backend must expose portal request creation endpoint");
 assert(backendApp.includes("\"/api/staff/requests\""), "Backend must expose staff/admin request list endpoint");
 assert(backendApp.includes("statusRoute") && backendApp.includes("PATCH"), "Backend must expose server-side staff status endpoint");
+assert(backendApp.includes("\"/api/staff/users\""), "Backend must expose admin staff-user management endpoint");
+assert(backendApp.includes("\"/api/staff/me/password\""), "Backend must expose staff password-change endpoint");
+assert(backendApp.includes("staffRequestEmailRoute"), "Backend must expose staff request email-reply endpoint");
 assert(backendApp.includes("metadata-only-no-file-content"), "Backend upload MVP must store metadata only");
 assert(backendApp.includes("\"document\""), "Backend public request API must accept document metadata requests");
 assert(backendApp.includes("metadata-only-no-file-transfer"), "Backend public document requests must remain metadata-only");
@@ -203,6 +206,9 @@ assert(backendApp.includes("portal-request-submitted"), "Backend must audit subm
 assert(backendApp.includes("portal-request-changed"), "Backend must audit changed portal requests");
 assert(backendApp.includes("portal-request-approved"), "Backend must audit approved portal requests");
 assert(backendApp.includes("portal-request-rejected"), "Backend must audit rejected portal requests");
+assert(backendApp.includes("staff-user-password-reset"), "Backend must audit admin password resets");
+assert(backendApp.includes("staff-password-changed"), "Backend must audit staff password changes");
+assert(backendApp.includes("staff-email-reply-sent"), "Backend must audit sent staff email replies");
 assert(backendApp.includes("requireRole"), "Backend must enforce server-side role checks");
 assert(backendApp.includes("portal-login-rate-limited"), "Backend must prepare route-specific login rate-limit auditing");
 assert(backendApp.includes("actorStaffUserId"), "Staff status audit metadata must carry staff actor context");
@@ -220,10 +226,15 @@ assert(adminUiSource.includes("staffAdminApi.login"), "Staff admin UI must login
 assert(adminUiSource.includes("staffAdminApi.listRequests"), "Staff admin UI must load request lists from the backend");
 assert(adminUiSource.includes("staffAdminApi.requestDetail"), "Staff admin UI must load request details from the backend");
 assert(adminUiSource.includes("staffAdminApi.updateStatus"), "Staff admin UI must update status through the backend");
+assert(adminUiSource.includes("staffAdminApi.createUser"), "Staff admin UI must create users through the backend");
+assert(adminUiSource.includes("staffAdminApi.changeOwnPassword"), "Staff admin UI must change own passwords through the backend");
+assert(adminUiSource.includes("staffAdminApi.sendEmailReply"), "Staff admin UI must send request replies through the backend");
 assert(adminUiSource.includes("credentials: \"include\""), "Staff admin API must use cookie credentials");
 assert(adminUiSource.includes("csrfToken"), "Staff admin UI must keep CSRF token in memory");
 assert(adminUiSource.includes("Request-Liste"), "Staff admin UI must render the request list");
 assert(adminUiSource.includes("Request-Details"), "Staff admin UI must render request details");
+assert(adminUiSource.includes("E-Mail-Versand nicht eingerichtet"), "Staff admin UI must show disabled mail state");
+assert(adminUiSource.includes("Temporaeres Passwort"), "Staff admin UI must show temporary passwords only in-session");
 assert(
   adminViteConfig.includes("\"/api\"") &&
   adminViteConfig.includes("PORTAL_BACKEND_PROXY_TARGET") &&

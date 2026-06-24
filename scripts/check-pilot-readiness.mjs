@@ -37,11 +37,13 @@ assert(env.portalRepositoryDriver === "postgres", "Controlled pilot must use Pos
 assert(env.uploadsEnabled === false, "Controlled pilot must keep uploads disabled");
 assert(env.avScannerMode === "stub-disabled", "Controlled pilot must keep AV disabled only because uploads are disabled");
 assert(env.omniaWriteMode === "read_only", "Controlled pilot must keep Omnia write mode read_only");
+assert(env.mailEnabled === false, "Controlled pilot must keep mail disabled unless SMTP is explicitly configured");
 assert(env.trustedOrigins.every((origin) => origin.startsWith("https://")), "Trusted origins must be HTTPS in production");
 
 await assertReadyzForMetadataOnlyPilot(env);
 assertPlaceholderProductionEnvIsRejected();
 assertUploadProductionEnvStaysStrict();
+assertMailEnvStaysStrict();
 assertRepoInvariants();
 
 console.log("Controlled pilot readiness check passed");
@@ -50,6 +52,7 @@ console.log(JSON.stringify({
   repository: env.portalRepositoryDriver,
   uploadsEnabled: env.uploadsEnabled,
   omniaWriteMode: env.omniaWriteMode,
+  mailEnabled: env.mailEnabled,
   readiness: "metadata-only-pilot-ready",
 }, null, 2));
 
@@ -98,6 +101,37 @@ function assertUploadProductionEnvStaysStrict() {
   assertThrowsEnv(withUploadsEnabled, "AV_SCANNER_MODE=stub-disabled");
 }
 
+function assertMailEnvStaysStrict() {
+  const withMailEnabledMissingSmtp = {
+    ...productionPilotEnv,
+    MAIL_ENABLED: "true",
+  };
+  assertThrowsEnv(withMailEnabledMissingSmtp, "SMTP_HOST");
+
+  const withMailPlaceholder = {
+    ...productionPilotEnv,
+    MAIL_ENABLED: "true",
+    MAIL_FROM_ADDRESS: "sani@sanipep.de",
+    SMTP_HOST: "replace-with-smtp-host",
+    SMTP_PORT: "587",
+    SMTP_USER: "replace-with-smtp-user",
+    SMTP_PASSWORD: "replace-with-smtp-password",
+  };
+  assertThrowsEnv(withMailPlaceholder, "MAIL_ENABLED=true");
+
+  const withMailEnabled = loadBackendEnv({
+    ...productionPilotEnv,
+    MAIL_ENABLED: "true",
+    MAIL_FROM_ADDRESS: "sani@sanipep.de",
+    SMTP_HOST: "smtp.pilot.sanipep.local",
+    SMTP_PORT: "465",
+    SMTP_USER: "pilot-smtp-user",
+    SMTP_PASSWORD: "pilot-smtp-secret-32-characters-min",
+    SMTP_SECURE: "true",
+  });
+  assert(withMailEnabled.mailEnabled === true, "MAIL_ENABLED=true must be accepted with complete non-placeholder SMTP env");
+}
+
 function assertRepoInvariants() {
   const packageJson = read("package.json");
   const stagingExample = read(".env.staging.example");
@@ -111,6 +145,7 @@ function assertRepoInvariants() {
   const backupRestoreCheck = read("scripts/check-postgres-backup-restore.mjs");
   const publicRequestsCheck = read("scripts/check-public-requests.mjs");
   const staffMvpCheck = read("scripts/check-staff-admin-mvp.mjs");
+  const staffUserCheck = read("scripts/check-staff-admin-user-management.mjs");
 
   const gitIndex = fs.readFileSync(path.join(root, ".git/index"));
   const isTracked = (fileName) => gitIndex.includes(Buffer.from(`${fileName}\0`));
@@ -126,6 +161,7 @@ function assertRepoInvariants() {
   assert(packageJson.includes("check:postgres:backup-restore"), "package.json must expose check:postgres:backup-restore");
   assert(packageJson.includes("check:public-requests"), "package.json must expose check:public-requests");
   assert(packageJson.includes("check:staff-admin:mvp"), "package.json must expose check:staff-admin:mvp");
+  assert(packageJson.includes("check:staff-admin:users"), "package.json must expose check:staff-admin:users");
   assert(packageJson.includes("staff:provision"), "package.json must expose staff:provision");
 
   assert(stagingExample.includes("BACKEND_NODE_ENV=production"), "Public staging example must run backend in production mode");
@@ -146,6 +182,9 @@ function assertRepoInvariants() {
   assert(staffMvpCheck.includes("wrong-staff-password"), "Staff MVP check must verify wrong-password rejection");
   assert(staffMvpCheck.includes("invalid-csrf-token"), "Staff MVP check must verify CSRF rejection");
   assert(staffMvpCheck.includes("uploadObjectsCreated"), "Staff MVP check must report uploadObjectsCreated");
+  assert(staffUserCheck.includes("staff-user-password-reset"), "Staff user check must audit password resets");
+  assert(staffUserCheck.includes("mail_disabled"), "Staff user check must verify disabled mail");
+  assert(staffUserCheck.includes("uploadObjectsCreated"), "Staff user check must report uploadObjectsCreated");
   assert(staffProvisionScript.includes("NODE_ENV=production"), "Staff provision script must require production mode");
   assert(staffProvisionScript.includes("PORTAL_REPOSITORY_DRIVER=postgres"), "Staff provision script must require Postgres repository");
   assert(staffProvisionScript.includes("staff-user-provisioned"), "Staff provision script must write an audit event");

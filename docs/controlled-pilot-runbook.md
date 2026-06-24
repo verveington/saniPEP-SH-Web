@@ -1,6 +1,6 @@
 # Controlled Pilot Runbook
 
-Stand: 2026-06-23
+Stand: 2026-06-24
 
 ## Pilot-Scope
 
@@ -8,7 +8,7 @@ Der kontrollierte Pilot umfasst nur:
 
 - Public Website mit Anfrageformularen
 - Public Requests als metadata-only Requests
-- Staff Admin fuer interne Sichtung, Statuswechsel und Audit
+- Staff Admin fuer interne Sichtung, Statuswechsel, Audit, Staff-User-Management, Passwortverwaltung und kontrollierte E-Mail-Antworten
 - Backend mit Postgres Repository, Redis Sessions/Rate Limit und Readiness Checks
 
 Nicht Teil des Pilotbetriebs:
@@ -17,6 +17,7 @@ Nicht Teil des Pilotbetriebs:
 - Kundenportal/Self-Service
 - CMS als produktive Pflegeoberflaeche
 - Omnia-Schreibintegration
+- E-Mail-Anhaenge oder Versand medizinischer Dokumente
 - vollstaendige Production-Freigabe fuer Gesundheitsdaten mit Dateiinhalt
 
 ## Harte Grenzen
@@ -26,7 +27,8 @@ Nicht Teil des Pilotbetriebs:
 | Uploads | No-Go | `UPLOADS_ENABLED=false`, Public Document Requests bleiben `metadata-only-no-file-transfer`, `uploadObjectsCreated=0` |
 | Kundenportal | No-Go | `/portal/login` bleibt noindex-Hinweisseite, kein Self-Service |
 | Omnia Writes | No-Go | `OMNIA_WRITE_MODE=read_only`, keine Backend-Schreibpfade |
-| Staff Admin | Go intern | Nur hinter Auth/Rolle, Staff-spezifische Session, CSRF, noindex |
+| Staff Admin | Go intern | Nur hinter Auth/Rolle, Staff-spezifische Session, CSRF, noindex, Admin-Aktionen auditieren |
+| E-Mail-Antworten | Go nur konfiguriert | Default `MAIL_ENABLED=false`, kein Versand ohne SMTP-Env, keine Anhaenge |
 | Public Requests | Go Pilot | Staff Review Pflicht, keine Upload-Objekte, keine Dateinamen |
 
 ## Repo-Gate Vor Pilotstart
@@ -38,6 +40,7 @@ npm run check:backend:migrations
 npm run check:backend
 npm run check:public-requests
 npm run check:staff-admin:mvp
+npm run check:staff-admin:users
 npm run check:pilot:readiness
 npm run check:architecture
 npm run check:flows
@@ -78,12 +81,28 @@ BACKEND_NODE_ENV=production
 PORTAL_REPOSITORY_DRIVER=postgres
 UPLOADS_ENABLED=false
 OMNIA_WRITE_MODE=read_only
+MAIL_ENABLED=false
 TRUSTED_ORIGINS=https://<owned-web-host>,https://<owned-staff-host>
 PORTAL_BACKEND_BASE_URL=https://<owned-api-host>
 VITE_PORTAL_BACKEND_URL=https://<owned-api-host>
 ```
 
 `VITE_PORTAL_BACKEND_URL` wird in das Staff-Admin-Bundle eingebettet. Nach jeder Aenderung muss `staff-admin` neu gebaut werden.
+
+Mail bleibt aus, solange `MAIL_ENABLED=false` gesetzt ist. Fuer aktivierten Mail-Versand muessen die SMTP-Werte aus dem Secret Store kommen:
+
+```dotenv
+MAIL_ENABLED=true
+MAIL_FROM_ADDRESS=sani@sanipep.de
+MAIL_FROM_NAME=saniPEP Sanitaetshaus
+SMTP_HOST=<smtp-host>
+SMTP_PORT=<smtp-port>
+SMTP_USER=<smtp-user>
+SMTP_PASSWORD=<smtp-secret>
+SMTP_SECURE=<true-oder-false>
+```
+
+Bei aktiviertem Mail-Versand duerfen keine Placeholder-Werte verwendet werden. Antworten sind einfache Textantworten ohne Anhang und werden einem Request-Verlauf zugeordnet.
 
 Env-Datei ohne Secret-Ausgabe pruefen:
 
@@ -180,6 +199,14 @@ Das Script:
 
 Fuer echten Produktivbetrieb ersetzt das kein finales IAM/RBAC. Es ist nur ein kontrollierter Pilotpfad, bis SSO/MFA, On-/Offboarding und Rollenmatrix freigegeben sind.
 
+## Staff-Admin Verwaltung Im Pilot
+
+Admins koennen Staff-Zugaenge im Staff Admin anlegen, Anzeigenamen und E-Mail/Login-Namen bearbeiten, Rollen `staff` oder `admin` setzen, Passwoerter zuruecksetzen und Benutzer deaktivieren. Temporaere Passwoerter werden nur einmalig in der laufenden Sitzung angezeigt und nicht gespeichert.
+
+Alle Staff-Benutzer koennen ihr eigenes Passwort aendern. Das alte Passwort ist erforderlich, schwache neue Passwoerter werden abgelehnt. Eigene Passwortwechsel invalidieren bestehende Sessions im Pilot nicht automatisch; Admin-Passwortreset und Deaktivierung beenden bestehende Sessions des betroffenen Benutzers.
+
+E-Mail-Antworten aus Request-Details sind nur bei `MAIL_ENABLED=true` und vollstaendiger SMTP-Konfiguration moeglich. Bei `MAIL_ENABLED=false` zeigt die UI "E-Mail-Versand nicht eingerichtet" und das Backend blockiert Versandversuche.
+
 ## Betriebs-Gate
 
 Vor Pilotstart muessen ausserhalb des Repos bestaetigt sein:
@@ -213,6 +240,9 @@ Pilot stoppen, wenn einer der Punkte eintritt:
 - Upload-Objekte oder Dateinamen werden erzeugt
 - `OMNIA_WRITE_MODE` ist nicht `read_only`
 - Staff Admin ist oeffentlich indexierbar oder ohne Auth erreichbar
+- Admin-, Passwort- oder E-Mail-Aktionen bleiben ohne Audit Event
+- temporaere Passwoerter werden gespeichert, geloggt oder in Nachweise kopiert
+- E-Mail-Versand erfolgt ohne explizite Staff-Bestaetigung oder mit Anhang
 - `/readyz` meldet required Dependency `failed` oder `not_configured`
 - Postgres-Migrationen sind nicht reproduzierbar/idempotent
 - Audit Events fehlen bei Request-Erstellung oder Statuswechsel
@@ -223,6 +253,8 @@ Pilot stoppen, wenn einer der Punkte eintritt:
 | --- | --- |
 | Public Requests metadata-only | Go, wenn alle Repo- und Betriebs-Gates gruen sind |
 | Staff Admin intern | Go, wenn IAM/RBAC fuer Pilotgruppe freigegeben ist |
+| Staff User Management | Go intern, wenn Admin-Prozess und Audit geprueft sind |
+| E-Mail-Antworten | Go intern nur mit vollstaendig konfiguriertem SMTP; sonst bewusst disabled |
 | Public Website | Go, wenn Rechtstexte und Inhalte final fuer Pilot freigegeben sind |
 | Uploads | No-Go |
 | Kundenportal | No-Go |

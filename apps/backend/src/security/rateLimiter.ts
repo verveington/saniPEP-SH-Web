@@ -5,6 +5,7 @@ export type RateLimitScope =
   | "login"
   | "otp_activation"
   | "password_reset"
+  | "staff_password_change"
   | "upload_session"
   | "public_form";
 

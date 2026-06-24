@@ -19,6 +19,30 @@ export type PortalUserRecord = {
   customerProfileId?: string;
   staffUserId?: string;
   safeDisplayName: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+  passwordChangedAt?: string;
+  disabledAt?: string;
+};
+
+export type StoredRequestMessage = {
+  id: string;
+  requestId: string;
+  channel: "email";
+  direction: "outbound";
+  status: "sent" | "failed";
+  to: string;
+  fromAddress: string;
+  fromName: string;
+  subject: string;
+  body: string;
+  errorCode?: string;
+  createdAt: string;
+  sentAt?: string;
+  failedAt?: string;
+  actorUserId: string;
+  actorStaffUserId?: string;
 };
 
 export type StoredUploadObject = {
@@ -119,6 +143,7 @@ export type StoredPortalRequest = {
   contactWish?: StoredContactWish;
   publicRequest?: StoredPublicRequestDetails;
   auditIds: string[];
+  communication: StoredRequestMessage[];
   submittedAt?: string;
   reviewedByStaffUserId?: string;
   reviewedAt?: string;
@@ -138,9 +163,12 @@ export type PortalMvpStoreData = {
 export type PortalMvpRepository = {
   findUserByEmail(email: string): Promise<PortalUserRecord | null>;
   findUserById(userId: string): Promise<PortalUserRecord | null>;
+  listStaffUsers(): Promise<PortalUserRecord[]>;
+  saveUser(user: PortalUserRecord): Promise<void>;
   saveSession(record: PortalSessionRecord): Promise<void>;
   findSessionByTokenHash(tokenHash: string): Promise<PortalSessionRecord | null>;
   deleteSession(tokenHash: string): Promise<void>;
+  deleteSessionsForUser(userId: string): Promise<void>;
   listAllRequests(): Promise<StoredPortalRequest[]>;
   listRequestsForCustomer(customerProfileId: string): Promise<StoredPortalRequest[]>;
   listRequestsForStaff(input?: { status?: StaffRequestStatus; limit?: number }): Promise<StoredPortalRequest[]>;
@@ -185,6 +213,28 @@ export function createFilePortalMvpRepository(
       return data.users.find((user) => user.userId === userId) ?? null;
     },
 
+    async listStaffUsers() {
+      const data = await readStore(filePath, developmentUsers);
+      return data.users
+        .filter((user) => user.role === "staff" || user.role === "admin")
+        .sort((a, b) => a.email.localeCompare(b.email));
+    },
+
+    async saveUser(user) {
+      await withStore((data) => {
+        const existingByEmail = data.users.find(
+          (item) => item.email.toLowerCase() === user.email.toLowerCase() && item.userId !== user.userId,
+        );
+        if (existingByEmail) throw new Error(`Portal user email ${user.email} already exists.`);
+        const existingIndex = data.users.findIndex((item) => item.userId === user.userId);
+        if (existingIndex >= 0) {
+          data.users[existingIndex] = user;
+          return;
+        }
+        data.users.push(user);
+      });
+    },
+
     async saveSession(record) {
       await withStore((data) => {
         data.sessions = [
@@ -202,6 +252,12 @@ export function createFilePortalMvpRepository(
     async deleteSession(tokenHash) {
       await withStore((data) => {
         data.sessions = data.sessions.filter((record) => record.session.tokenHash !== tokenHash);
+      });
+    },
+
+    async deleteSessionsForUser(userId) {
+      await withStore((data) => {
+        data.sessions = data.sessions.filter((record) => record.session.userId !== userId);
       });
     },
 

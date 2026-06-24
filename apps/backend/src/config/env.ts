@@ -58,6 +58,14 @@ export type BackendEnv = {
   auditLogSink: "database" | "worm" | "siem" | "hybrid";
   auditLogHashSecret: string;
   auditLogRetentionDays: number;
+  mailEnabled: boolean;
+  mailFromAddress: string;
+  mailFromName: string;
+  smtpHost?: string;
+  smtpPort: number;
+  smtpUser?: string;
+  smtpPassword?: string;
+  smtpSecure: boolean;
   omniaApiBaseUrl?: string;
   omniaClientId?: string;
   omniaClientSecret?: string;
@@ -100,6 +108,11 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
       errors.push(`${name} must not contain placeholder values in production.`);
     }
   };
+  const rejectPlaceholderWhenMailEnabled = (name: string, value: string | undefined) => {
+    if (value && isPlaceholderValue(value)) {
+      errors.push(`${name} must not contain placeholder values when MAIL_ENABLED=true.`);
+    }
+  };
 
   requireInProduction("PORTAL_DATABASE_URL", source.PORTAL_DATABASE_URL);
   requireInProduction("REDIS_URL", source.REDIS_URL);
@@ -135,6 +148,21 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     developmentWarnings.push("PORTAL_REPOSITORY_DRIVER=file is development-only and blocked in production.");
   }
   const developmentUsers = readDevelopmentUsers(source, production, errors, developmentWarnings);
+  const mailEnabled = readBoolean(source.MAIL_ENABLED, false);
+  const mailFromAddress = source.MAIL_FROM_ADDRESS || "sani@sanipep.de";
+  const mailFromName = source.MAIL_FROM_NAME || "saniPEP Sanitätshaus";
+  if (mailEnabled) {
+    for (const name of ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD"]) {
+      if (!source[name]) errors.push(`${name} is required when MAIL_ENABLED=true.`);
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailFromAddress)) {
+      errors.push("MAIL_FROM_ADDRESS must be a valid email address when MAIL_ENABLED=true.");
+    }
+    rejectPlaceholderWhenMailEnabled("MAIL_FROM_ADDRESS", mailFromAddress);
+    rejectPlaceholderWhenMailEnabled("SMTP_HOST", source.SMTP_HOST);
+    rejectPlaceholderWhenMailEnabled("SMTP_USER", source.SMTP_USER);
+    rejectPlaceholderWhenMailEnabled("SMTP_PASSWORD", source.SMTP_PASSWORD);
+  }
 
   const trustedOrigins = readCsv(source.TRUSTED_ORIGINS);
   rejectPlaceholderInProduction("TRUSTED_ORIGINS", source.TRUSTED_ORIGINS);
@@ -206,6 +234,14 @@ export function loadBackendEnv(source: NodeJS.ProcessEnv = process.env): Backend
     auditLogSink: readEnum(source.AUDIT_LOG_SINK, "AUDIT_LOG_SINK", ["database", "worm", "siem", "hybrid"] as const, "database"),
     auditLogHashSecret: readSecret("AUDIT_LOG_HASH_SECRET"),
     auditLogRetentionDays: readInt(source.AUDIT_LOG_RETENTION_DAYS, "AUDIT_LOG_RETENTION_DAYS", 2555, 30, 36500),
+    mailEnabled,
+    mailFromAddress,
+    mailFromName,
+    smtpHost: source.SMTP_HOST || undefined,
+    smtpPort: readInt(source.SMTP_PORT, "SMTP_PORT", 587, 1, 65535),
+    smtpUser: source.SMTP_USER || undefined,
+    smtpPassword: source.SMTP_PASSWORD || undefined,
+    smtpSecure: readBoolean(source.SMTP_SECURE, false),
     omniaApiBaseUrl: source.OMNIA_API_BASE_URL || undefined,
     omniaClientId: source.OMNIA_CLIENT_ID || undefined,
     omniaClientSecret: source.OMNIA_CLIENT_SECRET || undefined,

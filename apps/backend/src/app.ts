@@ -1,4 +1,4 @@
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import type { IncomingHttpHeaders, IncomingMessage, ServerResponse } from "node:http";
 import { createAuditEvent } from "./audit/auditEvent.js";
 import type { AuditEvent } from "./audit/models.js";
@@ -6,6 +6,7 @@ import type { Session } from "./auth/models.js";
 import { createSession, hashToken, isSessionActive } from "./auth/sessions.js";
 import type { BackendEnv } from "./config/env.js";
 import { createPostgresPool, createPostgresQueryLayer, verifyPostgresConnection } from "./db/postgres.js";
+import { createSmtpMailSender, type MailSender } from "./mail/smtp.js";
 import type { PortalRequestKind, PortalRequestSensitivity, PortalRequestStatus } from "./portalRequests/models.js";
 import { createPostgresPortalMvpRepository } from "./repositories/postgresPortalMvpRepository.js";
 import {
@@ -19,6 +20,7 @@ import {
   type StoredContactWish,
   type StoredPortalRequest,
   type StoredPublicRequestDetails,
+  type StoredRequestMessage,
   type StoredReorderWish,
   type StoredSubscriptionWish,
 } from "./repositories/portalMvpRepository.js";
@@ -30,6 +32,7 @@ import type { AuthenticatedActor, UserRole } from "./users/models.js";
 export type BackendRequestHandlerDependencies = {
   rateLimiter?: RateLimiter;
   repository?: PortalMvpRepository;
+  mailSender?: MailSender;
   readinessChecks?: BackendReadinessChecks;
 };
 
@@ -156,6 +159,7 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
     ? createPostgresPool(env)
     : undefined;
   const repository = dependencies.repository ?? createDefaultPortalMvpRepository(env, defaultPostgresPool);
+  const mailSender = dependencies.mailSender ?? createSmtpMailSender(env);
   const readinessChecks: BackendReadinessChecks = {
     ...dependencies.readinessChecks,
     database: dependencies.readinessChecks?.database ?? (defaultPostgresPool ? () => verifyPostgresConnection(defaultPostgresPool) : undefined),
@@ -259,6 +263,72 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
         return;
       }
 
+      if (request.method === "GET" && url.pathname === "/api/staff/users") {
+        const auth = await requireRole(request, response, env, repository, ["admin"]);
+        if (!auth) return;
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, {
+          users: (await repository.listStaffUsers()).map(toStaffUserDto),
+        });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/staff/users") {
+        const auth = await requireRole(request, response, env, repository, ["admin"]);
+        if (!auth) return;
+        if (!checkSessionCsrf(request, response, trustedOrigins, auth)) return;
+        const body = assertObject(await readJsonBody<unknown>(request));
+        const result = await createStaffUser(body, auth, env, repository);
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 201, result);
+        return;
+      }
+
+      const staffUserRoute = url.pathname.match(/^\/api\/staff\/users\/([^/]+)$/);
+      if (request.method === "PATCH" && staffUserRoute?.[1]) {
+        const auth = await requireRole(request, response, env, repository, ["admin"]);
+        if (!auth) return;
+        if (!checkSessionCsrf(request, response, trustedOrigins, auth)) return;
+        const body = assertObject(await readJsonBody<unknown>(request));
+        const user = await updateStaffUser(staffUserRoute[1], body, auth, env, repository);
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, { user: toStaffUserDto(user) });
+        return;
+      }
+
+      const staffUserPasswordResetRoute = url.pathname.match(/^\/api\/staff\/users\/([^/]+)\/password-reset$/);
+      if (request.method === "POST" && staffUserPasswordResetRoute?.[1]) {
+        const auth = await requireRole(request, response, env, repository, ["admin"]);
+        if (!auth) return;
+        if (!checkSessionCsrf(request, response, trustedOrigins, auth)) return;
+        const result = await resetStaffUserPassword(staffUserPasswordResetRoute[1], auth, request, response, env, repository, rateLimiter);
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, result);
+        return;
+      }
+
+      const staffUserDeactivateRoute = url.pathname.match(/^\/api\/staff\/users\/([^/]+)\/deactivate$/);
+      if (request.method === "POST" && staffUserDeactivateRoute?.[1]) {
+        const auth = await requireRole(request, response, env, repository, ["admin"]);
+        if (!auth) return;
+        if (!checkSessionCsrf(request, response, trustedOrigins, auth)) return;
+        const user = await deactivateStaffUser(staffUserDeactivateRoute[1], auth, env, repository);
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, { user: toStaffUserDto(user) });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/api/staff/me/password") {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        if (!checkSessionCsrf(request, response, trustedOrigins, auth)) return;
+        const body = assertObject(await readJsonBody<unknown>(request));
+        const result = await changeOwnStaffPassword(body, auth, request, response, env, repository, rateLimiter);
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, result);
+        return;
+      }
+
       if (request.method === "GET" && url.pathname === "/api/portal/dashboard") {
         const auth = await requireRole(request, response, env, repository, ["customer"]);
         if (!auth) return;
@@ -320,7 +390,39 @@ export function createBackendRequestHandler(env: BackendEnv, dependencies: Backe
         setStaffMvpBoundaryHeader(response);
         writeJson(response, 200, {
           mvpBoundary: staffMvpBoundary,
-          request: toStaffRequestDetailDto(portalRequest, auditEvents),
+          request: toStaffRequestDetailDto(portalRequest, auditEvents, env),
+        });
+        return;
+      }
+
+      const staffRequestMessagesRoute = url.pathname.match(/^\/api\/staff\/requests\/([^/]+)\/messages$/);
+      if (request.method === "GET" && staffRequestMessagesRoute?.[1]) {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        const portalRequest = await repository.getRequestById(staffRequestMessagesRoute[1]);
+        if (!portalRequest) throw new SafeHttpError(404, "portal_request_not_found");
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, 200, {
+          messages: (portalRequest.communication ?? []).map(toStaffRequestMessageDto),
+          mail: buildMailConfigDto(env, portalRequest),
+        });
+        return;
+      }
+
+      const staffRequestEmailRoute = url.pathname.match(/^\/api\/staff\/requests\/([^/]+)\/messages\/email$/);
+      if (request.method === "POST" && staffRequestEmailRoute?.[1]) {
+        const auth = await requireRole(request, response, env, repository, ["staff", "admin"]);
+        if (!auth) return;
+        if (!checkSessionCsrf(request, response, trustedOrigins, auth)) return;
+        const body = assertObject(await readJsonBody<unknown>(request));
+        const result = await sendStaffEmailReply(staffRequestEmailRoute[1], body, auth, env, repository, mailSender);
+        setStaffMvpBoundaryHeader(response);
+        writeJson(response, result.statusCode, {
+          message: toStaffRequestMessageDto(result.message),
+          request: toStaffRequestDetailDto(result.request, await repository.listAuditEventsFor({
+            requestIds: [result.request.id],
+            limit: 30,
+          }), env),
         });
         return;
       }
@@ -563,6 +665,12 @@ async function handleLogin(
   });
   const sessionRecord = { session, rawCsrfToken };
   await repository.saveSession(sessionRecord);
+  const loggedInUser = {
+    ...user,
+    lastLoginAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  await repository.saveUser(loggedInUser);
 
   await appendAudit(repository, env, {
     actorUserId: user.userId,
@@ -584,8 +692,8 @@ async function handleLogin(
   response.setHeader("set-cookie", serializeSessionCookie(rawSessionToken, env, user.role !== "customer"));
   writeJson(response, 200, {
     ...buildSessionResponse({
-      actor: actorFromUser(user),
-      user,
+      actor: actorFromUser(loggedInUser),
+      user: loggedInUser,
       sessionRecord,
     }),
     ...(staffSurface ? { mvpBoundary: staffMvpBoundary } : {}),
@@ -709,6 +817,334 @@ function buildSessionResponse(auth: AuthenticatedSession) {
       email: auth.user.email,
     },
   };
+}
+
+function toStaffUserDto(user: PortalUserRecord) {
+  return {
+    userId: user.userId,
+    staffUserId: user.staffUserId,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    safeDisplayName: user.safeDisplayName,
+    active: user.status === "active",
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    lastLoginAt: user.lastLoginAt,
+    passwordChangedAt: user.passwordChangedAt,
+    disabledAt: user.disabledAt,
+  };
+}
+
+async function createStaffUser(
+  body: Record<string, unknown>,
+  auth: AuthenticatedSession,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+) {
+  const email = readEmailAddress(body.email, "email");
+  const existing = await repository.findUserByEmail(email);
+  if (existing) throw new SafeHttpError(409, "staff_user_email_exists");
+
+  const role = readStaffRole(body.role);
+  const safeDisplayName = readBoundedString(body.safeDisplayName, "safeDisplayName", 2, 120);
+  const temporaryPassword = generateTemporaryPassword();
+  const now = new Date().toISOString();
+  const user: PortalUserRecord = {
+    userId: `usr_staff_${randomUUID()}`,
+    email,
+    role,
+    status: "active",
+    passwordHashSha256: hashPasswordWithPepper(temporaryPassword, env.passwordPepper),
+    staffUserId: `staff_${randomUUID()}`,
+    safeDisplayName,
+    createdAt: now,
+    updatedAt: now,
+    passwordChangedAt: now,
+  };
+
+  await repository.saveUser(user);
+  await appendAudit(repository, env, {
+    actorUserId: auth.actor.userId,
+    actorRole: auth.actor.role,
+    action: "staff-user-created",
+    outcome: "accepted",
+    objectType: "portal_user",
+    objectId: user.userId,
+    metadata: {
+      targetUserId: user.userId,
+      targetRole: user.role,
+      targetStatus: user.status,
+      actorStaffUserId: auth.actor.staffUserId ?? "",
+      emailHash: hashEmail(email),
+    },
+  });
+
+  return {
+    user: toStaffUserDto(user),
+    temporaryPassword,
+  };
+}
+
+async function updateStaffUser(
+  userId: string,
+  body: Record<string, unknown>,
+  auth: AuthenticatedSession,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+) {
+  const existing = await readManagedStaffUser(userId, repository);
+  const email = body.email === undefined ? existing.email : readEmailAddress(body.email, "email");
+  const safeDisplayName = body.safeDisplayName === undefined
+    ? existing.safeDisplayName
+    : readBoundedString(body.safeDisplayName, "safeDisplayName", 2, 120);
+  const role = body.role === undefined ? existing.role : readStaffRole(body.role);
+  const status = body.status === undefined
+    ? existing.status
+    : readEnumValue(body.status, ["active", "disabled"] as const, "status");
+
+  if (status === "disabled" && existing.userId === auth.actor.userId) {
+    throw new SafeHttpError(409, "cannot_disable_own_user");
+  }
+  if (existing.userId === auth.actor.userId && role !== "admin") {
+    throw new SafeHttpError(409, "cannot_remove_own_admin_role");
+  }
+
+  if (email.toLowerCase() !== existing.email.toLowerCase()) {
+    const emailOwner = await repository.findUserByEmail(email);
+    if (emailOwner && emailOwner.userId !== existing.userId) throw new SafeHttpError(409, "staff_user_email_exists");
+  }
+
+  const now = new Date().toISOString();
+  const updated: PortalUserRecord = {
+    ...existing,
+    email,
+    role,
+    status,
+    safeDisplayName,
+    updatedAt: now,
+    disabledAt: status === "disabled" ? existing.disabledAt ?? now : undefined,
+  };
+
+  await repository.saveUser(updated);
+  if (updated.status === "disabled") await repository.deleteSessionsForUser(updated.userId);
+  await appendAudit(repository, env, {
+    actorUserId: auth.actor.userId,
+    actorRole: auth.actor.role,
+    action: "staff-user-updated",
+    outcome: "accepted",
+    objectType: "portal_user",
+    objectId: updated.userId,
+    metadata: {
+      targetUserId: updated.userId,
+      previousRole: existing.role,
+      nextRole: updated.role,
+      previousStatus: existing.status,
+      nextStatus: updated.status,
+      changedEmail: email.toLowerCase() !== existing.email.toLowerCase(),
+      changedDisplayName: safeDisplayName !== existing.safeDisplayName,
+      actorStaffUserId: auth.actor.staffUserId ?? "",
+      emailHash: hashEmail(email),
+    },
+  });
+  return updated;
+}
+
+async function resetStaffUserPassword(
+  userId: string,
+  auth: AuthenticatedSession,
+  request: IncomingMessage,
+  response: ServerResponse,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+  rateLimiter: RateLimiter,
+) {
+  const resetRateLimit = await rateLimiter.check({
+    scope: "password_reset",
+    subject: `${auth.actor.userId}:${userId}`,
+    ip: readClientIp(request),
+    windowSeconds: env.rateLimitLoginWindowSeconds,
+    limitCount: env.rateLimitLoginMaxAttempts,
+  });
+  response.setHeader("x-ratelimit-password-reset-limit", String(resetRateLimit.limitCount));
+  response.setHeader("x-ratelimit-password-reset-remaining", String(Math.max(resetRateLimit.limitCount - resetRateLimit.observedCount, 0)));
+  if (resetRateLimit.decision === "deny") {
+    await appendAudit(repository, env, {
+      actorUserId: auth.actor.userId,
+      actorRole: auth.actor.role,
+      action: "staff-user-password-reset-rate-limited",
+      outcome: "blocked",
+      objectType: "portal_user",
+      objectId: userId,
+      metadata: {
+        targetUserId: userId,
+        actorStaffUserId: auth.actor.staffUserId ?? "",
+      },
+    });
+    throw new SafeHttpError(429, "password_reset_rate_limit_exceeded");
+  }
+
+  const existing = await readManagedStaffUser(userId, repository);
+  if (existing.userId === auth.actor.userId) throw new SafeHttpError(409, "use_own_password_change");
+  const temporaryPassword = generateTemporaryPassword();
+  const now = new Date().toISOString();
+  const updated: PortalUserRecord = {
+    ...existing,
+    passwordHashSha256: hashPasswordWithPepper(temporaryPassword, env.passwordPepper),
+    passwordChangedAt: now,
+    updatedAt: now,
+  };
+
+  await repository.saveUser(updated);
+  await repository.deleteSessionsForUser(updated.userId);
+  await appendAudit(repository, env, {
+    actorUserId: auth.actor.userId,
+    actorRole: auth.actor.role,
+    action: "staff-user-password-reset",
+    outcome: "accepted",
+    objectType: "portal_user",
+    objectId: updated.userId,
+    metadata: {
+      targetUserId: updated.userId,
+      targetRole: updated.role,
+      actorStaffUserId: auth.actor.staffUserId ?? "",
+    },
+  });
+
+  return {
+    user: toStaffUserDto(updated),
+    temporaryPassword,
+  };
+}
+
+async function deactivateStaffUser(
+  userId: string,
+  auth: AuthenticatedSession,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+) {
+  const existing = await readManagedStaffUser(userId, repository);
+  if (existing.userId === auth.actor.userId) throw new SafeHttpError(409, "cannot_disable_own_user");
+  const now = new Date().toISOString();
+  const updated: PortalUserRecord = {
+    ...existing,
+    status: "disabled",
+    disabledAt: existing.disabledAt ?? now,
+    updatedAt: now,
+  };
+
+  await repository.saveUser(updated);
+  await repository.deleteSessionsForUser(updated.userId);
+  await appendAudit(repository, env, {
+    actorUserId: auth.actor.userId,
+    actorRole: auth.actor.role,
+    action: "staff-user-disabled",
+    outcome: "accepted",
+    objectType: "portal_user",
+    objectId: updated.userId,
+    metadata: {
+      targetUserId: updated.userId,
+      targetRole: updated.role,
+      actorStaffUserId: auth.actor.staffUserId ?? "",
+    },
+  });
+  return updated;
+}
+
+async function changeOwnStaffPassword(
+  body: Record<string, unknown>,
+  auth: AuthenticatedSession,
+  request: IncomingMessage,
+  response: ServerResponse,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+  rateLimiter: RateLimiter,
+) {
+  const passwordRateLimit = await rateLimiter.check({
+    scope: "staff_password_change",
+    subject: auth.actor.userId,
+    ip: readClientIp(request),
+    windowSeconds: env.rateLimitLoginWindowSeconds,
+    limitCount: env.rateLimitLoginMaxAttempts,
+  });
+  response.setHeader("x-ratelimit-password-limit", String(passwordRateLimit.limitCount));
+  response.setHeader("x-ratelimit-password-remaining", String(Math.max(passwordRateLimit.limitCount - passwordRateLimit.observedCount, 0)));
+  if (passwordRateLimit.decision === "deny") {
+    await appendAudit(repository, env, {
+      actorUserId: auth.actor.userId,
+      actorRole: auth.actor.role,
+      action: "staff-password-change-rate-limited",
+      outcome: "blocked",
+      objectType: "portal_user",
+      objectId: auth.actor.userId,
+    });
+    throw new SafeHttpError(429, "password_change_rate_limit_exceeded");
+  }
+
+  const oldPassword = readRequiredString(body.oldPassword, "oldPassword");
+  const newPassword = readRequiredString(body.newPassword, "newPassword");
+  if (!verifyPassword(auth.user, oldPassword, env.passwordPepper)) {
+    await appendAudit(repository, env, {
+      actorUserId: auth.actor.userId,
+      actorRole: auth.actor.role,
+      action: "staff-password-change-rejected",
+      outcome: "rejected",
+      objectType: "portal_user",
+      objectId: auth.actor.userId,
+      metadata: {
+        reason: "old_password_invalid",
+      },
+    });
+    throw new SafeHttpError(401, "old_password_invalid");
+  }
+
+  const weakReason = staffPasswordWeakReason(newPassword);
+  if (weakReason) {
+    await appendAudit(repository, env, {
+      actorUserId: auth.actor.userId,
+      actorRole: auth.actor.role,
+      action: "staff-password-change-rejected",
+      outcome: "blocked",
+      objectType: "portal_user",
+      objectId: auth.actor.userId,
+      metadata: {
+        reason: weakReason,
+      },
+    });
+    throw new SafeHttpError(400, "weak_password");
+  }
+
+  const now = new Date().toISOString();
+  const updated: PortalUserRecord = {
+    ...auth.user,
+    passwordHashSha256: hashPasswordWithPepper(newPassword, env.passwordPepper),
+    passwordChangedAt: now,
+    updatedAt: now,
+  };
+  await repository.saveUser(updated);
+  await appendAudit(repository, env, {
+    actorUserId: auth.actor.userId,
+    actorRole: auth.actor.role,
+    action: "staff-password-changed",
+    outcome: "accepted",
+    objectType: "portal_user",
+    objectId: auth.actor.userId,
+    metadata: {
+      actorStaffUserId: auth.actor.staffUserId ?? "",
+      sessionsInvalidated: false,
+    },
+  });
+
+  return {
+    passwordChangedAt: now,
+    sessionsInvalidated: false,
+  };
+}
+
+async function readManagedStaffUser(userId: string, repository: PortalMvpRepository) {
+  const user = await repository.findUserById(userId);
+  if (!user || (user.role !== "staff" && user.role !== "admin")) throw new SafeHttpError(404, "staff_user_not_found");
+  return user;
 }
 
 async function buildDashboardResponse(auth: AuthenticatedSession, repository: PortalMvpRepository) {
@@ -846,6 +1282,7 @@ async function createStoredPortalRequest(
     employeeStatus: initialStatus === "draft" ? "queued" : "queued",
     employeeStatusLabel: initialStatus === "draft" ? "Entwurf gespeichert" : employeeStatusLabels.queued,
     auditIds: [],
+    communication: [],
     submittedAt: initialStatus === "submitted" ? now : undefined,
     createdAt: now,
     updatedAt: now,
@@ -934,6 +1371,7 @@ async function createPublicRequest(
     employeeStatusLabel: employeeStatusLabels.new,
     publicRequest: parsed.details,
     auditIds: [],
+    communication: [],
     submittedAt: now,
     createdAt: now,
     updatedAt: now,
@@ -1238,6 +1676,119 @@ async function updateRequestStatus(
   return updated;
 }
 
+async function sendStaffEmailReply(
+  requestId: string,
+  body: Record<string, unknown>,
+  auth: AuthenticatedSession,
+  env: BackendEnv,
+  repository: PortalMvpRepository,
+  mailSender: MailSender,
+): Promise<{ statusCode: number; request: StoredPortalRequest; message: StoredRequestMessage }> {
+  if (body.confirmSend !== true) throw new SafeHttpError(400, "explicit_confirmation_required");
+  if ("attachments" in body) throw new SafeHttpError(400, "attachments_not_supported");
+  if (!mailSendingConfigured(env)) throw new SafeHttpError(503, "mail_not_configured");
+
+  const existing = await repository.getRequestById(requestId);
+  if (!existing) throw new SafeHttpError(404, "portal_request_not_found");
+  const recipient = existing.publicRequest?.contact.email;
+  if (!recipient) throw new SafeHttpError(400, "request_contact_email_missing");
+
+  const subject = body.subject === undefined
+    ? "Ihre Anfrage beim saniPEP Sanitätshaus"
+    : readBoundedString(body.subject, "subject", 5, 160);
+  const text = readBoundedString(body.body, "body", 10, 4000);
+  const now = new Date().toISOString();
+  const baseMessage = {
+    id: `msg_${randomUUID()}`,
+    requestId: existing.id,
+    channel: "email" as const,
+    direction: "outbound" as const,
+    to: recipient,
+    fromAddress: env.mailFromAddress,
+    fromName: env.mailFromName,
+    subject,
+    body: text,
+    createdAt: now,
+    actorUserId: auth.actor.userId,
+    actorStaffUserId: auth.actor.staffUserId,
+  };
+
+  try {
+    await mailSender.send({
+      to: recipient,
+      fromAddress: env.mailFromAddress,
+      fromName: env.mailFromName,
+      subject,
+      text,
+    });
+    const sentMessage: StoredRequestMessage = {
+      ...baseMessage,
+      status: "sent",
+      sentAt: new Date().toISOString(),
+    };
+    const audit = createPortalAudit(env, {
+      actorUserId: auth.actor.userId,
+      actorRole: auth.actor.role,
+      action: "staff-email-reply-sent",
+      outcome: "accepted",
+      objectType: "request_message",
+      objectId: sentMessage.id,
+      requestId: existing.id,
+      metadata: {
+        channel: "email",
+        deliveryStatus: sentMessage.status,
+        actorStaffUserId: auth.actor.staffUserId ?? "",
+        recipientHash: hashEmail(recipient),
+      },
+    });
+    const updated = appendRequestMessage(existing, sentMessage, audit);
+    await repository.appendAudit(audit);
+    await repository.updateRequest(updated);
+    return { statusCode: 200, request: updated, message: sentMessage };
+  } catch (error) {
+    const failedMessage: StoredRequestMessage = {
+      ...baseMessage,
+      status: "failed",
+      failedAt: new Date().toISOString(),
+      errorCode: mailErrorCode(error),
+    };
+    const audit = createPortalAudit(env, {
+      actorUserId: auth.actor.userId,
+      actorRole: auth.actor.role,
+      action: "staff-email-reply-failed",
+      outcome: "blocked",
+      objectType: "request_message",
+      objectId: failedMessage.id,
+      requestId: existing.id,
+      metadata: {
+        channel: "email",
+        deliveryStatus: failedMessage.status,
+        actorStaffUserId: auth.actor.staffUserId ?? "",
+        recipientHash: hashEmail(recipient),
+        errorCode: failedMessage.errorCode ?? "smtp_delivery_failed",
+      },
+    });
+    const updated = appendRequestMessage(existing, failedMessage, audit);
+    await repository.appendAudit(audit);
+    await repository.updateRequest(updated);
+    return { statusCode: 502, request: updated, message: failedMessage };
+  }
+}
+
+function appendRequestMessage(
+  existing: StoredPortalRequest,
+  message: StoredRequestMessage,
+  audit: AuditEvent,
+) {
+  const now = new Date().toISOString();
+  return {
+    ...existing,
+    communication: [...(existing.communication ?? []), message],
+    auditIds: [...existing.auditIds, audit.id],
+    updatedAt: now,
+  };
+}
+
 function buildRequestByKind(base: RequestBase, body: Record<string, unknown>, env: BackendEnv): StoredPortalRequest {
   if (base.kind === "prescription_upload") {
     const contextKey = readRequiredString(body.context, "context");
@@ -1438,13 +1989,60 @@ function toStaffRequestListDto(request: StoredPortalRequest) {
   };
 }
 
-function toStaffRequestDetailDto(request: StoredPortalRequest, auditEvents: AuditEvent[]) {
+function toStaffRequestDetailDto(request: StoredPortalRequest, auditEvents: AuditEvent[], env: BackendEnv) {
   return {
     ...toStaffRequestListDto(request),
     publicRequest: request.publicRequest,
     request: toRequestDto(request),
+    communication: (request.communication ?? []).map(toStaffRequestMessageDto),
+    mail: buildMailConfigDto(env, request),
     auditEvents: auditEvents.map(toAuditDto),
   };
+}
+
+function toStaffRequestMessageDto(message: StoredRequestMessage) {
+  return {
+    id: message.id,
+    requestId: message.requestId,
+    channel: message.channel,
+    direction: message.direction,
+    status: message.status,
+    to: message.to,
+    fromAddress: message.fromAddress,
+    fromName: message.fromName,
+    subject: message.subject,
+    body: message.body,
+    errorCode: message.errorCode,
+    createdAt: message.createdAt,
+    sentAt: message.sentAt,
+    failedAt: message.failedAt,
+    actorUserId: message.actorUserId,
+    actorStaffUserId: message.actorStaffUserId,
+  };
+}
+
+function buildMailConfigDto(env: BackendEnv, request: StoredPortalRequest) {
+  const recipientAvailable = Boolean(request.publicRequest?.contact.email);
+  const configured = mailSendingConfigured(env);
+  return {
+    enabled: env.mailEnabled,
+    configured,
+    fromAddress: env.mailFromAddress,
+    fromName: env.mailFromName,
+    recipientAvailable,
+    disabledReason: !env.mailEnabled
+      ? "mail_disabled"
+      : !configured
+        ? "smtp_not_configured"
+        : !recipientAvailable
+          ? "recipient_email_missing"
+          : undefined,
+    defaultSubject: "Ihre Anfrage beim saniPEP Sanitätshaus",
+  };
+}
+
+function mailSendingConfigured(env: BackendEnv) {
+  return Boolean(env.mailEnabled && env.smtpHost && env.smtpUser && env.smtpPassword);
 }
 
 function toAuditDto(event: AuditEvent) {
@@ -1468,8 +2066,21 @@ function verifyPassword(user: PortalUserRecord, password: string, pepper: string
   return safeHashEqual(user.passwordHashSha256, actual);
 }
 
+function generateTemporaryPassword() {
+  return `${randomBytes(18).toString("base64url")}Aa1!`;
+}
+
 function hashPasswordWithPepper(password: string, pepper: string) {
   return createHash("sha256").update(`${pepper}:${password}`).digest("hex");
+}
+
+function staffPasswordWeakReason(password: string) {
+  if (password.length < 16) return "password_too_short";
+  if (!/[a-z]/.test(password)) return "password_missing_lowercase";
+  if (!/[A-Z]/.test(password)) return "password_missing_uppercase";
+  if (!/[0-9]/.test(password)) return "password_missing_digit";
+  if (password.length > 256) return "password_too_long";
+  return undefined;
 }
 
 function safeHashEqual(expected: string, actual: string) {
@@ -1585,6 +2196,18 @@ function readRequiredString(value: unknown, field: string) {
   return value.trim();
 }
 
+function readEmailAddress(value: unknown, field: string) {
+  const email = readRequiredString(value, field).toLowerCase();
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new SafeHttpError(400, `invalid_${field}`);
+  }
+  return email;
+}
+
+function readStaffRole(value: unknown) {
+  return readEnumValue(value, ["staff", "admin"] as const, "role");
+}
+
 function readBoundedString(value: unknown, field: string, minLength: number, maxLength: number) {
   const normalized = normalizeWhitespace(readRequiredString(value, field));
   if (normalized.length < minLength || normalized.length > maxLength) throw new SafeHttpError(400, `invalid_${field}`);
@@ -1659,6 +2282,17 @@ function readClientIp(request: IncomingMessage) {
 
 function readSingleHeader(value: IncomingHttpHeaders[string]) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function hashEmail(email: string) {
+  return createHash("sha256").update(email.toLowerCase()).digest("hex");
+}
+
+function mailErrorCode(error: unknown) {
+  if (!(error instanceof Error)) return "smtp_delivery_failed";
+  if (/^smtp_unexpected_response_\d+$/.test(error.message)) return error.message;
+  if (error.message === "smtp_connection_closed" || error.message === "smtp_not_configured") return error.message;
+  return "smtp_delivery_failed";
 }
 
 function formatBytes(sizeBytes: number) {

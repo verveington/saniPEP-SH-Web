@@ -6,13 +6,18 @@ import {
   ClipboardList,
   Clock,
   FileText,
+  KeyRound,
   Lock,
   LogOut,
+  Mail,
   RefreshCw,
+  Send,
   Shield,
+  UserPlus,
+  Users,
   type LucideIcon,
 } from "lucide-react";
-import { Badge, Button, FormControl, Reshaped, Text, TextField, View } from "reshaped";
+import { Badge, Button, FormControl, Reshaped, Text, TextArea, TextField, View } from "reshaped";
 import "reshaped/bundle.css";
 import "reshaped/themes/slate/theme.css";
 import "../../frontend/src/styles/global.css";
@@ -23,11 +28,14 @@ import {
   StaffAdminApiError,
   staffAdminApi,
   type StaffAuditEvent,
+  type StaffRequestMessage,
   type StaffRequestDetail,
   type StaffRequestListItem,
   type StaffRequestsResponse,
   type StaffSessionResponse,
   type StaffStatus,
+  type StaffUser,
+  type StaffRole,
 } from "./api";
 
 installDesignTokens();
@@ -39,6 +47,12 @@ type Notice = {
 };
 
 type StatusFilter = StaffStatus | "all";
+
+type TemporaryPasswordNotice = {
+  email: string;
+  password: string;
+  reason: "created" | "reset";
+};
 
 const fallbackStatusModel: StaffRequestsResponse["statusModel"] = [
   { value: "new", label: "Neu" },
@@ -67,10 +81,20 @@ const statusHelpText: Record<StaffStatus, string> = {
   cancelled: "Abgebrochen; keine weitere Aktion im MVP vorgesehen.",
 };
 
+const replyTemplates: Record<string, string> = {
+  none: "",
+  appointment: "Guten Tag,\n\nvielen Dank fuer Ihre Terminanfrage. Wir melden uns zur Abstimmung des passenden Termins bei Ihnen.\n\nFreundliche Gruesse\nsaniPEP Sanitaetshaus",
+  "contact-data": "Guten Tag,\n\nvielen Dank fuer Ihre Anfrage. Zur weiteren Bearbeitung benoetigen wir noch eine kurze Rueckmeldung zu Ihren Kontaktdaten oder zum bevorzugten Rueckrufweg.\n\nFreundliche Gruesse\nsaniPEP Sanitaetshaus",
+  care: "Guten Tag,\n\nvielen Dank fuer Ihre Pflege-/Versorgungs-Anfrage. Wir pruefen die Angaben intern und melden uns mit einer fachlichen Rueckfrage oder dem naechsten Schritt.\n\nFreundliche Gruesse\nsaniPEP Sanitaetshaus",
+  document: "Guten Tag,\n\nvielen Dank fuer Ihren Rezept-/Dokument-Hinweis. Die sichere Einreichung von Dateien wird separat geklaert; bitte senden Sie keine medizinischen Dokumente als Anhang ueber diese Antwort.\n\nFreundliche Gruesse\nsaniPEP Sanitaetshaus",
+};
+
 function StaffAdminApp() {
   const [session, setSession] = useState<StaffSessionResponse | null>(null);
   const [workspace, setWorkspace] = useState<StaffRequestsResponse | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<StaffRequestDetail | null>(null);
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+  const [temporaryPassword, setTemporaryPassword] = useState<TemporaryPasswordNotice | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -86,6 +110,7 @@ function StaffAdminApp() {
         if (restored) {
           setSession(restored);
           await loadRequests("all", undefined, active);
+          if (restored.session.role === "admin") await loadStaffUsers(active);
         }
       } catch (error) {
         if (active) setNotice(apiNotice(error, "Session konnte nicht geladen werden."));
@@ -125,12 +150,19 @@ function StaffAdminApp() {
     return response;
   };
 
+  const loadStaffUsers = async (active = true) => {
+    const response = await staffAdminApi.listUsers();
+    if (active) setStaffUsers(response.users);
+    return response;
+  };
+
   const handleLogin = async (input: { email: string; password: string }) => {
     setNotice(null);
     const login = await staffAdminApi.login(input);
     setSession(login);
     setStatusFilter("all");
     await loadRequests("all");
+    if (login.session.role === "admin") await loadStaffUsers();
     setNotice({
       tone: "positive",
       title: "Angemeldet",
@@ -143,6 +175,8 @@ function StaffAdminApp() {
     setSession(null);
     setWorkspace(null);
     setSelectedRequest(null);
+    setStaffUsers([]);
+    setTemporaryPassword(null);
     setNotice({
       tone: "neutral",
       title: "Abgemeldet",
@@ -193,6 +227,145 @@ function StaffAdminApp() {
     }
   };
 
+  const handleRefreshUsers = async () => {
+    setBusy(true);
+    setNotice(null);
+    try {
+      await loadStaffUsers();
+    } catch (error) {
+      setNotice(apiNotice(error, "Benutzerliste konnte nicht geladen werden."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCreateUser = async (input: { email: string; safeDisplayName: string; role: StaffRole }) => {
+    if (!session) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const result = await staffAdminApi.createUser(input, session.csrfToken);
+      await loadStaffUsers();
+      setTemporaryPassword({ email: result.user.email, password: result.temporaryPassword, reason: "created" });
+      setNotice({
+        tone: "positive",
+        title: "Benutzer angelegt",
+        body: `${result.user.safeDisplayName} kann sich mit dem einmalig angezeigten temporaeren Passwort anmelden.`,
+      });
+    } catch (error) {
+      setNotice(apiNotice(error, "Benutzer konnte nicht angelegt werden."));
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleUpdateUser = async (input: { userId: string; email: string; safeDisplayName: string; role: StaffRole; status: StaffUser["status"] }) => {
+    if (!session) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      await staffAdminApi.updateUser(input, session.csrfToken);
+      await loadStaffUsers();
+      setNotice({
+        tone: "positive",
+        title: "Benutzer aktualisiert",
+        body: "Rolle, Anzeige- oder Login-Daten wurden gespeichert.",
+      });
+    } catch (error) {
+      setNotice(apiNotice(error, "Benutzer konnte nicht aktualisiert werden."));
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleResetUserPassword = async (user: StaffUser) => {
+    if (!session) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const result = await staffAdminApi.resetUserPassword(user.userId, session.csrfToken);
+      await loadStaffUsers();
+      setTemporaryPassword({ email: result.user.email, password: result.temporaryPassword, reason: "reset" });
+      setNotice({
+        tone: "positive",
+        title: "Passwort zurueckgesetzt",
+        body: "Das temporaere Passwort wird einmalig angezeigt. Bestehende Sessions des Benutzers wurden beendet.",
+      });
+    } catch (error) {
+      setNotice(apiNotice(error, "Passwort konnte nicht zurueckgesetzt werden."));
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDeactivateUser = async (user: StaffUser) => {
+    if (!session) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      await staffAdminApi.deactivateUser(user.userId, session.csrfToken);
+      await loadStaffUsers();
+      setNotice({
+        tone: "neutral",
+        title: "Benutzer deaktiviert",
+        body: "Der Zugang ist deaktiviert und bestehende Sessions wurden beendet.",
+      });
+    } catch (error) {
+      setNotice(apiNotice(error, "Benutzer konnte nicht deaktiviert werden."));
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleChangeOwnPassword = async (input: { oldPassword: string; newPassword: string }) => {
+    if (!session) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const result = await staffAdminApi.changeOwnPassword(input, session.csrfToken);
+      setNotice({
+        tone: "positive",
+        title: "Passwort geaendert",
+        body: result.sessionsInvalidated
+          ? "Das Passwort wurde geaendert und bestehende Sessions wurden beendet."
+          : "Das Passwort wurde geaendert. Bestehende Sessions laufen bis zur normalen Session-Grenze weiter.",
+      });
+    } catch (error) {
+      setNotice(apiNotice(error, "Passwort konnte nicht geaendert werden."));
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSendEmailReply = async (input: { requestId: string; subject: string; body: string }) => {
+    if (!session) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const result = await staffAdminApi.sendEmailReply(input, session.csrfToken);
+      setSelectedRequest(result.request);
+      await loadRequests(statusFilter, input.requestId);
+      setNotice({
+        tone: "positive",
+        title: "E-Mail gesendet",
+        body: "Die Antwort wurde im Request-Verlauf gespeichert.",
+      });
+    } catch (error) {
+      if (selectedRequest?.id === input.requestId) {
+        await loadRequestDetail(input.requestId).catch(() => undefined);
+      }
+      setNotice(apiNotice(error, "E-Mail konnte nicht gesendet werden."));
+      throw error;
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (loading) {
     return (
       <StaffShell>
@@ -213,11 +386,21 @@ function StaffAdminApp() {
             session={session}
             workspace={workspace}
             selectedRequest={selectedRequest}
+            staffUsers={staffUsers}
+            temporaryPassword={temporaryPassword}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             onApplyFilter={handleApplyFilter}
             onSelectRequest={handleSelectRequest}
             onStatusChange={handleStatusChange}
+            onRefreshUsers={handleRefreshUsers}
+            onCreateUser={handleCreateUser}
+            onUpdateUser={handleUpdateUser}
+            onResetUserPassword={handleResetUserPassword}
+            onDeactivateUser={handleDeactivateUser}
+            onClearTemporaryPassword={() => setTemporaryPassword(null)}
+            onChangeOwnPassword={handleChangeOwnPassword}
+            onSendEmailReply={handleSendEmailReply}
           />
         )}
       </View>
@@ -353,21 +536,41 @@ function StaffWorkbench({
   session,
   workspace,
   selectedRequest,
+  staffUsers,
+  temporaryPassword,
   statusFilter,
   onStatusFilterChange,
   onApplyFilter,
   onSelectRequest,
   onStatusChange,
+  onRefreshUsers,
+  onCreateUser,
+  onUpdateUser,
+  onResetUserPassword,
+  onDeactivateUser,
+  onClearTemporaryPassword,
+  onChangeOwnPassword,
+  onSendEmailReply,
 }: {
   busy: boolean;
   session: StaffSessionResponse;
   workspace: StaffRequestsResponse | null;
   selectedRequest: StaffRequestDetail | null;
+  staffUsers: StaffUser[];
+  temporaryPassword: TemporaryPasswordNotice | null;
   statusFilter: StatusFilter;
   onStatusFilterChange: (value: StatusFilter) => void;
   onApplyFilter: () => Promise<void>;
   onSelectRequest: (request: StaffRequestListItem) => Promise<void>;
   onStatusChange: (status: StaffStatus) => Promise<void>;
+  onRefreshUsers: () => Promise<void>;
+  onCreateUser: (input: { email: string; safeDisplayName: string; role: StaffRole }) => Promise<void>;
+  onUpdateUser: (input: { userId: string; email: string; safeDisplayName: string; role: StaffRole; status: StaffUser["status"] }) => Promise<void>;
+  onResetUserPassword: (user: StaffUser) => Promise<void>;
+  onDeactivateUser: (user: StaffUser) => Promise<void>;
+  onClearTemporaryPassword: () => void;
+  onChangeOwnPassword: (input: { oldPassword: string; newPassword: string }) => Promise<void>;
+  onSendEmailReply: (input: { requestId: string; subject: string; body: string }) => Promise<void>;
 }) {
   const statusModel = workspace?.statusModel ?? fallbackStatusModel;
 
@@ -428,8 +631,25 @@ function StaffWorkbench({
           statusModel={statusModel}
           busy={busy}
           onStatusChange={onStatusChange}
+          onSendEmailReply={onSendEmailReply}
         />
       </div>
+
+      <PasswordChangePanel busy={busy} onChangePassword={onChangeOwnPassword} />
+
+      {session.session.role === "admin" && (
+        <StaffUsersPanel
+          busy={busy}
+          users={staffUsers}
+          temporaryPassword={temporaryPassword}
+          onRefresh={onRefreshUsers}
+          onCreate={onCreateUser}
+          onUpdate={onUpdateUser}
+          onResetPassword={onResetUserPassword}
+          onDeactivate={onDeactivateUser}
+          onClearTemporaryPassword={onClearTemporaryPassword}
+        />
+      )}
     </View>
   );
 }
@@ -509,11 +729,13 @@ function RequestDetail({
   statusModel,
   busy,
   onStatusChange,
+  onSendEmailReply,
 }: {
   request: StaffRequestDetail | null;
   statusModel: StaffRequestsResponse["statusModel"];
   busy: boolean;
   onStatusChange: (status: StaffStatus) => Promise<void>;
+  onSendEmailReply: (input: { requestId: string; subject: string; body: string }) => Promise<void>;
 }) {
   if (!request) {
     return (
@@ -596,6 +818,10 @@ function RequestDetail({
           </div>
         </View>
 
+        <EmailReplyPanel request={request} busy={busy} onSendEmailReply={onSendEmailReply} />
+
+        <CommunicationList messages={request.communication} />
+
         <View direction="column" gap={3}>
           <Text as="h3" variant="featured-6" weight="semibold">
             Audit
@@ -608,6 +834,466 @@ function RequestDetail({
             )}
           </div>
         </View>
+      </View>
+    </div>
+  );
+}
+
+function EmailReplyPanel({
+  request,
+  busy,
+  onSendEmailReply,
+}: {
+  request: StaffRequestDetail;
+  busy: boolean;
+  onSendEmailReply: (input: { requestId: string; subject: string; body: string }) => Promise<void>;
+}) {
+  const [subject, setSubject] = useState(request.mail.defaultSubject);
+  const [body, setBody] = useState("");
+  const [template, setTemplate] = useState("none");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSubject(request.mail.defaultSubject);
+    setBody("");
+    setTemplate("none");
+    setError(null);
+  }, [request.id, request.mail.defaultSubject]);
+
+  const applyTemplate = (value: string) => {
+    setTemplate(value);
+    setBody(replyTemplates[value] ?? "");
+  };
+
+  const send = async () => {
+    setSending(true);
+    setError(null);
+    try {
+      await onSendEmailReply({ requestId: request.id, subject, body });
+      setBody("");
+      setTemplate("none");
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const disabledReason = request.mail.disabledReason;
+  const canSend = request.mail.configured && request.mail.recipientAvailable && subject.trim().length >= 5 && body.trim().length >= 10;
+
+  return (
+    <View direction="column" gap={3}>
+      <Text as="h3" variant="featured-6" weight="semibold">
+        E-Mail-Antwort
+      </Text>
+      {disabledReason === "mail_disabled" && (
+        <StateNotice tone="neutral" title="E-Mail-Versand nicht eingerichtet" body="MAIL_ENABLED=false: Das Backend versendet keine E-Mails." />
+      )}
+      {disabledReason === "smtp_not_configured" && (
+        <StateNotice tone="warning" title="SMTP nicht vollstaendig" body="MAIL_ENABLED ist aktiv, aber die SMTP-Konfiguration ist nicht vollstaendig." />
+      )}
+      {disabledReason === "recipient_email_missing" && (
+        <StateNotice tone="warning" title="Keine Empfaengeradresse" body="Diese Anfrage enthaelt keine E-Mail-Adresse." />
+      )}
+      <div className="staffAdminFormGrid">
+        <FormControl>
+          <FormControl.Label>Vorlage</FormControl.Label>
+          <select className="nativeSelect" value={template} onChange={(event) => applyTemplate(event.currentTarget.value)}>
+            <option value="none">Keine Vorlage</option>
+            <option value="appointment">Termin-Rueckmeldung</option>
+            <option value="contact-data">Rueckfrage Kontaktdaten</option>
+            <option value="care">Pflege-/Versorgungs-Rueckfrage</option>
+            <option value="document">Rezept/Dokument-Hinweis</option>
+          </select>
+        </FormControl>
+        <FormControl>
+          <FormControl.Label>Betreff</FormControl.Label>
+          <TextField name="replySubject" value={subject} onChange={({ value }) => setSubject(value)} />
+        </FormControl>
+      </div>
+      <FormControl>
+        <FormControl.Label>Antworttext</FormControl.Label>
+        <TextArea
+          name="replyBody"
+          value={body}
+          onChange={({ value }) => setBody(value)}
+          resize="auto"
+        />
+      </FormControl>
+      <View direction="row" gap={3} align="center" wrap>
+        <Button color="primary" onClick={send} disabled={busy || sending || !canSend}>
+          <span className="buttonLabel">
+            <Send aria-hidden />
+            {sending ? "Senden laeuft" : "Antwort senden"}
+          </span>
+        </Button>
+        <Text variant="caption-1" color="neutral-faded">
+          Absender {request.mail.fromAddress}
+        </Text>
+      </View>
+      {error && <StateNotice tone="warning" title="E-Mail-Antwort fehlgeschlagen" body={error} />}
+    </View>
+  );
+}
+
+function CommunicationList({ messages }: { messages: StaffRequestMessage[] }) {
+  return (
+    <View direction="column" gap={3}>
+      <Text as="h3" variant="featured-6" weight="semibold">
+        Verlauf
+      </Text>
+      {messages.length === 0 ? (
+        <StateNotice tone="neutral" title="Noch keine Antworten" body="Fuer diesen Request wurde noch keine Staff-Antwort gespeichert." />
+      ) : (
+        <div className="staffAdminAuditList">
+          {messages.map((message) => (
+            <div className="safeRow" key={message.id}>
+              <View direction="row" justify="space-between" gap={3} wrap>
+                <Text weight="semibold">{message.subject}</Text>
+                <Badge color={message.status === "sent" ? "positive" : "warning"} variant="faded">
+                  {message.status === "sent" ? "gesendet" : "fehlgeschlagen"}
+                </Badge>
+              </View>
+              <Text variant="caption-1" color="neutral-faded">
+                {formatDateTime(message.sentAt ?? message.failedAt ?? message.createdAt)} · an {message.to}
+              </Text>
+              <Text variant="body-2" color="neutral-faded">
+                {message.body}
+              </Text>
+              {message.errorCode && (
+                <Text variant="caption-1" color="neutral-faded">
+                  Fehlerzustand: {message.errorCode}
+                </Text>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </View>
+  );
+}
+
+function PasswordChangePanel({
+  busy,
+  onChangePassword,
+}: {
+  busy: boolean;
+  onChangePassword: (input: { oldPassword: string; newPassword: string }) => Promise<void>;
+}) {
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (newPassword !== confirmPassword) {
+      setError("Das neue Passwort und die Wiederholung stimmen nicht ueberein.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onChangePassword({ oldPassword, newPassword });
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="plainPanel">
+      <View direction="column" gap={4} padding={6}>
+        <View direction="row" gap={3} align="center">
+          <span className="iconBox" aria-hidden>
+            <KeyRound />
+          </span>
+          <Text as="h2" variant="featured-5" weight="semibold">
+            Eigenes Passwort
+          </Text>
+        </View>
+        <div className="staffAdminFormGrid">
+          <FormControl>
+            <FormControl.Label>Altes Passwort</FormControl.Label>
+            <TextField name="oldPassword" value={oldPassword} onChange={({ value }) => setOldPassword(value)} inputAttributes={{ type: "password", autoComplete: "current-password" }} />
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Neues Passwort</FormControl.Label>
+            <TextField name="newPassword" value={newPassword} onChange={({ value }) => setNewPassword(value)} inputAttributes={{ type: "password", autoComplete: "new-password" }} />
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Neues Passwort wiederholen</FormControl.Label>
+            <TextField name="confirmPassword" value={confirmPassword} onChange={({ value }) => setConfirmPassword(value)} inputAttributes={{ type: "password", autoComplete: "new-password" }} />
+          </FormControl>
+        </div>
+        <Button color="primary" onClick={submit} disabled={busy || submitting || !oldPassword || !newPassword || !confirmPassword}>
+          <span className="buttonLabel">
+            <KeyRound aria-hidden />
+            {submitting ? "Speichern laeuft" : "Passwort aendern"}
+          </span>
+        </Button>
+        {error && <StateNotice tone="warning" title="Passwortwechsel fehlgeschlagen" body={error} />}
+      </View>
+    </div>
+  );
+}
+
+function StaffUsersPanel({
+  busy,
+  users,
+  temporaryPassword,
+  onRefresh,
+  onCreate,
+  onUpdate,
+  onResetPassword,
+  onDeactivate,
+  onClearTemporaryPassword,
+}: {
+  busy: boolean;
+  users: StaffUser[];
+  temporaryPassword: TemporaryPasswordNotice | null;
+  onRefresh: () => Promise<void>;
+  onCreate: (input: { email: string; safeDisplayName: string; role: StaffRole }) => Promise<void>;
+  onUpdate: (input: { userId: string; email: string; safeDisplayName: string; role: StaffRole; status: StaffUser["status"] }) => Promise<void>;
+  onResetPassword: (user: StaffUser) => Promise<void>;
+  onDeactivate: (user: StaffUser) => Promise<void>;
+  onClearTemporaryPassword: () => void;
+}) {
+  return (
+    <div className="plainPanel">
+      <View direction="column" gap={4} padding={6}>
+        <View direction="row" justify="space-between" align="center" gap={3} wrap>
+          <View direction="row" gap={3} align="center">
+            <span className="iconBox" aria-hidden>
+              <Users />
+            </span>
+            <Text as="h2" variant="featured-5" weight="semibold">
+              Benutzer
+            </Text>
+          </View>
+          <Button variant="outline" color="neutral" onClick={onRefresh} disabled={busy}>
+            <span className="buttonLabel">
+              <RefreshCw aria-hidden />
+              Aktualisieren
+            </span>
+          </Button>
+        </View>
+
+        {temporaryPassword && (
+          <div className="staffSecretBox">
+            <View direction="row" justify="space-between" gap={3} wrap>
+              <View direction="column" gap={1}>
+                <Text weight="semibold">
+                  Temporaeres Passwort fuer {temporaryPassword.email}
+                </Text>
+                <Text variant="body-2" color="neutral-faded">
+                  {temporaryPassword.reason === "created" ? "Neu angelegt" : "Passwortreset"} · nur einmalig anzeigen.
+                </Text>
+              </View>
+              <Button variant="outline" color="neutral" onClick={onClearTemporaryPassword}>
+                Ausblenden
+              </Button>
+            </View>
+            <code>{temporaryPassword.password}</code>
+          </div>
+        )}
+
+        <StaffUserCreateForm busy={busy} onCreate={onCreate} />
+
+        <div className="staffUserList">
+          {users.map((user) => (
+            <StaffUserRow
+              busy={busy}
+              user={user}
+              key={user.userId}
+              onUpdate={onUpdate}
+              onResetPassword={onResetPassword}
+              onDeactivate={onDeactivate}
+            />
+          ))}
+        </div>
+      </View>
+    </div>
+  );
+}
+
+function StaffUserCreateForm({
+  busy,
+  onCreate,
+}: {
+  busy: boolean;
+  onCreate: (input: { email: string; safeDisplayName: string; role: StaffRole }) => Promise<void>;
+}) {
+  const [email, setEmail] = useState("");
+  const [safeDisplayName, setSafeDisplayName] = useState("");
+  const [role, setRole] = useState<StaffRole>("staff");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onCreate({ email, safeDisplayName, role });
+      setEmail("");
+      setSafeDisplayName("");
+      setRole("staff");
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="safeRow">
+      <View direction="column" gap={3}>
+        <Text weight="semibold">Benutzer anlegen</Text>
+        <div className="staffAdminFormGrid">
+          <FormControl>
+            <FormControl.Label>E-Mail/Login</FormControl.Label>
+            <TextField name="newUserEmail" value={email} onChange={({ value }) => setEmail(value)} inputAttributes={{ type: "email", autoComplete: "off" }} />
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Anzeigename</FormControl.Label>
+            <TextField name="newUserName" value={safeDisplayName} onChange={({ value }) => setSafeDisplayName(value)} inputAttributes={{ autoComplete: "off" }} />
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Rolle</FormControl.Label>
+            <select className="nativeSelect" value={role} onChange={(event) => setRole(event.currentTarget.value as StaffRole)}>
+              <option value="staff">staff</option>
+              <option value="admin">admin</option>
+            </select>
+          </FormControl>
+        </div>
+        <Button color="primary" onClick={submit} disabled={busy || submitting || !email.trim() || !safeDisplayName.trim()}>
+          <span className="buttonLabel">
+            <UserPlus aria-hidden />
+            {submitting ? "Anlegen laeuft" : "Benutzer anlegen"}
+          </span>
+        </Button>
+        {error && <StateNotice tone="warning" title="Benutzeranlage fehlgeschlagen" body={error} />}
+      </View>
+    </div>
+  );
+}
+
+function StaffUserRow({
+  busy,
+  user,
+  onUpdate,
+  onResetPassword,
+  onDeactivate,
+}: {
+  busy: boolean;
+  user: StaffUser;
+  onUpdate: (input: { userId: string; email: string; safeDisplayName: string; role: StaffRole; status: StaffUser["status"] }) => Promise<void>;
+  onResetPassword: (user: StaffUser) => Promise<void>;
+  onDeactivate: (user: StaffUser) => Promise<void>;
+}) {
+  const [email, setEmail] = useState(user.email);
+  const [safeDisplayName, setSafeDisplayName] = useState(user.safeDisplayName);
+  const [role, setRole] = useState<StaffRole>(user.role);
+  const [status, setStatus] = useState<StaffUser["status"]>(user.status);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEmail(user.email);
+    setSafeDisplayName(user.safeDisplayName);
+    setRole(user.role);
+    setStatus(user.status);
+    setError(null);
+  }, [user]);
+
+  const save = async () => {
+    setError(null);
+    try {
+      await onUpdate({ userId: user.userId, email, safeDisplayName, role, status });
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    }
+  };
+
+  const resetPassword = async () => {
+    setError(null);
+    try {
+      await onResetPassword(user);
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    }
+  };
+
+  const deactivate = async () => {
+    setError(null);
+    try {
+      await onDeactivate(user);
+    } catch (caught) {
+      setError(apiErrorText(caught));
+    }
+  };
+
+  return (
+    <div className="staffUserCard">
+      <View direction="column" gap={3}>
+        <View direction="row" justify="space-between" gap={3} wrap>
+          <View direction="column" gap={1}>
+            <Text weight="semibold">{user.safeDisplayName}</Text>
+            <Text variant="caption-1" color="neutral-faded">
+              {user.email} · letzter Login {formatDateTime(user.lastLoginAt)}
+            </Text>
+          </View>
+          <Badge color={user.status === "active" ? "positive" : "warning"} variant="faded">
+            {user.status === "active" ? "aktiv" : "deaktiviert"}
+          </Badge>
+        </View>
+        <div className="staffAdminFormGrid">
+          <FormControl>
+            <FormControl.Label>E-Mail/Login</FormControl.Label>
+            <TextField name={`email-${user.userId}`} value={email} onChange={({ value }) => setEmail(value)} inputAttributes={{ type: "email", autoComplete: "off" }} />
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Anzeigename</FormControl.Label>
+            <TextField name={`name-${user.userId}`} value={safeDisplayName} onChange={({ value }) => setSafeDisplayName(value)} inputAttributes={{ autoComplete: "off" }} />
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Rolle</FormControl.Label>
+            <select className="nativeSelect" value={role} onChange={(event) => setRole(event.currentTarget.value as StaffRole)}>
+              <option value="staff">staff</option>
+              <option value="admin">admin</option>
+            </select>
+          </FormControl>
+          <FormControl>
+            <FormControl.Label>Status</FormControl.Label>
+            <select className="nativeSelect" value={status} onChange={(event) => setStatus(event.currentTarget.value as StaffUser["status"])}>
+              <option value="active">aktiv</option>
+              <option value="disabled">deaktiviert</option>
+            </select>
+          </FormControl>
+        </div>
+        <View direction="row" gap={3} wrap>
+          <Button color="primary" onClick={save} disabled={busy || !email.trim() || !safeDisplayName.trim()}>
+            Speichern
+          </Button>
+          <Button variant="outline" color="neutral" onClick={resetPassword} disabled={busy}>
+            <span className="buttonLabel">
+              <KeyRound aria-hidden />
+              Passwort resetten
+            </span>
+          </Button>
+          <Button variant="outline" color="critical" onClick={deactivate} disabled={busy || user.status === "disabled"}>
+            Deaktivieren
+          </Button>
+        </View>
+        <Text variant="caption-1" color="neutral-faded">
+          Angelegt {formatDateTime(user.createdAt)} · geaendert {formatDateTime(user.updatedAt)}
+        </Text>
+        {error && <StateNotice tone="warning" title="Benutzeraktion fehlgeschlagen" body={error} />}
       </View>
     </div>
   );

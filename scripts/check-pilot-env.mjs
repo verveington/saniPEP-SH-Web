@@ -44,6 +44,14 @@ const optional = [
   "POSTGRES_POOL_MAX",
   "REDIS_KEY_PREFIX",
   "AV_SCANNER_MODE",
+  "MAIL_ENABLED",
+  "MAIL_FROM_ADDRESS",
+  "MAIL_FROM_NAME",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASSWORD",
+  "SMTP_SECURE",
 ];
 
 for (const name of required) {

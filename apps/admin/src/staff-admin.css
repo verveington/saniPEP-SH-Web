@@ -5,7 +5,9 @@
 .staffAdminToolbar,
 .staffAdminGrid,
 .staffAdminDetailGrid,
-.staffAdminStatusGrid {
+.staffAdminStatusGrid,
+.staffAdminFormGrid,
+.staffUserList {
   display: grid;
   gap: 12px;
   min-width: 0;
@@ -24,6 +26,11 @@
 .staffAdminDetailGrid,
 .staffAdminStatusGrid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.staffAdminFormGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  align-items: end;
 }
 
 .staffRequestList {
@@ -80,6 +87,34 @@
 .staffAdminAuditList {
   display: grid;
   gap: 10px;
+}
+
+.staffUserCard,
+.staffSecretBox {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--sani-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  overflow-wrap: anywhere;
+}
+
+.staffSecretBox {
+  border-color: color-mix(in srgb, var(--sani-warning-border) 70%, transparent);
+  background: var(--sani-warning-soft);
+}
+
+.staffSecretBox code {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+  color: inherit;
+  overflow-wrap: anywhere;
 }
 
 .staffDocumentNotice {

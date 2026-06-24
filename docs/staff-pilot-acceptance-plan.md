@@ -17,6 +17,9 @@ Im Scope sind:
 - interne Staff-Sichtung von metadata-only Public Requests
 - Bearbeitung von Termin-, Kontakt-, Pflege-/Versorgungs- und Dokument-/Rezept-Metadaten-Anfragen
 - Statuswechsel innerhalb des Staff-MVP-Modells
+- Staff-User-Management fuer Admins: anlegen, bearbeiten, deaktivieren, Passwort zuruecksetzen
+- eigener Passwortwechsel fuer angemeldete Staff-Benutzer
+- kontrollierte einfache E-Mail-Antworten aus der Request-Detailansicht, wenn `MAIL_ENABLED=true` vollstaendig konfiguriert ist
 - Audit-Pruefung fuer Request-Erstellung und Statuswechsel
 - Login, Logout und Session-Grenzen des Staff Admin
 - fachliches Feedback zu Verstaendlichkeit, fehlenden Informationen und UX-Problemen
@@ -33,6 +36,8 @@ Nicht im Scope sind:
 - echte Kundendaten
 - echte Gesundheitsdaten
 - produktive Dateiuebertragung
+- Anhaenge oder medizinische Dokumente per E-Mail
+- automatischer E-Mail-Versand
 - oeffentliches HTTPS-Staging ohne eigene Domains, DNS und TLS
 
 Die technischen Grenzen bleiben unveraendert: `UPLOADS_ENABLED=false`, Kundenportal deaktiviert, `OMNIA_WRITE_MODE=read_only`, keine Secrets im Git.
@@ -111,6 +116,27 @@ Regeln:
 - Provisioning-Ergebnis ohne Passwort dokumentieren
 - Rollen nur nach Pilotauftrag vergeben; Standard fuer Pilot-Mitarbeiter ist `staff`
 
+## Staff User Management Und Passwortverwaltung
+
+Admins koennen Staff-Zugaenge im Staff Admin anlegen, Anzeigenamen und E-Mail/Login-Namen bearbeiten, Rollen `staff` oder `admin` setzen, Benutzer deaktivieren und Passwoerter zuruecksetzen. Temporaere Passwoerter werden nur einmalig in der laufenden Admin-Sitzung angezeigt und duerfen nicht in Git, Tickets, Screenshots oder Chat kopiert werden.
+
+Angemeldete Staff-Benutzer koennen ihr eigenes Passwort aendern. Das alte Passwort muss bestaetigt werden; schwache neue Passwoerter werden abgelehnt. Eigene Passwortwechsel invalidieren im Pilot nicht automatisch bestehende Sessions, sondern lassen diese bis zur normalen Session-Grenze weiterlaufen. Admin-Passwortreset und Deaktivierung beenden bestehende Sessions des betroffenen Benutzers.
+
+Alle kritischen Admin- und Passwortaktionen schreiben Audit Events ohne Passwortwerte.
+
+## E-Mail-Antworten
+
+Staff kann aus einer Request-Detailansicht eine einfache Textantwort an die im Request hinterlegte E-Mail-Adresse senden. Der konfigurierte Absender ist `sani@sanipep.de`; SMTP-Zugangsdaten kommen nur aus Env/Secret Store.
+
+Regeln:
+
+- `MAIL_ENABLED=false` ist der Default; dann zeigt die UI "E-Mail-Versand nicht eingerichtet" und das Backend versendet nicht.
+- Wenn `MAIL_ENABLED=true`, muessen `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM_ADDRESS` und `SMTP_SECURE` passend gesetzt sein; Placeholder werden bei aktiviertem Mail-Versand abgelehnt.
+- Versand erfolgt nur nach explizitem Staff-Klick.
+- Antworten werden im Request-Verlauf gespeichert; Status `sent` oder `failed` ist sichtbar.
+- Gesendete und fehlgeschlagene Versandversuche schreiben Audit Events.
+- Es gibt keine Anhaenge, keine Dateiversendung und keinen automatischen Versand.
+
 ## Fachliche Testfaelle
 
 | ID | Testfall | Erwartung | Nachweis |
@@ -127,6 +153,12 @@ Regeln:
 | SP-10 | Logout pruefen | Logout beendet die Staff-Session. | Nach Logout ist keine Staff-Ansicht mehr erreichbar. |
 | SP-11 | Staff ohne Session pruefen | Staff-Endpunkte oder Staff UI verlangen Authentifizierung. | Zugriff ohne Session wird abgelehnt. |
 | SP-12 | Fehlerfall bei ungueltigem Status pruefen | Ungueltiger oder nicht erlaubter Statuswechsel wird abgelehnt. | Fehler dokumentiert, kein Status wurde gespeichert. |
+| SP-13 | Admin legt Staff-Benutzer an | Neuer Staff-Account ist aktiv, temporaeres Passwort wird einmalig angezeigt, Audit vorhanden. | Benutzer-ID ohne Passwort dokumentiert. |
+| SP-14 | Admin setzt Passwort zurueck | Temporaeres Passwort wird einmalig angezeigt, bestehende Sessions des Benutzers sind ungueltig. | Audit vorhanden, kein Passwort dokumentiert. |
+| SP-15 | Admin deaktiviert Benutzer | Benutzer ist deaktiviert und kann sich nicht mehr anmelden. | Status und Audit geprueft. |
+| SP-16 | Eigenes Passwort aendern | Altes Passwort ist erforderlich, schwaches neues Passwort wird abgelehnt, starkes neues Passwort wird gespeichert. | Fehler- und Erfolgszustand dokumentiert. |
+| SP-17 | E-Mail disabled pruefen | Bei `MAIL_ENABLED=false` zeigt die UI den nicht eingerichteten Versand und sendet nicht. | Kein Versand, kein Silent Failure. |
+| SP-18 | E-Mail-Antwort senden | Bei vollstaendig konfiguriertem Mail-Versand wird eine Textantwort explizit gesendet und im Verlauf angezeigt. | Message-Status und Audit geprueft, kein Anhang. |
 
 ## Feedbackbogen
 
@@ -144,6 +176,12 @@ Regeln:
 | SP-10 | offen | offen | offen | offen | offen | offen | offen |
 | SP-11 | offen | offen | offen | offen | offen | offen | offen |
 | SP-12 | offen | offen | offen | offen | offen | offen | offen |
+| SP-13 | offen | offen | offen | offen | offen | offen | offen |
+| SP-14 | offen | offen | offen | offen | offen | offen | offen |
+| SP-15 | offen | offen | offen | offen | offen | offen | offen |
+| SP-16 | offen | offen | offen | offen | offen | offen | offen |
+| SP-17 | offen | offen | offen | offen | offen | offen | offen |
+| SP-18 | offen | offen | offen | offen | offen | offen | offen |
 
 ## Abbruchkriterien
 
@@ -155,6 +193,9 @@ Pilot sofort stoppen, wenn:
 - `OMNIA_WRITE_MODE` nicht `read_only` ist
 - Staff Admin ohne eigene Session oder ohne passende Rolle nutzbar ist
 - Statuswechsel ohne Audit-Spur bleiben
+- Admin-, Passwort- oder E-Mail-Aktionen ohne Audit-Spur bleiben
+- temporaere Passwoerter gespeichert, geloggt oder in Nachweise kopiert werden
+- E-Mail-Versand ohne explizite Staff-Bestaetigung oder mit Anhang ausgeloest wird
 - technische Runtime-, Live-, Public-Requests- oder Backup/Restore-Gates rot werden
 - oeffentliches HTTPS-Staging ohne eigene Domains, DNS und TLS verwendet werden soll
 - ein Pilot-Mitarbeiter Shared Credentials verwendet
@@ -168,6 +209,8 @@ Der Staff Pilot ist fachlich erfolgreich, wenn:
 - Termin-, Kontakt-, Pflege-/Versorgungs- und Dokument-/Rezept-Metadaten-Anfragen bearbeitbar sind
 - die Statuswechsel `new`, `in_review`, `waiting_for_customer`, `completed` und `cancelled` fachlich verstanden wurden
 - Audit fuer Erstellung und Statuswechsel nachvollziehbar ist
+- Staff-User-Management, Passwortreset, Deaktivierung und eigener Passwortwechsel nachvollziehbar funktionieren
+- E-Mail-Antworten bei deaktiviertem Mail-Versand klar blockiert sind und bei konfiguriertem Versand im Verlauf/Audit erscheinen
 - Logout und Staff-ohne-Session-Grenze bestaetigt sind
 - ungueltige Statuswechsel abgelehnt werden
 - keine Uploads, kein Kundenportal und keine Omnia Writes beobachtet wurden

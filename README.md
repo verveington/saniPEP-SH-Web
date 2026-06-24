@@ -24,6 +24,9 @@ und getrennten Development-only Vite-Builds fuer Portal, Staff-Admin und Design-
 - Portal Backend: `apps/backend` stellt im Development-MVP Login, HTTP-only Session-Cookie,
   CSRF-Token, Dashboard, Request-Speicherung und Audit Events bereit. Es bleibt ohne Omnia-Anbindung
   und ohne Produktiv-Uploads.
+- Staff-Admin-Pilot: Admins verwalten Staff-Zugaenge, Passwortreset und Deaktivierung; Staff-Benutzer
+  koennen ihr eigenes Passwort aendern. Kontrollierte E-Mail-Antworten sind nur bei `MAIL_ENABLED=true`
+  und vollstaendiger SMTP-Konfiguration aktiv, default ist `MAIL_ENABLED=false`.
 
 ## Installierte Pakete
 
@@ -126,6 +129,9 @@ Getrennte Development-only Apps:
   Uploads speichern nur Metadaten; es gibt keine echten Gesundheitsdaten und keine Produktiv-Uploads.
 - Development-only Staff-Admin und Design-Lab sind separate Builds mit Mock-Gate und klarer
   Nicht-Produktionskennzeichnung.
+
+Weitere Pilot-Gates: `npm run check:staff-admin:mvp`, `npm run check:staff-admin:users` und
+`npm run check:pilot:readiness`. Operative Details stehen in `docs/controlled-pilot-runbook.md`.
 
 ## Mockdatenmodell
 

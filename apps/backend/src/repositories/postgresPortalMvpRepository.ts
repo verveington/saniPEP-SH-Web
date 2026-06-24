@@ -31,6 +31,36 @@ export function createPostgresPortalMvpRepository(queryLayer: QueryLayer): Porta
       return result.rows[0]?.data ?? null;
     },
 
+    async listStaffUsers() {
+      const result = await queryLayer.query<JsonRow<PortalUserRecord>>(
+        `SELECT data
+         FROM portal_mvp_users
+         WHERE role IN ('staff', 'admin')
+         ORDER BY email_ci ASC`,
+      );
+      return result.rows.map((row) => row.data);
+    },
+
+    async saveUser(user) {
+      await queryLayer.query(
+        `INSERT INTO portal_mvp_users (user_id, email_ci, role, status, data, updated_at)
+         VALUES ($1, lower($2), $3, $4, $5::jsonb, now())
+         ON CONFLICT (user_id) DO UPDATE SET
+           email_ci = EXCLUDED.email_ci,
+           role = EXCLUDED.role,
+           status = EXCLUDED.status,
+           data = EXCLUDED.data,
+           updated_at = now()`,
+        [
+          user.userId,
+          user.email,
+          user.role,
+          user.status,
+          encodeJson(user),
+        ],
+      );
+    },
+
     async saveSession(record) {
       await queryLayer.query(
         `INSERT INTO portal_mvp_sessions (token_hash, user_id, absolute_expires_at, data, updated_at)
@@ -59,6 +89,10 @@ export function createPostgresPortalMvpRepository(queryLayer: QueryLayer): Porta
 
     async deleteSession(tokenHash) {
       await queryLayer.query("DELETE FROM portal_mvp_sessions WHERE token_hash = $1", [tokenHash]);
+    },
+
+    async deleteSessionsForUser(userId) {
+      await queryLayer.query("DELETE FROM portal_mvp_sessions WHERE user_id = $1", [userId]);
     },
 
     async listAllRequests() {

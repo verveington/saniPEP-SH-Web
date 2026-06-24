@@ -104,7 +104,11 @@ function assertRepoInvariants() {
   const internalExample = read(".env.staging.internal.example");
   const adminNginx = read("apps/admin/nginx.conf");
   const pilotRunbook = read("docs/controlled-pilot-runbook.md");
+  const pilotStartChecklist = read("docs/controlled-pilot-start-checklist.md");
   const staffProvisionScript = read("scripts/provision-staff-user.mjs");
+  const pilotEnvCheck = read("scripts/check-pilot-env.mjs");
+  const liveSmokeCheck = read("scripts/check-pilot-live-smoke.mjs");
+  const backupRestoreCheck = read("scripts/check-postgres-backup-restore.mjs");
   const publicRequestsCheck = read("scripts/check-public-requests.mjs");
   const staffMvpCheck = read("scripts/check-staff-admin-mvp.mjs");
 
@@ -117,6 +121,9 @@ function assertRepoInvariants() {
   assert(isTracked(".env.staging.internal.example"), ".env.staging.internal.example must stay tracked");
 
   assert(packageJson.includes("check:pilot:readiness"), "package.json must expose check:pilot:readiness");
+  assert(packageJson.includes("check:pilot:env"), "package.json must expose check:pilot:env");
+  assert(packageJson.includes("check:pilot:live"), "package.json must expose check:pilot:live");
+  assert(packageJson.includes("check:postgres:backup-restore"), "package.json must expose check:postgres:backup-restore");
   assert(packageJson.includes("check:public-requests"), "package.json must expose check:public-requests");
   assert(packageJson.includes("check:staff-admin:mvp"), "package.json must expose check:staff-admin:mvp");
   assert(packageJson.includes("staff:provision"), "package.json must expose staff:provision");
@@ -143,11 +150,27 @@ function assertRepoInvariants() {
   assert(staffProvisionScript.includes("PORTAL_REPOSITORY_DRIVER=postgres"), "Staff provision script must require Postgres repository");
   assert(staffProvisionScript.includes("staff-user-provisioned"), "Staff provision script must write an audit event");
   assert(staffProvisionScript.includes("passwordHashSha256"), "Staff provision script must store only a password hash");
+  assert(pilotEnvCheck.includes("PILOT_ENV_FILE"), "Pilot env check must support file-based env validation");
+  assert(pilotEnvCheck.includes("PILOT_INTERNAL_IP_STAGING"), "Pilot env check must require an explicit internal-IP staging flag");
+  assert(liveSmokeCheck.includes("PILOT_WEB_URL"), "Pilot live smoke must require a web URL");
+  assert(liveSmokeCheck.includes("PILOT_STAFF_URL"), "Pilot live smoke must require a staff URL");
+  assert(liveSmokeCheck.includes("PILOT_API_URL"), "Pilot live smoke must require an API URL");
+  assert(liveSmokeCheck.includes("/api/staff/session"), "Pilot live smoke must verify staff session without login");
+  assert(backupRestoreCheck.includes("PILOT_RESTORE_DATABASE_URL"), "Backup/restore check must require a restore database");
+  assert(backupRestoreCheck.includes("PILOT_RESTORE_CONFIRM"), "Backup/restore check must require explicit restore confirmation");
+  assert(backupRestoreCheck.includes("restore-to-scratch-db"), "Backup/restore check must force scratch restore acknowledgement");
 
   assert(pilotRunbook.includes("UPLOADS_ENABLED=false"), "Pilot runbook must document disabled uploads");
   assert(pilotRunbook.includes("OMNIA_WRITE_MODE=read_only"), "Pilot runbook must document Omnia read-only");
   assert(pilotRunbook.includes("npm run check:pilot:readiness"), "Pilot runbook must include the pilot readiness gate");
+  assert(pilotRunbook.includes("npm run check:pilot:env"), "Pilot runbook must include the pilot env gate");
+  assert(pilotRunbook.includes("npm run check:pilot:live"), "Pilot runbook must include the pilot live smoke gate");
+  assert(pilotRunbook.includes("npm run check:postgres:backup-restore"), "Pilot runbook must include the backup/restore gate");
   assert(pilotRunbook.includes("npm run staff:provision"), "Pilot runbook must document staff provisioning");
+  assert(pilotStartChecklist.includes("UPLOADS_ENABLED=false"), "Pilot start checklist must document disabled uploads");
+  assert(pilotStartChecklist.includes("OMNIA_WRITE_MODE=read_only"), "Pilot start checklist must document Omnia read-only");
+  assert(pilotStartChecklist.includes("npm run check:postgres:backup-restore"), "Pilot start checklist must include backup/restore evidence");
+  assert(pilotStartChecklist.includes("Freigabe Legal/DSGVO/Ops"), "Pilot start checklist must include Legal/DSGVO/Ops signoff");
 }
 
 function assertThrowsEnv(source, expectedMessagePart) {

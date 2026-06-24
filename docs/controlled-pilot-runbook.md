@@ -51,9 +51,11 @@ npm run build:admin
 Falls eine Postgres-Staging-Env erreichbar ist:
 
 ```bash
+npm run check:pilot:env
 npm run db:migrate
 npm run db:migrate
 npm run check:public-requests:postgres
+npm run check:postgres:backup-restore
 ```
 
 Der zweite Migrationslauf muss idempotent bleiben.
@@ -83,6 +85,21 @@ VITE_PORTAL_BACKEND_URL=https://<owned-api-host>
 
 `VITE_PORTAL_BACKEND_URL` wird in das Staff-Admin-Bundle eingebettet. Nach jeder Aenderung muss `staff-admin` neu gebaut werden.
 
+Env-Datei ohne Secret-Ausgabe pruefen:
+
+```bash
+PILOT_ENV_FILE=.env.staging npm run check:pilot:env
+```
+
+Fuer bewusst internes IP-Staging ueber `10.x` muss die Env zusaetzlich enthalten:
+
+```dotenv
+PILOT_INTERNAL_IP_STAGING=true
+BACKEND_NODE_ENV=development
+```
+
+Das ist kein Production-Relaxing fuer oeffentliche Hosts, sondern nur der dokumentierte LAN/VPN-Pilotmodus.
+
 ## Deployment-Gate
 
 1. Eigene Domains/DNS/TLS bereitstellen oder IP-/LAN-Staging ausdruecklich als internen Test kennzeichnen.
@@ -95,7 +112,15 @@ docker compose --env-file .env.staging -f compose.yaml -f compose.staging.yaml -
 
 4. Stack bauen und starten.
 5. Migrationen zweimal ausfuehren.
-6. Smoke testen:
+6. Backup/Restore gegen eine Scratch-Datenbank testen:
+
+```bash
+export PILOT_RESTORE_DATABASE_URL='postgres://<restore-user>:<secret>@<host>:5432/sanipep_portal_restore'
+export PILOT_RESTORE_CONFIRM='restore-to-scratch-db'
+npm run check:postgres:backup-restore
+```
+
+7. Smoke testen:
 
 ```bash
 curl -i https://<api-host>/healthz
@@ -112,6 +137,24 @@ Erwartung:
 - Staff Session ohne Login `401`
 - `/readyz` `200 ready`
 - Upload-Checks in `/readyz` sind `disabled`, solange `UPLOADS_ENABLED=false`
+
+Automatischer Live-Smoke ohne Login-Credentials:
+
+```bash
+export PILOT_WEB_URL='https://<web-host>/'
+export PILOT_STAFF_URL='https://<staff-host>/'
+export PILOT_API_URL='https://<api-host>/'
+npm run check:pilot:live
+```
+
+Fuer internes IP-Staging:
+
+```bash
+export PILOT_WEB_URL='http://10.0.60.13:3000/'
+export PILOT_STAFF_URL='http://10.0.60.13:5184/'
+export PILOT_API_URL='http://10.0.60.13:4100/'
+npm run check:pilot:live
+```
 
 ## Staff-Zugang Fuer Pilotgruppe
 
@@ -146,6 +189,20 @@ Vor Pilotstart muessen ausserhalb des Repos bestaetigt sein:
 - Log-/Monitoring-Ziel und Alarmierung
 - Datenschutz-/Impressum-/Einwilligungstexte final geprueft
 - TOMs, AV-Vertraege, Loesch-/Retention-Regeln und Incident-Prozess fuer den Pilotumfang
+
+## Startfreigabe
+
+Die Pilotfreigabe ist erst belastbar, wenn diese Nachweise vorliegen:
+
+| Gate | Nachweis |
+| --- | --- |
+| Repo | alle Repo-Gates gruen |
+| Env | `npm run check:pilot:env` gruen, keine Secrets im Bericht |
+| Postgres | Migrationen zweimal gruen, `check:public-requests:postgres` gruen |
+| Backup/Restore | `check:postgres:backup-restore` gruen gegen Scratch-DB |
+| Runtime | `check:pilot:live` gruen |
+| Staff | Pilot-Staffgruppe provisioniert und fachlich abgenommen |
+| Legal/DSGVO/Ops | schriftliche Abnahme fuer metadata-only Pilotumfang |
 
 ## Abbruchkriterien
 

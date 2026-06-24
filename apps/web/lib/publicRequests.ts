@@ -63,15 +63,8 @@ export class PublicRequestApiError extends Error {
   }
 }
 
-const publicRequestBackendUrl =
-  process.env.NEXT_PUBLIC_PORTAL_BACKEND_URL ?? (process.env.NODE_ENV === "development" ? "http://localhost:4100" : undefined);
-
 export async function submitPublicRequest(payload: PublicRequestPayload) {
-  if (!publicRequestBackendUrl) {
-    throw new PublicRequestApiError("public_request_api_not_configured", 0);
-  }
-
-  const response = await fetch(`${publicRequestBackendUrl.replace(/\/$/, "")}/api/public/requests`, {
+  const response = await fetch("/api/public/requests", {
     method: "POST",
     headers: {
       "content-type": "application/json",

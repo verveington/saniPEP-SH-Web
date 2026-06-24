@@ -4,6 +4,8 @@ Stand: 2026-06-23
 
 Diese Checkliste ist fuer die Startfreigabe des kontrollierten internen Pilotbetriebs. Keine Secrets, keine echten Kundendaten und keine personenbezogenen Details eintragen.
 
+Die fachliche Staff-Abnahme wird in `docs/staff-pilot-acceptance-plan.md` dokumentiert.
+
 ## Scope
 
 | Bereich | Entscheidung |
@@ -52,6 +54,7 @@ Diese Checkliste ist fuer die Startfreigabe des kontrollierten internen Pilotbet
 | Rollen/Verantwortlichkeiten bestaetigt | offen |
 | Staff-Zugaenge provisioniert via `npm run staff:provision` | offen |
 | Abnahme: Request-Liste, Detail, Statuswechsel, Audit | offen |
+| Staff-Pilot-Abnahmeplan ausgefuellt | offen |
 | Supportfenster und Eskalationsweg bestaetigt | offen |
 
 ## Legal/DSGVO/Ops

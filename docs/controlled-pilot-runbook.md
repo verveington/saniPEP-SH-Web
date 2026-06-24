@@ -158,6 +158,8 @@ npm run check:pilot:live
 
 ## Staff-Zugang Fuer Pilotgruppe
 
+Die fachliche Staff-Abnahme und der Feedbackbogen liegen in `docs/staff-pilot-acceptance-plan.md`.
+
 `PORTAL_DEV_STAFF_*` ist in Production verboten. Staff-Zugaenge fuer den kontrollierten Pilot werden gezielt in Postgres provisioniert:
 
 ```bash

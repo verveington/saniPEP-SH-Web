@@ -5,7 +5,8 @@ import path from "node:path";
 import { Client } from "pg";
 
 const sourceUrl = requiredEnv("PORTAL_DATABASE_URL");
-const restoreUrl = requiredEnv("PILOT_RESTORE_DATABASE_URL");
+const configuredRestoreUrl = requiredEnv("PILOT_RESTORE_DATABASE_URL");
+const restoreUrl = restoreUrlWithSourceHost(sourceUrl, configuredRestoreUrl);
 const confirm = requiredEnv("PILOT_RESTORE_CONFIRM");
 if (confirm !== "restore-to-scratch-db") {
   throw new Error("PILOT_RESTORE_CONFIRM must be restore-to-scratch-db.");
@@ -85,6 +86,14 @@ function pgEnv(databaseUrl) {
     PGPASSWORD: decodeURIComponent(url.password),
     PGSSLMODE: process.env.PORTAL_DATABASE_SSL === "true" ? "require" : "disable",
   };
+}
+
+function restoreUrlWithSourceHost(sourceUrl, restoreUrl) {
+  const source = new URL(sourceUrl);
+  const restore = new URL(restoreUrl);
+  restore.hostname = source.hostname;
+  restore.port = source.port;
+  return restore.toString();
 }
 
 function requiredEnv(name) {
